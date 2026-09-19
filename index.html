@@ -17,13 +17,13 @@
 <style>
 :root{
   --bg:#F2F4F0; --surface:#FFFFFF; --ink:#1B2A26; --muted:#5F6E68; --line:#DDE3DD; --soft:#E8EDE7;
-  --primary:#2F55E0; --on-primary:#FFFFFF; --income:#12805C; --expense:#C2385A; --plan:#A86B00;
+  --primary:#2F55E0; --on-primary:#FFFFFF; --income:#12805C; --expense:#C2385A; --plan:#A86B00; --on-plan:#FFFFFF;
   --shadow:0 18px 50px rgba(20,40,30,.22);
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#121816; --surface:#1A2320; --ink:#E6EEEA; --muted:#93A39C; --line:#2B3833; --soft:#222D29;
-    --primary:#7D9BFF; --on-primary:#0E1530; --income:#4FD1A1; --expense:#FF7C9C; --plan:#E0AE55;
+    --primary:#7D9BFF; --on-primary:#0E1530; --income:#4FD1A1; --expense:#FF7C9C; --plan:#E0AE55; --on-plan:#2A1D00;
     --shadow:0 18px 50px rgba(0,0,0,.55);
   }
 }
@@ -69,7 +69,7 @@ main{margin-top:14px}
 
 /* generic */
 h2{font-size:1.05rem;margin:0 0 10px;font-weight:700}
-h3{font-size:.95rem;margin:0;font-weight:700}
+h3{font-size:.95rem;margin:0 0 6px;font-weight:700}
 section{margin:0 0 32px}
 .pad{padding:24px 0}
 .btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;border-radius:12px;border:1px solid transparent;background:var(--primary);color:var(--on-primary);padding:10px 18px;font-weight:600;min-height:46px}
@@ -79,16 +79,18 @@ section{margin:0 0 32px}
 .btn.sm{min-height:40px;padding:6px 14px;font-size:.92rem;border-radius:10px}
 .btn.danger{background:transparent;color:var(--expense);border-color:color-mix(in srgb,var(--expense) 50%,transparent)}
 .btn.danger.armed{background:var(--expense);color:#fff}
-.btn:disabled{opacity:.5}
 .hint{font-size:.85rem;color:var(--muted);margin:8px 0 0}
 .empty{padding:30px 0;color:var(--muted);max-width:52ch}
 .empty p{margin:0 0 14px}
 .tag{--c:#748FA1;display:inline-block;padding:1px 9px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 18%,transparent)}
-.badge{display:inline-block;padding:1px 8px;border-radius:6px;font-size:.76rem;background:var(--soft);color:var(--muted)}
+.badge{display:inline-block;padding:1px 8px;border-radius:6px;font-size:.74rem;font-weight:600;background:var(--soft);color:var(--muted)}
+.badge.over{background:color-mix(in srgb,var(--expense) 16%,transparent);color:var(--expense)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{--c:#748FA1;display:inline-flex;align-items:center;min-height:36px;padding:5px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 55%,transparent);background:transparent;font-size:.9rem}
 .chip:hover{background:color-mix(in srgb,var(--c) 12%,transparent)}
 .chip.on{background:color-mix(in srgb,var(--c) 24%,transparent);border-color:var(--c);font-weight:700}
+.track{height:10px;background:var(--soft);border-radius:6px;overflow:hidden}
+.fill{display:block;height:100%;border-radius:6px}
 
 /* overview */
 .figs{display:flex;gap:10px 26px;flex-wrap:wrap;margin-bottom:18px}
@@ -101,7 +103,7 @@ section{margin:0 0 32px}
 .flow.emptybar{background:var(--soft)}
 .flowcap{margin:12px 0 14px;font-weight:600}
 .legend{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 26px}
-.legend li{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.93rem}
+.legend li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.93rem}
 .legend .sw{width:12px;height:12px;border-radius:4px;flex:none}
 .legend .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .legend .pc{color:var(--muted);font-size:.82rem;width:38px;text-align:right}
@@ -110,16 +112,56 @@ section{margin:0 0 32px}
 .kv .sep{grid-column:1/-1;border-top:1px solid var(--line)}
 .bars{list-style:none;margin:0;padding:0}
 .bars li{display:grid;grid-template-columns:minmax(90px,150px) 1fr auto;gap:12px;align-items:center;padding:6px 0;font-size:.93rem}
-.bars .track{height:10px;background:var(--soft);border-radius:6px;overflow:hidden}
-.bars .fill{display:block;height:100%;border-radius:6px}
-.trend{width:100%;height:auto;display:block}
-.trend text{fill:var(--muted);font-size:12px;font-family:inherit}
-.trend .bi{fill:var(--income)} .trend .bo{fill:var(--expense)}
-.trend .cur{fill:var(--soft)}
-.tlegend{display:flex;gap:18px;font-size:.84rem;color:var(--muted);margin-top:6px}
-.tlegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
 .banner{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:20px}
 .banner p{margin:0 0 10px;font-weight:600}
+.banner.alert{border-color:color-mix(in srgb,var(--expense) 55%,transparent);background:color-mix(in srgb,var(--expense) 8%,var(--surface))}
+.banner.alert p{margin:0 0 6px;color:var(--expense)}
+.alist{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.93rem}
+
+/* limits */
+.lims{list-style:none;margin:0;padding:0}
+.lim{padding:10px 0;border-bottom:1px solid var(--line)}
+.lim-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;font-size:.95rem}
+.lim-head .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.lim.over .nm{color:var(--expense)}
+.lim-note{display:flex;justify-content:space-between;gap:12px;font-size:.82rem;margin-top:5px}
+.lim-note.muted{display:block}
+.limhint{margin:-4px 0 12px;font-size:.86rem;display:flex;flex-direction:column;gap:2px}
+.limhint:empty{display:none}
+.limhint .over{color:var(--expense);font-weight:600}
+.limhint .warn{color:var(--plan);font-weight:600}
+.limhint .info{color:var(--muted)}
+
+/* plans timeline on overview */
+.tl{list-style:none;margin:0;padding:0}
+.tlrow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 0}
+.tlrow:hover{background:color-mix(in srgb,var(--soft) 60%,transparent)}
+.tl-date{display:flex;flex-direction:column;width:78px;flex:none;line-height:1.25}
+.tl-date b{font-size:.95rem}
+.tl-date small{font-size:.74rem;color:var(--muted)}
+.tl-amt{display:flex;flex-direction:column;align-items:flex-end;text-align:right;flex:none}
+.tl-amt small{font-size:.76rem}
+.warnline{color:var(--plan);font-weight:600}
+.late{color:var(--expense)!important;font-weight:600}
+
+/* forecast */
+.trend{width:100%;height:auto;display:block}
+.trend text{fill:var(--muted);font-size:13px;font-family:inherit}
+.trend .bi{fill:var(--income)} .trend .bo{fill:var(--expense)}
+.trend .pi{stroke:var(--income);stroke-width:1.2} .trend .po{stroke:var(--expense);stroke-width:1.2}
+.trend .pbi{fill:var(--income);opacity:.14} .trend .pli{fill:var(--income);opacity:.55}
+.trend .pbo{fill:var(--expense);opacity:.14} .trend .plo{fill:var(--expense);opacity:.55}
+.trend .cur{fill:var(--soft)}
+.tlegend{display:flex;gap:18px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin:6px 0 12px}
+.tlegend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tlegend i.solid{background:var(--muted)}
+.tlegend i.hatch{border:1px solid var(--muted);background:repeating-linear-gradient(45deg,var(--muted) 0 2px,transparent 2px 5px)}
+.ftable{width:100%;border-collapse:collapse;font-size:.9rem}
+.ftable th{text-align:left;color:var(--muted);font-weight:500;padding:4px 6px 4px 0;font-size:.82rem}
+.ftable td{padding:8px 6px 8px 0;border-top:1px solid var(--line);vertical-align:top}
+.ftable .r{text-align:right}
+.ftable td:last-child,.ftable th:last-child{padding-right:0}
+.ftable small{display:block;font-size:.72rem;color:var(--muted)}
 
 /* lists */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
@@ -144,36 +186,17 @@ section{margin:0 0 32px}
 .plan-row{border-bottom:1px solid var(--line)}
 .plan-row .row{border:0}
 .plan-actions{display:flex;gap:8px;padding:0 0 10px 22px}
-.late{color:var(--expense);font-weight:600}
 details.fold{margin-top:22px}
 details.fold summary{cursor:pointer;font-weight:700;padding:8px 0}
 .done-row{opacity:.62}
 
-/* items analytics */
-.iagg{border-bottom:1px solid var(--line)}
-.ibtn{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
-.ibtn:hover{background:color-mix(in srgb,var(--soft) 60%,transparent)}
-.in-main{flex:1;min-width:0;display:flex;flex-direction:column}
-.in-name{font-weight:600;overflow:hidden;text-overflow:ellipsis}
-.in-sub{font-size:.8rem;color:var(--muted)}
-.in-nums{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
-.spark{display:block;flex:none}
-@media (max-width:420px){.spark{display:none}}
-.spark.up{color:var(--expense)} .spark.down{color:var(--income)} .spark.flat{color:var(--muted)}
-.idetail{padding:2px 0 18px}
-.idetail table{width:100%;border-collapse:collapse;font-size:.9rem;margin:8px 0 14px}
-.idetail th{text-align:left;color:var(--muted);font-weight:500;padding:4px 8px 4px 0}
-.idetail td{padding:6px 8px 6px 0;border-top:1px solid var(--line)}
-.idetail .r{text-align:right}
-.rename{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.rename input,.rename select{flex:1;min-width:170px;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--surface)}
-
 /* settings */
 .setlist{list-style:none;margin:0 0 12px;padding:0}
-.setrow{display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid var(--line)}
+.setrow{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}
 .setrow input{flex:1;min-width:0;border:1px solid transparent;background:transparent;border-radius:8px;padding:6px 8px;min-height:42px}
 .setrow input:hover{border-color:var(--line)}
-.setrow .cnt{font-size:.8rem;color:var(--muted);min-width:24px;text-align:right}
+.setrow input.limin{flex:none;width:92px;text-align:right;border-color:var(--line);background:var(--surface)}
+.setrow .cnt{font-size:.8rem;color:var(--muted);min-width:20px;text-align:right}
 .dotbtn{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);flex:none;padding:0}
 .addrow{display:flex;gap:8px;margin-bottom:6px}
 .addrow input{flex:1;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--surface)}
@@ -213,29 +236,16 @@ details.help ol{padding-left:20px}
 @media (max-width:520px){.grid2{grid-template-columns:1fr}}
 .addtag{display:flex;gap:8px;margin-top:10px}
 .addtag input{flex:1;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--surface)}
-.itemsbox{border-top:1px solid var(--line);margin-top:6px;padding-top:16px}
-.itemsbox .ihead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.irow{display:grid;grid-template-columns:1fr 42px;gap:6px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
-.irow>input{min-width:0;width:100%;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--surface)}
-.i-line2{grid-column:1/-1;display:grid;grid-template-columns:78px 110px 1fr;gap:8px}
-.mini{display:flex;flex-direction:column;gap:2px;font-size:.72rem;color:var(--muted);min-width:0}
-.mini input,.mini select{width:100%;min-width:0;min-height:42px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface)}
-.mini input{text-align:right}
-.isum{font-size:.88rem;margin-top:10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
-.scanbusy{display:flex;align-items:center;gap:12px;font-weight:600;flex-wrap:wrap}
-.spin{width:18px;height:18px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--primary);animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.scannote{font-size:.9rem;font-weight:600;margin:10px 0 0;color:var(--income)}
-.scannote.warn{color:var(--plan)}
 .ferr{color:var(--expense);font-size:.88rem;font-weight:600;margin:6px 0 0;min-height:1em}
 .mfoot{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap}
 .mfoot .right{display:flex;gap:10px;margin-left:auto}
 textarea.export{width:100%;min-height:220px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);font-family:ui-monospace,Menlo,monospace;font-size:.8rem}
-#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:600;font-size:.92rem;opacity:0;pointer-events:none;z-index:60;width:max-content;max-width:92vw;text-align:center;transition:opacity .16s,transform .16s}
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:600;font-size:.92rem;opacity:0;pointer-events:none;z-index:60;width:max-content;max-width:92vw;text-align:center;white-space:pre-line;transition:opacity .16s,transform .16s}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{background:var(--expense);color:#fff}
+#toast.warn{background:var(--plan);color:var(--on-plan)}
 @media (min-width:720px){#toast{bottom:96px}}
-@media (prefers-reduced-motion:reduce){.sheet{animation:none}.spin{animation:none}#toast{transition:none}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}#toast{transition:none}}
 </style>
 </head>
 <body>
@@ -255,7 +265,6 @@ textarea.export{width:100%;min-height:220px;border:1px solid var(--line);border-
   <button class="tab" role="tab" data-act="tab" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Обзор</span></button>
   <button class="tab" role="tab" data-act="tab" data-v="ops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg><span>Операции</span></button>
   <button class="tab" role="tab" data-act="tab" data-v="plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Планы</span></button>
-  <button class="tab" role="tab" data-act="tab" data-v="items"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.6 10.2a1 1 0 0 1-1 .8H6.6a1 1 0 0 1-1-.8L4 9zM8 9l3-5M16 9l-3-5"/></svg><span>Товары</span></button>
   <button class="tab" role="tab" data-act="tab" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Настройки</span></button>
 </nav>
 <button class="fab" id="fab" data-act="add">
@@ -288,6 +297,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const sum = (arr, f = x => x) => round2(arr.reduce((a, x) => a + f(x), 0));
 const plural = (n, f) => { n = Math.abs(n) % 100; const n1 = n % 10; if (n > 10 && n < 20) return f[2]; if (n1 > 1 && n1 < 5) return f[1]; if (n1 === 1) return f[0]; return f[2]; };
 const fmtIn = x => String(round2(x)).replace('.', ',');
+const DAYW = ['день', 'дня', 'дней'];
 
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MON_S = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
@@ -295,7 +305,6 @@ const monthTitle = k => { const [y, m] = k.split('-').map(Number); return `${MON
 const dayTitle = ds => { const [y, m, d] = ds.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' }); };
 const shortDate = ds => { const [y, m, d] = ds.split('-').map(Number); return `${d} ${MON_S[m - 1]}${y !== new Date().getFullYear() ? ' ' + y : ''}`; };
 const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
-const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 
 const nf0 = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
 const nf2 = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -303,22 +312,22 @@ const num = x => { x = round2(x); return Number.isInteger(x) ? nf0.format(x) : n
 
 const PALETTE = ['#4C6EF5','#12B886','#F59F00','#E64980','#7950F2','#15AABF','#FA5252','#82C91E','#FD7E14','#3B5BDB','#AE3EC9','#748FA1'];
 const col = i => PALETTE[((i ?? 11) % PALETTE.length + PALETTE.length) % PALETTE.length];
-const normName = s => String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').replace(/[.,;:]+$/, '').trim();
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 1 && /Mac/i.test(navigator.platform || ''));
+const LIMIT_WARN = 0.8;
 
 /* ───────── data ───────── */
 const DEF_OUT = ['Продукты','Кафе и рестораны','Жильё и коммуналка','Транспорт','Связь и интернет','Здоровье','Одежда и обувь','Дом и быт','Развлечения','Образование','Подарки','Налоги и сборы','Прочее'];
 const DEF_IN = ['Зарплата','Подработка','Подарки','Возврат и кэшбэк','Проценты и дивиденды','Прочее'];
-const GROUPS = ['Молочные и яйца','Мясо и рыба','Овощи и фрукты','Хлеб и выпечка','Крупы и бакалея','Напитки','Сладкое и снеки','Заморозка и готовое','Бытовое и гигиена','Другое'];
 function defaultMeta() {
   const cats = [];
   DEF_OUT.forEach((n, i) => cats.push({ id: 'e' + i, kind: 'out', name: n, color: i % PALETTE.length }));
   DEF_IN.forEach((n, i) => cats.push({ id: 'i' + i, kind: 'in', name: n, color: (i + 3) % PALETTE.length }));
-  return { currency: null, opening: 0, lastBackup: null, cats, tags: [{ id: 't0', name: 'Важно', color: 6 }, { id: 't1', name: 'Можно отложить', color: 11 }] };
+  return { currency: null, opening: 0, totalLimit: 0, lastBackup: null, cats, tags: [{ id: 't0', name: 'Важно', color: 6 }, { id: 't1', name: 'Можно отложить', color: 11 }] };
 }
 let meta = defaultMeta();
-let plans = [];      // {id, kind, title, amount, cat, tags, date, note, status:'open'|'done'|'cancelled', txId, ts}
-let months = {};     // 'YYYY-MM' -> [tx]  tx: {id, kind, date, amount, cat, title, store, tags, note, items:[{n,q,s,g}], planId, ts}
+let plans = [];      // {id, kind:'in'|'out', title, amount, cat, tags, date, note, status:'open'|'done'|'cancelled', txId, ts}
+let months = {};     // 'YYYY-MM' -> [tx]   tx: {id, kind, date, amount, cat, title, store, tags, note, items?, planId, ts}
+                     // cat.limit — необязательный мягкий лимит расходов на месяц; meta.totalLimit — общий
 
 const money = (x, signed) => {
   x = round2(x);
@@ -336,20 +345,16 @@ const balance = () => round2((meta.opening || 0) + allTx().reduce((a, t) => a + 
 const openPlans = () => plans.filter(p => p.status === 'open');
 const catUsage = id => allTx().filter(t => t.cat === id).length + plans.filter(p => p.cat === id).length;
 const tagUsage = id => allTx().filter(t => (t.tags || []).includes(id)).length + plans.filter(p => (p.tags || []).includes(id)).length;
+const tagChipsHtml = ids => (ids || []).map(id => tagById(id)).filter(Boolean).map(g => `<span class="tag" style="--c:${col(g.color)}">${esc(g.name)}</span>`).join('');
 
 /* ───────── storage: localStorage on this device ───────── */
 const LS_KEY = 'fin-ledger-v1';
-const AI_STORE = 'fin-ledger-ai';
 let volatile = false, memRaw = null, saveT = null, persistAsked = false;
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { volatile = true; return k === LS_KEY ? memRaw : null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { volatile = true; if (k === LS_KEY) memRaw = v; return false; } }
 
-const ai = Object.assign({ key: '', model: 'claude-sonnet-5', custom: '' }, (() => { try { return JSON.parse(lsGet(AI_STORE) || '{}'); } catch (e) { return {}; } })());
-const saveAi = () => lsSet(AI_STORE, JSON.stringify(ai));
-const aiModel = () => ai.model === 'custom' ? (ai.custom.trim() || 'claude-sonnet-5') : ai.model;
-
 function exportObj() {
-  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, lastBackup: meta.lastBackup || null, cats: meta.cats, tags: meta.tags }, plans, months };
+  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, lastBackup: meta.lastBackup || null, cats: meta.cats, tags: meta.tags }, plans, months };
 }
 function setSave(state) {
   const el = $('#savestate'); if (!el) return;
@@ -372,6 +377,7 @@ function hydrate(obj) {
   if (!Array.isArray(meta.cats) || !meta.cats.length) meta.cats = dm.cats;
   if (!Array.isArray(meta.tags)) meta.tags = dm.tags;
   if (meta.currency === undefined) meta.currency = null;
+  if (!(meta.totalLimit > 0)) meta.totalLimit = 0;
   plans = Array.isArray(obj.plans) ? obj.plans.filter(p => p && p.id && (p.kind === 'in' || p.kind === 'out') && Number.isFinite(p.amount)) : [];
   months = {};
   for (const [k, list] of Object.entries(obj.months || {})) {
@@ -386,155 +392,14 @@ function loadState() {
 }
 window.addEventListener('storage', e => { if (e.key === LS_KEY && !draft && !saveT) { loadState(); render(); } });
 
-/* ───────── AI-агент: чек → позиции → сверка → самопроверка ───────── */
-const RECEIPT_TOOL = {
-  name: 'submit_receipt',
-  description: 'Передать результат разбора кассового чека.',
-  input_schema: {
-    type: 'object',
-    properties: {
-      store: { type: 'string', description: 'Название магазина или пустая строка' },
-      date: { type: 'string', description: 'Дата покупки YYYY-MM-DD или пустая строка' },
-      total: { type: 'number', description: 'Итог к оплате, как напечатано в чеке' },
-      category: { type: 'string', description: 'Категория расхода из списка' },
-      items: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            name: { type: 'string' },
-            qty: { type: 'number' },
-            sum: { type: 'number', description: 'Стоимость позиции с учётом скидки на неё' },
-            group: { type: 'string', enum: GROUPS }
-          },
-          required: ['name', 'qty', 'sum']
-        }
-      }
-    },
-    required: ['items']
-  }
-};
-function buildSystem() {
-  const cats = meta.cats.filter(c => c.kind === 'out').map(c => c.name);
-  const known = topItemNames(120);
-  return `Ты — модуль распознавания кассовых чеков в приложении личного учёта. Тебе присылают фото чека (или несколько фото одного чека). Извлеки данные и передай их вызовом инструмента submit_receipt. Ничего, кроме вызова инструмента, не пиши.
-
-Правила:
-- items[].sum — итоговая стоимость позиции: количество × цена, уже с учётом скидки на эту позицию.
-- items[].qty — число штук; для весовых товаров вес или объём как напечатано (например 0.452); если не указано — 1.
-- items[].name — короткое понятное название без артикулов и служебных сокращений, на языке чека (например «Молоко 3.2% 1 л»).
-- items[].group — одна из фиксированных групп: ${GROUPS.join('; ')}.
-- Скидки, которые нельзя отнести к конкретной позиции, добавь отдельной позицией «Скидка» с отрицательной суммой и группой «Другое».
-- total — итог к оплате, как напечатано в чеке. Числа десятичные, с точкой, без символа валюты.
-- date — дата покупки в формате YYYY-MM-DD, если она видна. store — название магазина.
-- category — одна из: ${cats.join('; ')} (для продуктового чека — «Продукты»).
-- Ничего не выдумывай: нечитаемое пропусти, но не пропускай читаемые позиции.${known.length ? `\n- Если товар по смыслу совпадает с уже известным названием, используй его в точности: ${JSON.stringify(known)}.` : ''}`;
-}
-async function callClaude(body, signal) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', signal,
-    headers: { 'content-type': 'application/json', 'x-api-key': ai.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    let message = ''; try { const j = await res.json(); message = (j && j.error && j.error.message) || ''; } catch (e) { /* пустой ответ */ }
-    throw { status: res.status, message };
-  }
-  return res.json();
-}
-function aiErrText(e) {
-  if (!e || e.name === 'AbortError') return '';
-  const s = e.status, m = String(e.message || '');
-  if (e.code === 'image') return 'Не удалось открыть фото. Выберите другое (JPEG или PNG).';
-  if (e.code === 'parse') return 'Не удалось разобрать чек. Снимите ближе и ровнее, чтобы был виден весь текст.';
-  if (e.code === 'long') return 'Чек слишком длинный для одного снимка. Сфотографируйте его двумя-тремя частями и выберите все фото сразу.';
-  if (s === 401) return 'Ключ API не подошёл. Проверьте его в настройках.';
-  if (s === 403) return 'Этому ключу доступ запрещён.';
-  if (s === 404) return 'Модель не найдена. Выберите другую в настройках.';
-  if (s === 413) return 'Фото слишком большое. Снимите ближе или выберите файл поменьше.';
-  if (s === 429) return 'Слишком много запросов. Подождите минуту и повторите.';
-  if (s === 400 && /credit|balance/i.test(m)) return 'На счёте API нет средств. Пополните баланс в console.anthropic.com.';
-  if (s === 400) return 'Запрос отклонён: ' + m.slice(0, 140);
-  if (s >= 500) return 'Сервис Anthropic сейчас перегружен. Повторите чуть позже.';
-  if (e instanceof TypeError) return 'Нет соединения с интернетом или запрос заблокирован.';
-  return 'Не получилось распознать чек. Попробуйте ещё раз или введите позиции вручную.';
-}
-const blobToB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
-async function prepareImage(file) {
-  const MAX = 2000;
-  try {
-    let bmp;
-    if (window.createImageBitmap) { try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { bmp = await createImageBitmap(file); } }
-    else throw new Error('no bitmap');
-    const k = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
-    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
-    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-    if (bmp.close) bmp.close();
-    const blob = await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('toBlob')), 'image/jpeg', 0.86));
-    return { type: 'image/jpeg', data: await blobToB64(blob) };
-  } catch (e) {
-    if (/^image\/(jpeg|png|webp|gif)$/.test(file.type) && file.size < 3.5e6) return { type: file.type, data: await blobToB64(file) };
-    throw { code: 'image' };
-  }
-}
-function normalizeReceipt(inp) {
-  if (typeof inp === 'string') { try { inp = JSON.parse(inp); } catch (e) { throw { code: 'parse' }; } }
-  if (!inp || typeof inp !== 'object') throw { code: 'parse' };
-  let rawItems = inp.items; if (typeof rawItems === 'string') { try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; } }
-  const items = (Array.isArray(rawItems) ? rawItems : []).map(i => {
-    const q = parseNum(i.qty ?? i.q), s = parseNum(i.sum ?? i.s), g = String(i.group ?? i.g ?? '');
-    return { n: String(i.name ?? i.n ?? '').trim().slice(0, 120), q: q > 0 ? Math.round(q * 1000) / 1000 : 1, s: Number.isFinite(s) ? round2(s) : NaN, g: GROUPS.includes(g) ? g : '' };
-  }).filter(i => i.n && Number.isFinite(i.s));
-  const total = parseNum(inp.total);
-  return { store: String(inp.store || '').trim().slice(0, 60), date: isDate(inp.date) ? inp.date : '', total: total > 0 ? round2(total) : NaN, category: String(inp.category || ''), items };
-}
-function checkReceipt(rc) {
-  const sm = sum(rc.items, i => i.s);
-  if (!Number.isFinite(rc.total)) return { ok: null, sm, diff: NaN };
-  const diff = round2(rc.total - sm);
-  return { ok: Math.abs(diff) <= 0.05, sm, diff };
-}
-function pickToolUse(resp) {
-  if (resp && resp.stop_reason === 'max_tokens') throw { code: 'long' };
-  const b = ((resp && resp.content) || []).find(x => x.type === 'tool_use' && x.name === 'submit_receipt');
-  if (!b) throw { code: 'parse' };
-  return b;
-}
-async function runAgent(files, signal, onStep) {
-  onStep('Готовлю фото…');
-  const imgs = []; for (const f of files) imgs.push(await prepareImage(f));
-  const content = imgs.map(im => ({ type: 'image', source: { type: 'base64', media_type: im.type, data: im.data } }));
-  content.push({ type: 'text', text: files.length > 1 ? 'Это несколько фото одного чека. Разбери чек и передай результат через submit_receipt.' : 'Разбери этот чек и передай результат через submit_receipt.' });
-  const messages = [{ role: 'user', content }];
-  const base = { model: aiModel(), max_tokens: 6000, system: buildSystem(), tools: [RECEIPT_TOOL], tool_choice: { type: 'tool', name: 'submit_receipt' } };
-
-  onStep('Читаю чек…');
-  const resp1 = await callClaude({ ...base, messages }, signal);
-  const tu1 = pickToolUse(resp1);
-  let best = normalizeReceipt(tu1.input), chk = checkReceipt(best), attempts = 1;
-
-  if (chk.ok === false) {
-    onStep('Сумма не сошлась, перепроверяю…');
-    messages.push({ role: 'assistant', content: resp1.content });
-    messages.push({ role: 'user', content: [{ type: 'tool_result', tool_use_id: tu1.id, content:
-      `Автопроверка: сумма позиций ${chk.sm} не равна итогу ${best.total} (разница ${chk.diff}). Посмотри на фото ещё раз: не пропущены ли позиции или скидки, верно ли прочитаны количество, вес и суммы (сумма позиции = количество × цена), верно ли прочитан итог. Передай исправленный чек через submit_receipt.` }] });
-    const resp2 = await callClaude({ ...base, messages }, signal);
-    attempts = 2;
-    const second = normalizeReceipt(pickToolUse(resp2).input), chk2 = checkReceipt(second);
-    if (chk2.ok === true || Math.abs(chk2.diff) < Math.abs(chk.diff) || !Number.isFinite(chk.diff)) { best = second; chk = chk2; }
-  }
-  if (!best.items.length && !(best.total > 0)) throw { code: 'parse' };
-  return { data: best, check: chk, attempts };
-}
-
 /* ───────── ui state ───────── */
-const ui = { tab: 'overview', month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', iq: '', iperiod: 'all', isort: 'sum', igroup: '', openItem: null };
-let draft = null, scanBusy = false, scanCtl = null, scanErr = '', scanNote = null, scanStep = '', lastFocus = null, pendingImport = null, keyMsg = '';
+const ui = { tab: 'overview', month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '' };
+let draft = null, lastFocus = null, pendingImport = null;
 
 let toastT;
-function toast(msg, kind) {
+function toast(msg, kind, ms) {
   const el = $('#toast'); if (!el) return; el.textContent = msg; el.className = 'show ' + (kind || '');
-  clearTimeout(toastT); toastT = setTimeout(() => { el.className = ''; }, 3800);
+  clearTimeout(toastT); toastT = setTimeout(() => { el.className = ''; }, ms || 3800);
 }
 function twoStep(btn, run, label) {
   if (btn.dataset.armed) { clearTimeout(+btn.dataset.t); run(); return; }
@@ -553,63 +418,132 @@ function groupTags(list) {
   for (const t of list) if (t.kind === 'out') for (const id of (t.tags || [])) if (tagById(id)) m.set(id, (m.get(id) || 0) + t.amount);
   return [...m].map(([id, amt]) => ({ id, name: tagById(id).name, color: col(tagById(id).color), amt: round2(amt) })).sort((a, b) => b.amt - a.amt);
 }
-function collectItems() {
-  const cutoff = ui.iperiod === 'all' ? null : daysAgo(+ui.iperiod);
-  const map = new Map();
-  for (const list of Object.values(months)) for (const t of list) {
-    if (t.kind !== 'out' || !t.items || !t.items.length) continue;
-    if (cutoff && t.date < cutoff) continue;
-    for (const it of t.items) {
-      const k = normName(it.n); if (!k || !(it.q > 0) || !Number.isFinite(it.s)) continue;
-      let g = map.get(k); if (!g) { g = { key: k, name: it.n, rows: [] }; map.set(k, g); }
-      g.rows.push({ date: t.date, place: t.store || t.title || '', q: it.q, s: it.s, name: it.n, grp: it.g || '' });
-    }
-  }
-  const out = [];
-  for (const g of map.values()) {
-    g.rows.sort((a, b) => a.date.localeCompare(b.date));
-    const units = g.rows.map(r => r.s / r.q);
-    g.name = g.rows[g.rows.length - 1].name;
-    g.grp = [...g.rows].reverse().find(r => r.grp)?.grp || '';
-    g.count = g.rows.length;
-    g.qty = g.rows.reduce((a, r) => a + r.q, 0);
-    g.sum = sum(g.rows, r => r.s);
-    g.avg = g.qty ? g.sum / g.qty : 0;
-    g.first = units[0]; g.last = units[units.length - 1];
-    g.min = Math.min(...units); g.max = Math.max(...units);
-    g.delta = g.count > 1 && g.first > 0 ? (g.last - g.first) / g.first * 100 : null;
-    g.units = units.slice(-14);
-    const dates = [...new Set(g.rows.map(r => r.date))];
-    g.every = dates.length > 1 ? Math.max(1, Math.round(daysBetween(dates[0], dates[dates.length - 1]) / (dates.length - 1))) : null;
-    out.push(g);
-  }
-  return out;
-}
-function topItemNames(n) {
-  const m = new Map();
-  for (const list of Object.values(months)) for (const t of list) for (const it of (t.items || [])) {
-    const k = normName(it.n); if (!k) continue;
-    const g = m.get(k) || { name: it.n, c: 0 }; g.c++; g.name = it.n; m.set(k, g);
-  }
-  return [...m.values()].sort((a, b) => b.c - a.c).slice(0, n).map(g => g.name);
-}
 const backupDue = () => allTx().length >= 5 && (!meta.lastBackup || daysBetween(meta.lastBackup.slice(0, 10), today()) > 30);
+const byPlanDate = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.ts || 0) - (b.ts || 0);
+
+/* — мягкие лимиты: только предупреждают, записи не блокируют — */
+function limitRows(key) {
+  const out = (months[key] || []).filter(t => t.kind === 'out');
+  const inMonth = p => p.status === 'open' && p.kind === 'out' && p.date && mkey(p.date) === key;
+  const rows = [];
+  if (meta.totalLimit > 0) rows.push({ id: '', name: 'Все расходы за месяц', spent: sum(out, t => t.amount), limit: meta.totalLimit, planned: sum(plans.filter(inMonth), p => p.amount), color: 'var(--primary)', total: true });
+  meta.cats.filter(c => c.kind === 'out' && c.limit > 0).forEach(c => rows.push({ id: c.id, name: c.name, spent: sum(out.filter(t => t.cat === c.id), t => t.amount), limit: c.limit, planned: sum(plans.filter(p => inMonth(p) && p.cat === c.id), p => p.amount), color: col(c.color) }));
+  rows.forEach(r => { r.ratio = r.spent / r.limit; });
+  return [...rows.filter(r => r.total), ...rows.filter(r => !r.total).sort((a, b) => b.ratio - a.ratio)];
+}
+function limitMessages(tx) {
+  const out = (months[mkey(tx.date)] || []).filter(t => t.kind === 'out'), msgs = [];
+  const c = catById(tx.cat);
+  const check = (label, spent, limit) => {
+    if (spent > limit) msgs.push(`${label}: превышение на ${money(spent - limit)}`);
+    else if (spent >= limit * LIMIT_WARN) msgs.push(`${label}: использовано ${Math.round(spent / limit * 100)}% лимита`);
+  };
+  if (c && c.limit > 0) check(`Лимит «${c.name}»`, sum(out.filter(t => t.cat === c.id), t => t.amount), c.limit);
+  if (meta.totalLimit > 0) check('Общий лимит', sum(out, t => t.amount), meta.totalLimit);
+  return msgs;
+}
+
+/* — прогноз: текущий месяц и два следующих, факт + планы — */
+function forecastData() {
+  const n = new Date(), keys = [];
+  for (let i = 0; i < 3; i++) { const d = new Date(n.getFullYear(), n.getMonth() + i, 1); keys.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`); }
+  const open = openPlans().filter(p => p.date);
+  return keys.map((k, i) => {
+    const list = months[k] || [];
+    const pl = open.filter(p => mkey(p.date) === k || (i === 0 && mkey(p.date) < k));   // просроченные — в текущий месяц
+    const [y, m] = k.split('-').map(Number);
+    return { k, m: m - 1, y, inc: sum(list.filter(t => t.kind === 'in'), t => t.amount), out: sum(list.filter(t => t.kind === 'out'), t => t.amount),
+      pIn: sum(pl.filter(p => p.kind === 'in'), p => p.amount), pOut: sum(pl.filter(p => p.kind === 'out'), p => p.amount) };
+  });
+}
 
 /* ───────── views ───────── */
 function render() {
   $('#monthnav').hidden = !(ui.tab === 'overview' || ui.tab === 'ops');
   $('#monthlabel').textContent = monthTitle(ui.month);
   $$('.tab').forEach(b => { const on = b.dataset.v === ui.tab; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
-  const fab = $('#fab'); fab.hidden = ui.tab === 'settings' || ui.tab === 'items';
+  const fab = $('#fab'); fab.hidden = ui.tab === 'settings';
   $('#fablabel').textContent = ui.tab === 'plans' ? 'Новый план' : 'Добавить';
   const v = $('#view'); v.innerHTML = '';
-  ({ overview: viewOverview, ops: viewOps, plans: viewPlans, items: viewItems, settings: viewSettings })[ui.tab](v);
+  ({ overview: viewOverview, ops: viewOps, plans: viewPlans, settings: viewSettings })[ui.tab](v);
 }
 
 function curBanner() {
   return `<div class="banner"><p>Выберите валюту — она появится рядом с суммами. Изменить можно в настройках.</p>
     <div class="chips">${['₽', 'zł', '€', '$', '₴', '₸'].map(c => `<button class="chip" data-act="setCur" data-v="${c}">${c}</button>`).join('')}
     <button class="chip" data-act="setCur" data-v="">Без валюты</button></div></div>`;
+}
+
+function limitsHtml(rows) {
+  if (!rows.length) return '';
+  return `<section><h2>Лимиты на месяц</h2><ul class="lims">${rows.map(r => {
+    const over = r.spent > r.limit, warn = !over && r.ratio >= LIMIT_WARN, pct = Math.round(r.ratio * 100);
+    let pnote = '';
+    if (r.planned > 0) { const after = round2(r.spent + r.planned); pnote = after > r.limit ? `С запланированными ${money(r.planned)} выйдет за лимит на ${money(after - r.limit)}` : `С запланированными ${money(r.planned)} останется ${money(r.limit - after)}`; }
+    return `<li class="lim ${over ? 'over' : ''}"><div class="lim-head"><span class="nm">${esc(r.name)}</span><span class="num">${money(r.spent)} из ${money(r.limit)}</span></div>
+      <div class="track" role="img" aria-label="${pct}% лимита"><span class="fill" style="width:${Math.min(100, Math.max(2, pct))}%;background:${over ? 'var(--expense)' : warn ? 'var(--plan)' : r.color}"></span></div>
+      <div class="lim-note"><span class="${over ? 'out' : ''}" ${over ? 'style="font-weight:700"' : ''}>${over ? `Превышение на ${money(r.spent - r.limit)}` : `Осталось ${money(r.limit - r.spent)}`}</span><span class="num muted">${pct}%</span></div>
+      ${pnote ? `<div class="lim-note muted">${pnote}</div>` : ''}</li>`;
+  }).join('')}</ul></section>`;
+}
+
+/* планы списком по датам с нарастающим балансом */
+function plansTimelineHtml() {
+  const open = openPlans(), bal = balance();
+  if (!allTx().length && !meta.opening && !open.length) return '';
+  const dated = open.filter(p => p.date).sort(byPlanDate), undated = open.filter(p => !p.date).sort(byPlanDate);
+  const row = (p, running) => {
+    const diff = p.date ? daysBetween(today(), p.date) : null;
+    const rel = diff === null ? '' : diff < 0 ? `просрочено на ${-diff} ${plural(-diff, DAYW)}` : diff === 0 ? 'сегодня' : diff === 1 ? 'завтра' : `через ${diff} ${plural(diff, DAYW)}`;
+    return `<li><button class="tlrow" data-act="editPlan" data-id="${p.id}">
+      <span class="tl-date"><b>${p.date ? esc(shortDate(p.date)) : '—'}</b>${rel ? `<small class="${diff < 0 ? 'late' : ''}">${rel}</small>` : ''}</span>
+      <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub"><span>${esc(catName(p.cat))}</span>${tagChipsHtml(p.tags)}</span></span>
+      <span class="tl-amt"><span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span>${running !== undefined ? `<small class="num ${running < 0 ? 'out' : 'muted'}">баланс ${money(running)}</small>` : ''}</span></button></li>`;
+  };
+  let run = bal; const shownRows = []; let firstNeg = null;
+  dated.forEach(p => { run = round2(run + (p.kind === 'in' ? p.amount : -p.amount)); if (run < 0 && !firstNeg) firstNeg = { p, run }; shownRows.push({ p, run }); });
+  const LIM = 10;
+  let html = `<section><h2>Баланс и планы</h2><dl class="kv" style="margin-bottom:8px"><dt>Сейчас по записям</dt><dd class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</dd></dl>`;
+  if (shownRows.length) html += `<ul class="tl">${shownRows.slice(0, LIM).map(r => row(r.p, r.run)).join('')}</ul>`;
+  if (shownRows.length > LIM) html += `<p class="hint">Ещё ${shownRows.length - LIM} ${plural(shownRows.length - LIM, ['план', 'плана', 'планов'])} — на вкладке «Планы».</p>`;
+  if (firstNeg) html += `<p class="hint warnline">К ${esc(shortDate(firstNeg.p.date))} баланс по планам уходит в минус (${money(firstNeg.run)}).</p>`;
+  if (undated.length) html += `<h3 style="margin-top:16px">Без срока</h3><ul class="tl">${undated.slice(0, 5).map(p => row(p)).join('')}</ul>${undated.length > 5 ? `<p class="hint">И ещё ${undated.length - 5} — на вкладке «Планы».</p>` : ''}`;
+  if (open.length) {
+    const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount), after = round2(bal - pOut + pIn);
+    html += `<dl class="kv" style="margin-top:14px"><dt>Запланированные расходы</dt><dd class="num out">${pOut ? '−' + money(pOut) : money(0)}</dd><dt>Запланированные доходы</dt><dd class="num in">${pIn ? '+' + money(pIn) : money(0)}</dd><div class="sep"></div><dt>После всех планов</dt><dd class="num ${after < 0 ? 'out' : ''}">${money(after)}</dd></dl>
+      <p class="hint"><button class="chip" data-act="tab" data-v="plans">Все планы</button></p>`;
+  } else html += `<p class="hint">Планов пока нет. Добавьте их на вкладке «Планы», и здесь появится список по датам.</p>`;
+  return html + '</section>';
+}
+
+function forecastHtml() {
+  const data = forecastData();
+  const max = Math.max(1, ...data.flatMap(d => [d.inc + d.pIn, d.out + d.pOut]));
+  const W = 600, H = 176, base = 142, top = 14, bw = 44, gap = 6, cw = W / 3, sc = (base - top) / max;
+  let s = `<svg class="trend" viewBox="0 0 ${W} ${H}" role="img" aria-label="Доходы и расходы на три месяца, включая планы">
+    <defs><pattern id="hin" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="pbi" width="7" height="7"/><rect class="pli" width="3" height="7"/></pattern>
+    <pattern id="hout" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="pbo" width="7" height="7"/><rect class="plo" width="3" height="7"/></pattern></defs>`;
+  data.forEach((d, i) => {
+    const cx = (i + .5) * cw, xi = cx - bw - gap / 2, xo = cx + gap / 2;
+    const fi = d.inc * sc, pi = d.pIn * sc, fo = d.out * sc, po = d.pOut * sc;
+    if (d.k === ui.month) s += `<rect class="cur" x="${i * cw + 4}" y="0" width="${cw - 8}" height="${H}" rx="12"/>`;
+    if (fi > 0) s += `<rect class="bi" x="${xi}" y="${base - fi}" width="${bw}" height="${Math.max(fi, 2)}" rx="4"/>`;
+    if (pi > 0) s += `<rect class="pi" fill="url(#hin)" x="${xi}" y="${base - fi - pi}" width="${bw}" height="${Math.max(pi, 2)}" rx="4"><title>План: доходы ${esc(money(d.pIn))}</title></rect>`;
+    if (fo > 0) s += `<rect class="bo" x="${xo}" y="${base - fo}" width="${bw}" height="${Math.max(fo, 2)}" rx="4"/>`;
+    if (po > 0) s += `<rect class="po" fill="url(#hout)" x="${xo}" y="${base - fo - po}" width="${bw}" height="${Math.max(po, 2)}" rx="4"><title>План: расходы ${esc(money(d.pOut))}</title></rect>`;
+    s += `<text x="${cx}" y="${H - 12}" text-anchor="middle">${MON_S[d.m]}${i === 0 ? ' · сейчас' : ''}</text>`;
+  });
+  s += '</svg>';
+  const undated = openPlans().filter(p => !p.date).length;
+  return `<section><h2>Ближайшие три месяца</h2>${s}
+    <div class="tlegend"><span><i class="solid"></i>Записано</span><span><i class="hatch"></i>Планы</span></div>
+    <table class="ftable"><thead><tr><th>Месяц</th><th class="r">Доходы</th><th class="r">Расходы</th><th class="r">Итог</th></tr></thead><tbody>
+    ${data.map(d => { const net = round2(d.inc + d.pIn - d.out - d.pOut);
+      return `<tr><td>${MONTHS[d.m]}</td>
+      <td class="r num in">${money(d.inc + d.pIn)}${d.pIn ? `<small>из них план ${money(d.pIn)}</small>` : ''}</td>
+      <td class="r num out">${money(d.out + d.pOut)}${d.pOut ? `<small>из них план ${money(d.pOut)}</small>` : ''}</td>
+      <td class="r num ${net < 0 ? 'out' : 'in'}">${money(net, true)}</td></tr>`; }).join('')}</tbody></table>
+    ${undated ? `<p class="hint">Планы без срока в прогноз не входят.</p>` : ''}</section>`;
 }
 
 function viewOverview(root) {
@@ -619,8 +553,11 @@ function viewOverview(root) {
   const net = round2(inc - out);
   const segs = groupCats(list, 'out');
   const base = Math.max(inc, out);
+  const lims = limitRows(ui.month), overs = lims.filter(l => l.spent > l.limit);
+  const overCats = new Set(overs.map(l => l.id).filter(Boolean));
   let html = meta.currency == null ? curBanner() : '';
   if (backupDue()) html += `<div class="banner"><p>Сделайте резервную копию: данные хранятся только на этом устройстве.</p><button class="btn sm" data-act="exportJson">Сохранить копию</button></div>`;
+  if (overs.length) html += `<div class="banner alert"><p>Превышены лимиты</p><div class="alist">${overs.map(l => `<span>${esc(l.name)} <b class="out num">+${money(l.spent - l.limit)}</b></span>`).join('')}</div></div>`;
 
   let bar = '', cap = '';
   if (base > 0) {
@@ -640,20 +577,11 @@ function viewOverview(root) {
     </div>
     <div class="flow ${base > 0 ? '' : 'emptybar'}" role="img" aria-label="${esc(cap)}">${bar}</div>
     <p class="flowcap">${esc(cap)}</p>
-    ${segs.length ? `<ul class="legend">${segs.map(s => `<li><span class="sw" style="background:${s.color}"></span><span class="nm">${esc(s.name)}</span><span class="num">${money(s.amt)}</span><span class="pc num">${Math.round(s.amt / pctBase * 100)}%</span></li>`).join('')}</ul>` : ''}
+    ${segs.length ? `<ul class="legend">${segs.map(s => `<li><span class="sw" style="background:${s.color}"></span><span class="nm">${esc(s.name)}</span>${overCats.has(s.id) ? '<span class="badge over">выше лимита</span>' : ''}<span class="num">${money(s.amt)}</span><span class="pc num">${Math.round(s.amt / pctBase * 100)}%</span></li>`).join('')}</ul>` : ''}
+    ${!lims.length && out > 0 ? `<p class="hint">Можно задать лимиты на месяц: <button class="chip" data-act="tab" data-v="settings">Настройки → Категории</button></p>` : ''}
   </section>`;
-
-  const bal = balance(), open = openPlans();
-  const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount);
-  if (allTx().length || meta.opening || open.length) {
-    html += `<section><h2>Баланс</h2><dl class="kv">
-      <dt>По всем записям</dt><dd class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</dd>
-      ${open.length ? `<dt>Запланированные расходы</dt><dd class="num out">${pOut ? '−' + money(pOut) : money(0)}</dd>
-      <dt>Запланированные доходы</dt><dd class="num in">${pIn ? '+' + money(pIn) : money(0)}</dd>
-      <div class="sep"></div>
-      <dt>После всех планов</dt><dd class="num ${bal - pOut + pIn < 0 ? 'out' : ''}">${money(bal - pOut + pIn)}</dd>` : ''}
-    </dl>${open.length ? `<p class="hint"><button class="chip" data-act="tab" data-v="plans">Открыть планы</button></p>` : ''}</section>`;
-  }
+  html += limitsHtml(lims);
+  html += plansTimelineHtml();
 
   const tags = groupTags(list);
   if (tags.length) {
@@ -666,29 +594,8 @@ function viewOverview(root) {
     const mx = inc2[0].amt || 1;
     html += `<section><h2>Доходы по категориям</h2><ul class="bars">${inc2.map(t => `<li><span>${esc(t.name)}</span><span class="track"><span class="fill" style="width:${Math.max(3, t.amt / mx * 100)}%;background:var(--income)"></span></span><span class="num">${money(t.amt)}</span></li>`).join('')}</ul></section>`;
   }
-  html += `<section><h2>Шесть месяцев</h2>${trendSvg()}
-    <div class="tlegend"><span><i style="background:var(--income)"></i>Доходы</span><span><i style="background:var(--expense)"></i>Расходы</span></div></section>`;
+  html += forecastHtml();
   root.innerHTML = html;
-}
-
-function trendSvg() {
-  const [y, m] = ui.month.split('-').map(Number);
-  const data = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(y, m - 1 - i, 1), k = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`, list = months[k] || [];
-    data.push({ k, label: MON_S[d.getMonth()], inc: sum(list.filter(t => t.kind === 'in'), t => t.amount), out: sum(list.filter(t => t.kind === 'out'), t => t.amount) });
-  }
-  const max = Math.max(1, ...data.flatMap(d => [d.inc, d.out]));
-  const W = 600, H = 170, base = 140, top = 12, bw = 26, gap = 4, cw = W / 6;
-  let s = `<svg class="trend" viewBox="0 0 ${W} ${H}" role="img" aria-label="Доходы и расходы за шесть месяцев">`;
-  data.forEach((d, i) => {
-    const cx = (i + .5) * cw, hi = d.inc / max * (base - top), ho = d.out / max * (base - top);
-    if (d.k === ui.month) s += `<rect class="cur" x="${i * cw + 4}" y="0" width="${cw - 8}" height="${H}" rx="10"/>`;
-    s += `<rect class="bi" x="${cx - bw - gap / 2}" y="${base - hi}" width="${bw}" height="${Math.max(hi, d.inc ? 2 : 0)}" rx="4"><title>${monthTitle(d.k)}: доходы ${esc(money(d.inc))}</title></rect>`;
-    s += `<rect class="bo" x="${cx + gap / 2}" y="${base - ho}" width="${bw}" height="${Math.max(ho, d.out ? 2 : 0)}" rx="4"><title>${monthTitle(d.k)}: расходы ${esc(money(d.out))}</title></rect>`;
-    s += `<text x="${cx}" y="${H - 10}" text-anchor="middle">${d.label}</text>`;
-  });
-  return s + '</svg>';
 }
 
 /* — operations — */
@@ -703,7 +610,7 @@ function viewOps(root) {
       </div>
       <select data-change="fcat" aria-label="Категория"><option value="">Все категории</option>${catOpts}</select>
       <select data-change="ftag" aria-label="Тег"><option value="">Все теги</option>${tagOpts}</select>
-      <input id="f-search" type="search" placeholder="Поиск по названию, заметке, товарам" value="${esc(f.q)}" aria-label="Поиск">
+      <input id="f-search" type="search" placeholder="Поиск по названию и заметке" value="${esc(f.q)}" aria-label="Поиск">
     </div>
     <div id="opsList"></div></section>`;
   renderOpsList();
@@ -713,7 +620,7 @@ function renderOpsList() {
   const q = f.q.trim().toLowerCase();
   const list = (months[ui.month] || []).filter(t =>
     (f.kind === 'all' || t.kind === f.kind) && (!f.cat || t.cat === f.cat) && (!f.tag || (t.tags || []).includes(f.tag)) &&
-    (!q || (t.title + ' ' + (t.note || '') + ' ' + (t.store || '') + ' ' + (t.items || []).map(i => i.n).join(' ')).toLowerCase().includes(q))
+    (!q || (t.title + ' ' + (t.note || '') + ' ' + (t.store || '')).toLowerCase().includes(q))
   ).sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0));
   if (!list.length) {
     const any = (months[ui.month] || []).length;
@@ -727,12 +634,10 @@ function renderOpsList() {
     const dayOut = sum(arr.filter(t => t.kind === 'out'), t => t.amount);
     html += `<div class="daygroup"><div class="dayhead"><span>${esc(dayTitle(date))}</span><span class="num">${dayOut ? '−' + money(dayOut) : ''}</span></div>`;
     for (const t of arr) {
-      const tags = (t.tags || []).map(id => tagById(id)).filter(Boolean).map(g => `<span class="tag" style="--c:${col(g.color)}">${esc(g.name)}</span>`).join('');
-      const n = (t.items || []).length;
       html += `<button class="row" data-act="editTx" data-id="${t.id}">
         <span class="dot" style="background:${t.kind === 'in' ? 'var(--income)' : catColor(t.cat)}"></span>
         <span class="row-main"><span class="row-title">${esc(t.title || catName(t.cat))}</span>
-        <span class="row-sub"><span>${esc(catName(t.cat))}</span>${tags}${n ? `<span class="badge">чек, ${n} ${plural(n, ['позиция', 'позиции', 'позиций'])}</span>` : ''}</span></span>
+        <span class="row-sub"><span>${esc(catName(t.cat))}</span>${tagChipsHtml(t.tags)}</span></span>
         <span class="amt num ${t.kind}">${t.kind === 'in' ? '+' : '−'}${money(t.amount)}</span></button>`;
     }
     html += '</div>';
@@ -740,25 +645,23 @@ function renderOpsList() {
   box.innerHTML = html;
 }
 
-/* — plans — */
+/* — plans tab — */
 function viewPlans(root) {
   const open = openPlans();
   const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount);
   const bal = balance();
   const tagChips = meta.tags.length ? `<div class="chips" style="margin-bottom:16px" role="group" aria-label="Фильтр по тегам">${meta.tags.map(t => `<button class="chip ${ui.planTag === t.id ? 'on' : ''}" style="--c:${col(t.color)}" data-act="planTagFilter" data-id="${t.id}" aria-pressed="${ui.planTag === t.id}">${esc(t.name)}</button>`).join('')}</div>` : '';
   const pass = p => !ui.planTag || (p.tags || []).includes(ui.planTag);
-  const byDate = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.ts || 0) - (b.ts || 0);
-  const shown = open.filter(pass).sort(byDate);
+  const shown = open.filter(pass).sort(byPlanDate);
   const done = plans.filter(p => p.status === 'done' && pass(p)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   const canc = plans.filter(p => p.status === 'cancelled' && pass(p)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   const planRow = (p, muted) => {
-    const tags = (p.tags || []).map(id => tagById(id)).filter(Boolean).map(g => `<span class="tag" style="--c:${col(g.color)}">${esc(g.name)}</span>`).join('');
     const late = p.status === 'open' && p.date && p.date < today();
     return `<div class="plan-row ${muted ? 'done-row' : ''}">
       <button class="row" data-act="editPlan" data-id="${p.id}">
         <span class="dot" style="background:${p.kind === 'in' ? 'var(--income)' : catColor(p.cat)}"></span>
         <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span>
-        <span class="row-sub"><span>${esc(catName(p.cat))}</span>${p.date ? `<span class="${late ? 'late' : ''}">${late ? 'просрочено, ' : 'до '}${esc(shortDate(p.date))}</span>` : ''}${tags}</span></span>
+        <span class="row-sub"><span>${esc(catName(p.cat))}</span>${p.date ? `<span class="${late ? 'late' : ''}">${late ? 'просрочено, ' : 'до '}${esc(shortDate(p.date))}</span>` : ''}${tagChipsHtml(p.tags)}</span></span>
         <span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span></button>
       <div class="plan-actions">${p.status === 'open'
         ? `<button class="btn sm" data-act="planDo" data-id="${p.id}">Провести</button><button class="btn sm ghost" data-act="planCancel" data-id="${p.id}">Отменить</button>`
@@ -767,71 +670,12 @@ function viewPlans(root) {
   let html = '';
   if (open.length) html += `<section><dl class="kv"><dt>Запланировано расходов</dt><dd class="num out">${pOut ? '−' + money(pOut) : money(0)}</dd><dt>Запланировано доходов</dt><dd class="num in">${pIn ? '+' + money(pIn) : money(0)}</dd><dt>Баланс сейчас</dt><dd class="num">${money(bal)}</dd><div class="sep"></div><dt>После всех планов</dt><dd class="num ${bal - pOut + pIn < 0 ? 'out' : ''}">${money(bal - pOut + pIn)}</dd></dl></section>`;
   html += tagChips;
-  if (!plans.length) html += `<div class="empty"><p>Здесь копятся будущие траты и поступления. Добавьте план, а когда он случится — нажмите «Провести», и он станет записью.</p><button class="btn" data-act="add">Новый план</button></div>`;
+  if (!plans.length) html += `<div class="empty"><p>Здесь копятся будущие траты и поступления. Добавьте план с датой, и он появится на «Обзоре» в общем списке по срокам. Когда план случится, нажмите «Провести», и он станет записью.</p><button class="btn" data-act="add">Новый план</button></div>`;
   else if (!shown.length) html += `<div class="empty"><p>${open.length ? 'Под этот тег планов нет.' : 'Открытых планов нет.'}</p></div>`;
   else html += `<section>${shown.map(p => planRow(p)).join('')}</section>`;
   if (done.length) html += `<details class="fold"><summary>Проведено (${done.length})</summary>${done.map(p => planRow(p, true)).join('')}</details>`;
   if (canc.length) html += `<details class="fold"><summary>Отменено (${canc.length})</summary>${canc.map(p => planRow(p, true)).join('')}</details>`;
   root.innerHTML = html;
-}
-
-/* — items analytics — */
-function viewItems(root) {
-  root.innerHTML = `<section><div class="toolbar">
-    <input id="i-search" type="search" placeholder="Найти товар" value="${esc(ui.iq)}" aria-label="Поиск товара">
-    <select data-change="iperiod" aria-label="Период">${[['all', 'За всё время'], ['30', '30 дней'], ['90', '90 дней'], ['365', 'Год']].map(([v, l]) => `<option value="${v}" ${ui.iperiod === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
-    <select data-change="igroup" aria-label="Группа"><option value="">Все группы</option>${GROUPS.map(g => `<option value="${esc(g)}" ${ui.igroup === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}<option value="-" ${ui.igroup === '-' ? 'selected' : ''}>Без группы</option></select>
-    <select data-change="isort" aria-label="Сортировка">${[['sum', 'По сумме трат'], ['count', 'По частоте'], ['delta', 'По росту цены'], ['name', 'По названию']].map(([v, l]) => `<option value="${v}" ${ui.isort === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
-  </div><div id="itemsList"></div></section>`;
-  renderItemsList();
-}
-function spark(vals) {
-  if (vals.length < 2) return '';
-  const w = 84, h = 26, p = 3, mn = Math.min(...vals), mx = Math.max(...vals), rg = mx - mn || 1;
-  const pts = vals.map((v, i) => `${(p + i * (w - 2 * p) / (vals.length - 1)).toFixed(1)},${(mx === mn ? h / 2 : h - p - (v - mn) / rg * (h - 2 * p)).toFixed(1)}`).join(' ');
-  const cls = mx === mn ? 'flat' : vals[vals.length - 1] > vals[0] ? 'up' : vals[vals.length - 1] < vals[0] ? 'down' : 'flat';
-  return `<svg class="spark ${cls}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-}
-function renderItemsList() {
-  const box = $('#itemsList'); if (!box) return;
-  const q = normName(ui.iq);
-  const found = collectItems().filter(g => !q || g.key.includes(q));
-  let list = found.filter(g => !ui.igroup || (ui.igroup === '-' ? !g.grp : g.grp === ui.igroup));
-  const sorters = { sum: (a, b) => b.sum - a.sum, count: (a, b) => b.count - a.count || b.sum - a.sum, delta: (a, b) => (b.delta ?? -1e9) - (a.delta ?? -1e9), name: (a, b) => a.key.localeCompare(b.key, 'ru') };
-  list.sort(sorters[ui.isort] || sorters.sum);
-  if (!list.length) {
-    const hasAny = allTx().some(t => t.items && t.items.length);
-    box.innerHTML = `<div class="empty"><p>${hasAny ? 'Ничего не найдено — попробуйте другой период, группу или запрос.' : 'Здесь появятся товары из чеков: сколько раз вы их покупали, сколько потратили и как менялась цена. Добавьте расход и отсканируйте чек или введите позиции вручную.'}</p></div>`;
-    return;
-  }
-  const total = sum(list, g => g.sum);
-  let html = '';
-  if (!ui.igroup) {
-    const gm = new Map(); found.forEach(g => gm.set(g.grp || 'Без группы', (gm.get(g.grp || 'Без группы') || 0) + g.sum));
-    const gs = [...gm].map(([n, a]) => ({ n, a: round2(a) })).sort((a, b) => b.a - a.a);
-    if (gs.length > 1 && gs.some(x => x.n !== 'Без группы')) html += `<h2>На что уходит больше всего</h2><ul class="bars" style="margin-bottom:22px">${gs.map(x => `<li><span>${esc(x.n)}</span><span class="track"><span class="fill" style="width:${Math.max(3, x.a / gs[0].a * 100)}%;background:var(--primary)"></span></span><span class="num">${money(x.a)}</span></li>`).join('')}</ul>`;
-  }
-  html += `<p class="hint" style="margin:0 0 6px">${list.length} ${plural(list.length, ['товар', 'товара', 'товаров'])}, всего в чеках ${money(total)}</p>`;
-  for (const g of list) {
-    const open = ui.openItem === g.key;
-    const dcls = g.delta == null ? '' : g.delta > 0.5 ? 'out' : g.delta < -0.5 ? 'in' : '';
-    const sub = `${g.count} ${plural(g.count, ['покупка', 'покупки', 'покупок'])}${g.every ? `, примерно раз в ${g.every} ${plural(g.every, ['день', 'дня', 'дней'])}` : ''}${g.grp ? `, ${esc(g.grp)}` : ''}`;
-    html += `<div class="iagg"><button class="ibtn" data-act="openItem" data-k="${esc(g.key)}" aria-expanded="${open}">
-      <span class="in-main"><span class="in-name">${esc(g.name)}</span><span class="in-sub">${sub}</span></span>
-      ${spark(g.units)}
-      <span class="in-nums"><span class="num">${money(g.avg)} <span class="in-sub">за ед.</span></span><span class="in-sub num">всего ${money(g.sum)}${g.delta != null ? ` <span class="${dcls}">${g.delta > 0 ? '+' : ''}${Math.round(g.delta)}%</span>` : ''}</span></span></button>`;
-    if (open) {
-      const rows = [...g.rows].reverse();
-      html += `<div class="idetail"><table><thead><tr><th>Дата</th><th>Где</th><th class="r">Кол-во</th><th class="r">Сумма</th><th class="r">За ед.</th></tr></thead><tbody>
-        ${rows.map(r => `<tr><td>${esc(shortDate(r.date))}</td><td>${esc(r.place)}</td><td class="r num">${esc(String(round2(r.q)).replace('.', ','))}</td><td class="r num">${money(r.s)}</td><td class="r num">${money(r.s / r.q)}</td></tr>`).join('')}</tbody></table>
-        <p class="hint" style="margin:0 0 12px">Цена за единицу: от ${money(g.min)} до ${money(g.max)}, последняя ${money(g.last)}.</p>
-        <div class="rename"><input id="ren" value="${esc(g.name)}" aria-label="Новое название" maxlength="120"><button class="btn sm ghost" data-act="renameItem" data-k="${esc(g.key)}">Переименовать во всех чеках</button></div>
-        <div class="rename"><select data-change="itemGroup" data-k="${esc(g.key)}" aria-label="Группа товара"><option value="">Без группы</option>${GROUPS.map(x => `<option value="${esc(x)}" ${g.grp === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
-        <p class="hint">Если новое название совпадёт с другим товаром, история объединится. Группа применяется ко всем покупкам этого товара.</p></div>`;
-    }
-    html += '</div>';
-  }
-  box.innerHTML = html;
 }
 
 /* — settings — */
@@ -841,43 +685,35 @@ function viewSettings(root) {
     const n = catUsage(c.id);
     return `<li class="setrow"><button class="dotbtn" data-act="catColor" data-id="${c.id}" style="background:${col(c.color)}" aria-label="Сменить цвет"></button>
       <input data-change="catName" data-id="${c.id}" value="${esc(c.name)}" maxlength="40" aria-label="Название категории">
+      ${kind === 'out' ? `<input class="limin" data-change="catLimit" data-id="${c.id}" inputmode="decimal" placeholder="Лимит" value="${c.limit > 0 ? esc(fmtIn(c.limit)) : ''}" aria-label="Лимит на месяц, ${esc(c.name)}">` : ''}
       <span class="cnt">${n || ''}</span><button class="icon" data-act="catDel" data-id="${c.id}" aria-label="Удалить категорию">×</button></li>`;
   }).join('')}</ul><div class="addrow"><input id="new-cat-${kind}" placeholder="Новая категория" maxlength="40" aria-label="Новая категория"><button class="btn sm ghost" data-act="catAdd" data-kind="${kind}">Добавить</button></div>`;
   const tagList = `<ul class="setlist">${meta.tags.map(t => `<li class="setrow"><button class="dotbtn" data-act="tagColor" data-id="${t.id}" style="background:${col(t.color)}" aria-label="Сменить цвет"></button>
       <input data-change="tagName" data-id="${t.id}" value="${esc(t.name)}" maxlength="30" aria-label="Название тега"><span class="cnt">${tagUsage(t.id) || ''}</span>
       <button class="icon" data-act="tagDel" data-id="${t.id}" aria-label="Удалить тег">×</button></li>`).join('')}</ul>
     <div class="addrow"><input id="new-tag" placeholder="Новый тег, например «Срочно»" maxlength="30" aria-label="Новый тег"><button class="btn sm ghost" data-act="tagAdd">Добавить</button></div>`;
-  const nTx = allTx().length, nItems = allTx().reduce((a, t) => a + (t.items || []).length, 0);
+  const nTx = allTx().length;
   let imp = '';
   if (pendingImport) imp = `<div class="notice"><p style="margin:0 0 10px">В файле: ${pendingImport.nTx} ${plural(pendingImport.nTx, ['запись', 'записи', 'записей'])}, ${pendingImport.nPlans} ${plural(pendingImport.nPlans, ['план', 'плана', 'планов'])}. Текущие данные будут заменены.</p><div class="btnrow"><button class="btn danger sm" data-act="importApply">Заменить данные</button><button class="btn ghost sm" data-act="importCancel">Отмена</button></div></div>`;
-  const keyState = ai.key ? `Ключ сохранён (…${esc(ai.key.slice(-4))}).` : 'Ключ не задан.';
-  const models = [['claude-sonnet-5', 'Sonnet 5 — точнее, рекомендуется'], ['claude-haiku-4-5-20251001', 'Haiku 4.5 — быстрее и дешевле'], ['custom', 'Другая модель…']];
   const lastB = meta.lastBackup ? shortDate(meta.lastBackup.slice(0, 10)) : 'ещё не делали';
   root.innerHTML = `
-  <section><h2>Распознавание чеков</h2>
-    <p class="hint" style="margin:0 0 12px">Фото уходит с телефона прямо в Anthropic и нигде не сохраняется, в записи остаются только позиции. Нужен ключ API: его создают на console.anthropic.com, оплата отдельная от подписки Claude, по факту использования.</p>
-    <div class="field"><span>Ключ API. ${keyState}</span><div class="addtag" style="margin-top:0"><input id="s-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Ключ API"><button class="btn sm" data-act="saveKey">Сохранить</button></div>
-      ${keyMsg ? `<p class="hint">${esc(keyMsg)}</p>` : ''}
-      <div class="btnrow" style="margin-top:10px"><button class="btn ghost sm" data-act="testKey" ${ai.key ? '' : 'disabled'}>Проверить ключ</button><button class="btn ghost sm" data-act="delKey" ${ai.key ? '' : 'disabled'}>Удалить ключ</button></div></div>
-    <div class="field"><span>Модель</span><select data-change="aiModel" aria-label="Модель">${models.map(([v, l]) => `<option value="${v}" ${ai.model === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
-      ${ai.model === 'custom' ? `<input class="mt" data-change="aiCustom" placeholder="Идентификатор модели" value="${esc(ai.custom)}" autocapitalize="off" spellcheck="false" aria-label="Идентификатор модели">` : ''}</div>
-  </section>
   <section><h2>Основное</h2>
     <div class="field"><span>Валюта</span><div class="chips">${['₽', 'zł', '€', '$', '₴', '₸'].map(c => `<button class="chip ${meta.currency === c ? 'on' : ''}" style="--c:#4C6EF5" data-act="setCur" data-v="${c}">${c}</button>`).join('')}
       <button class="chip ${meta.currency === '' ? 'on' : ''}" style="--c:#4C6EF5" data-act="setCur" data-v="">Без валюты</button></div>
       <div class="setinline" style="margin-top:8px"><input data-change="curCustom" placeholder="Своя" maxlength="5" value="${esc(['₽', 'zł', '€', '$', '₴', '₸', '', null].includes(meta.currency) ? '' : meta.currency)}" aria-label="Своя валюта"></div></div>
     <div class="field"><span>Начальный остаток (необязательно)</span><div class="setinline"><input data-change="opening" inputmode="decimal" placeholder="0" value="${meta.opening ? esc(fmtIn(meta.opening)) : ''}"><span class="muted">сколько было на старте, чтобы общий баланс сходился</span></div></div>
+    <div class="field"><span>Общий лимит расходов на месяц (необязательно)</span><div class="setinline"><input data-change="totalLimit" inputmode="decimal" placeholder="Без лимита" value="${meta.totalLimit > 0 ? esc(fmtIn(meta.totalLimit)) : ''}" aria-label="Общий лимит расходов на месяц"><span class="muted">мягкий: записи не блокируются, приложение только предупреждает</span></div></div>
   </section>
-  <div class="two"><section><h2>Категории расходов</h2>${catList('out')}</section><section><h2>Категории доходов</h2>${catList('in')}</section></div>
+  <div class="two"><section><h2>Категории расходов</h2><p class="hint" style="margin:0 0 10px">В правом поле можно задать лимит на месяц. При превышении на «Обзоре» появится предупреждение, вносить траты можно по-прежнему.</p>${catList('out')}</section><section><h2>Категории доходов</h2>${catList('in')}</section></div>
   <section><h2>Теги</h2><p class="hint" style="margin:0 0 10px">Например, для важности: обязательное, желаемое, можно отложить. Цифра справа — сколько записей и планов используют тег.</p>${tagList}</section>
   <section><h2>Данные</h2>
-    <p class="hint" style="margin:0 0 12px">Всё хранится в памяти этого браузера на устройстве, никуда не отправляется. Сейчас: ${nTx} ${plural(nTx, ['запись', 'записи', 'записей'])}, ${nItems} ${plural(nItems, ['позиция', 'позиции', 'позиций'])} из чеков. Последняя копия: ${lastB}.</p>
+    <p class="hint" style="margin:0 0 12px">Всё хранится в памяти этого браузера на устройстве, никуда не отправляется. Сейчас: ${nTx} ${plural(nTx, ['запись', 'записи', 'записей'])}. Последняя копия: ${lastB}.</p>
     ${location.protocol === 'file:' ? `<div class="notice warn"><p style="margin:0">Вы открыли приложение прямо из файла. В таком режиме браузер может очистить данные, а на экран «Домой» оно не устанавливается. Надёжнее разместить его по ссылке, см. README в архиве.</p></div>` : ''}
     ${volatile ? `<div class="notice warn"><p style="margin:0">Хранилище браузера недоступно (возможно, режим инкогнито): данные живут только до закрытия вкладки. Сохраните копию.</p></div>` : ''}
-    <div class="btnrow"><button class="btn sm" data-act="exportJson">Сохранить копию (JSON)</button><button class="btn ghost sm" data-act="importPick">Восстановить из файла</button><button class="btn ghost sm" data-act="exportCsv">Операции (CSV)</button><button class="btn ghost sm" data-act="exportItems">Позиции чеков (CSV)</button></div>
+    <div class="btnrow"><button class="btn sm" data-act="exportJson">Сохранить копию (JSON)</button><button class="btn ghost sm" data-act="importPick">Восстановить из файла</button><button class="btn ghost sm" data-act="exportCsv">Операции (CSV)</button></div>
     <input type="file" id="importFile" accept="application/json,.json" hidden>${imp}
     <details class="help"><summary>Как поставить на телефон</summary>
-      ${isStandalone() ? '<p>Приложение уже установлено на этом устройстве.</p>' : `<ol><li><b>iPhone, Safari:</b> кнопка «Поделиться», затем «На экран Домой».</li><li><b>Android, Chrome:</b> меню ⋮, затем «Установить приложение» или «Добавить на главный экран».</li></ol><p>Это работает, когда приложение открыто по ссылке (https), а не из файла. После установки оно открывается во весь экран и работает без интернета, кроме распознавания чеков.</p>`}
+      ${isStandalone() ? '<p>Приложение уже установлено на этом устройстве.</p>' : `<ol><li><b>Android, Chrome:</b> меню ⋮, затем «Установить приложение» или «Добавить на главный экран».</li><li><b>iPhone, Safari:</b> кнопка «Поделиться», затем «На экран Домой».</li></ol><p>Это работает, когда приложение открыто по ссылке (https), а не из файла. После установки оно открывается во весь экран и работает без интернета.</p>`}
     </details>
   </section>`;
 }
@@ -887,8 +723,7 @@ function openSheet() {
   $('#modal-root').innerHTML = `<div class="scrim" data-act="closeModal"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mtitle" tabindex="-1"><div id="mcontent"></div></div>`;
 }
 function closeModal() {
-  if (scanCtl) scanCtl.abort();
-  $('#modal-root').innerHTML = ''; draft = null; scanBusy = false;
+  $('#modal-root').innerHTML = ''; draft = null;
   if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
 }
 function formErr(msg, id) { const e = $('#ferr'); if (e) e.textContent = msg; const el = id && $('#' + id); if (el) el.focus(); return false; }
@@ -914,6 +749,25 @@ function syncDraft() {
   if (v('f-newcat') !== undefined) draft.newCatName = v('f-newcat');
 }
 
+/* подсказка про лимит прямо в форме расхода (мягкая, ничего не блокирует) */
+function refreshLimitHint() {
+  const el = $('#limhint'); if (!el || !draft || draft.type !== 'tx') return;
+  if (draft.kind !== 'out') { el.innerHTML = ''; return; }
+  const amt = parseNum($('#f-amount')?.value ?? draft.amount), add = amt > 0 ? amt : 0;
+  const dv = $('#f-date')?.value || draft.date, key = isDate(dv) ? mkey(dv) : ui.month;
+  const others = (months[key] || []).filter(t => t.kind === 'out' && t.id !== draft.id);
+  const c = draft.catNew ? null : catById(draft.cat), lines = [];
+  const line = (label, spent, limit) => {
+    if (!add) return lines.push(`<span class="info">${esc(label)}: потрачено ${money(spent)} из ${money(limit)}</span>`);
+    const after = round2(spent + add);
+    if (after > limit) lines.push(`<span class="over">${esc(label)}: с этой записью превышение на ${money(after - limit)} (лимит ${money(limit)})</span>`);
+    else lines.push(`<span class="${after >= limit * LIMIT_WARN ? 'warn' : 'info'}">${esc(label)}: после записи останется ${money(limit - after)} из ${money(limit)}</span>`);
+  };
+  if (c && c.limit > 0) line(`Лимит «${c.name}»`, sum(others.filter(t => t.cat === c.id), t => t.amount), c.limit);
+  if (meta.totalLimit > 0) line('Общий лимит месяца', sum(others, t => t.amount), meta.totalLimit);
+  el.innerHTML = lines.join('');
+}
+
 /* — transaction modal — */
 function openTx(opts = {}) {
   lastFocus = document.activeElement;
@@ -922,45 +776,17 @@ function openTx(opts = {}) {
   if (ex) base = Object.assign(base, clone(ex.tx), { oldKey: ex.key });
   else if (opts.prefill) base = Object.assign(base, clone(opts.prefill));
   base.type = 'tx'; base.catNew = false; base.newCatName = '';
-  base.amountAuto = !ex && (base.amount === '' || base.amount == null);
-  base.dateTouched = !!ex || !!opts.prefill;
   base.amount = base.amount === '' || base.amount == null ? '' : fmtIn(base.amount);
-  base.items = (base.items || []).map(i => ({ n: i.n, q: i.q, s: i.s, g: i.g || '' }));
+  base.items = Array.isArray(base.items) ? base.items : [];   // позиции чеков из старых версий сохраняем как есть
   base.tags = (base.tags || []).filter(id => tagById(id));
-  draft = base; scanErr = ''; scanNote = null; scanBusy = false;
+  draft = base;
   openSheet(); renderModal();
   if (!ex && !IS_MOBILE) $('#f-amount')?.focus(); else $('.sheet').focus();
-}
-function itemsSum() { return round2(draft.items.reduce((a, i) => a + (Number.isFinite(i.s) ? i.s : 0), 0)); }
-function scanBlock() {
-  if (scanBusy) return `<div class="scanbusy" role="status"><span class="spin"></span><span id="scanstatus">${esc(scanStep)}</span><button type="button" class="btn ghost sm" data-act="stopScan">Остановить</button></div>`;
-  if (!ai.key) return `<p class="hint" style="margin-top:0">Чтобы распознавать чеки, вставьте ключ API Anthropic (создаётся на console.anthropic.com). Он хранится только на этом устройстве.</p>
-    <div class="addtag" style="margin-top:8px"><input id="f-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Ключ API"><button type="button" class="btn sm" data-act="saveKeyDraft">Сохранить</button></div>${keyMsg ? `<p class="ferr">${esc(keyMsg)}</p>` : ''}`;
-  return `<div class="btnrow"><button type="button" class="btn sm" data-act="scanCam">Снять чек</button><button type="button" class="btn ghost sm" data-act="scanPick">Из галереи</button></div>
-    <input id="scanCam" type="file" accept="image/*" capture="environment" hidden>
-    <input id="scanFile" type="file" accept="image/*" multiple hidden>
-    ${scanNote ? `<p class="scannote ${scanNote.ok === false ? 'warn' : ''}">${scanNote.ok === true ? '✓ ' : ''}${esc(scanNote.text)}</p>` : ''}
-    ${scanErr ? `<p class="ferr">${esc(scanErr)}</p>` : ''}
-    <p class="hint">Длинный чек лучше снять частями и выбрать все фото сразу. Распознавание платное (обычно центы за чек), точные цены смотрите в консоли Anthropic.</p>`;
-}
-function itemsBlock() {
-  const rows = draft.items.map((it, i) => `<div class="irow" data-i="${i}">
-    <input class="i-n" placeholder="Товар" value="${esc(it.n)}" maxlength="120" aria-label="Название товара">
-    <button type="button" class="icon" data-act="delItem" data-i="${i}" aria-label="Удалить позицию">×</button>
-    <div class="i-line2">
-      <label class="mini"><span>Кол-во</span><input class="i-q" inputmode="decimal" value="${esc(Number.isFinite(it.q) ? String(it.q).replace('.', ',') : '')}"></label>
-      <label class="mini"><span>Сумма</span><input class="i-s" inputmode="decimal" value="${esc(Number.isFinite(it.s) ? fmtIn(it.s) : '')}"></label>
-      <label class="mini"><span>Группа</span><select class="i-g"><option value="">—</option>${GROUPS.map(g => `<option value="${esc(g)}" ${it.g === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></label>
-    </div></div>`).join('');
-  return `<div class="itemsbox"><div class="ihead"><h3>Что куплено</h3><button type="button" class="btn ghost sm" data-act="addItem">＋ Позиция</button></div>
-    <div style="margin-bottom:12px">${scanBlock()}</div>
-    ${rows}
-    <div class="isum" id="isum"></div></div>`;
 }
 function renderModal() {
   const box = $('#mcontent'); if (!box || !draft) return;
   box.innerHTML = draft.type === 'tx' ? txHtml() : planHtml();
-  if (draft.type === 'tx') refreshItemsSummary();
+  if (draft.type === 'tx') refreshLimitHint();
 }
 function txHtml() {
   const d = draft, out = d.kind === 'out';
@@ -971,25 +797,14 @@ function txHtml() {
     <div class="field"><span>Дата</span><input id="f-date" type="date" value="${esc(d.date)}"></div>
     <div class="field"><span>Категория</span>${catSelect(d.kind, d.cat, d.catNew)}</div>
   </div>
+  <div class="limhint" id="limhint" aria-live="polite"></div>
   <div class="field"><span>${out ? 'За что' : 'От кого или за что'}</span><input id="f-title" class="entersave" value="${esc(d.title)}" maxlength="120" placeholder="${out ? 'Например, продукты на неделю' : 'Например, зарплата за сентябрь'}"></div>
   ${out ? `<div class="field"><span>Магазин или место (необязательно)</span><input id="f-store" class="entersave" value="${esc(d.store || '')}" maxlength="60"></div>` : ''}
   ${tagBlock()}
   <div class="field"><span>Заметка (необязательно)</span><textarea id="f-note" maxlength="500">${esc(d.note || '')}</textarea></div>
-  ${out ? itemsBlock() : ''}
   <div class="ferr" id="ferr" role="alert"></div>
   <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
     <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
-}
-function refreshItemsSummary() {
-  const box = $('#isum'); if (!box || !draft) return;
-  const s = itemsSum();
-  if (draft.items.length && draft.amountAuto) { const inp = $('#f-amount'); if (inp) inp.value = s ? fmtIn(s) : ''; draft.amount = s ? fmtIn(s) : ''; }
-  if (!draft.items.length) { box.innerHTML = ''; return; }
-  const a = parseNum($('#f-amount')?.value ?? draft.amount);
-  const diff = Number.isFinite(a) ? round2(a - s) : NaN;
-  let h = `<span>Сумма позиций: <b class="num">${money(s)}</b></span>`;
-  if (Number.isFinite(diff) && Math.abs(diff) > 0.005) h += `<span class="muted">Сумма записи ${diff > 0 ? 'больше' : 'меньше'} на ${money(Math.abs(diff))}</span><button type="button" class="btn ghost sm" data-act="useItemsSum">Подставить сумму позиций</button>`;
-  box.innerHTML = h;
 }
 
 /* — plan modal — */
@@ -1011,7 +826,7 @@ function planHtml() {
   <div class="field"><span>Что планируете</span><input id="f-title" class="entersave" value="${esc(d.title)}" maxlength="120" placeholder="${d.kind === 'out' ? 'Например, новая клавиатура' : 'Например, возврат налога'}"></div>
   <div class="field"><span>Сумма</span><div class="amountwrap"><input id="f-amount" class="entersave" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(d.amount)}"><span class="curs">${esc(meta.currency || '')}</span></div></div>
   <div class="grid2">
-    <div class="field"><span>Когда (необязательно)</span><input id="f-date" type="date" value="${esc(d.date || '')}"></div>
+    <div class="field"><span>К какому сроку (примерно)</span><input id="f-date" type="date" value="${esc(d.date || '')}"></div>
     <div class="field"><span>Категория</span>${catSelect(d.kind, d.cat, d.catNew)}</div>
   </div>
   ${tagBlock()}
@@ -1046,23 +861,26 @@ function saveDraft() {
   if (d.type === 'tx' && !isDate(d.date)) return formErr('Укажите дату', 'f-date');
   const cat = resolveCat(d);
   const tags = d.tags.filter(id => tagById(id));
+  let msg = 'Сохранено', kind = '', ms = 3800;
   if (d.type === 'tx') {
-    const items = d.kind === 'out' ? d.items.map(i => ({ n: String(i.n || '').trim(), q: i.q > 0 ? Math.round(i.q * 1000) / 1000 : 1, s: i.s, g: i.g || '' })).filter(i => i.n && Number.isFinite(i.s)).map(i => ({ n: i.n, q: i.q, s: round2(i.s), g: i.g })) : [];
-    const tx = { id: d.id || uid(), kind: d.kind, date: d.date, amount: round2(amt), cat, title: (d.title || '').trim(), store: d.kind === 'out' ? (d.store || '').trim() : '', tags, note: (d.note || '').trim(), items, planId: d.planId || null, ts: d.ts || Date.now() };
+    const tx = { id: d.id || uid(), kind: d.kind, date: d.date, amount: round2(amt), cat, title: (d.title || '').trim(), store: d.kind === 'out' ? (d.store || '').trim() : '', tags, note: (d.note || '').trim(), items: d.kind === 'out' ? d.items : [], planId: d.planId || null, ts: d.ts || Date.now() };
+    if (!tx.items.length) delete tx.items;
     const key = mkey(tx.date);
     if (d.oldKey && d.oldKey !== key) months[d.oldKey] = (months[d.oldKey] || []).filter(t => t.id !== tx.id);
     const arr = months[key] || (months[key] = []);
     const i = arr.findIndex(t => t.id === tx.id);
     if (i >= 0) arr[i] = tx; else arr.push(tx);
     if (tx.planId) { const p = plans.find(p => p.id === tx.planId); if (p && p.status !== 'done') { p.status = 'done'; p.txId = tx.id; } }
-    if (key !== ui.month) { ui.month = key; toast('Запись сохранена в месяц «' + monthTitle(key) + '»'); } else toast('Сохранено');
+    if (key !== ui.month) { ui.month = key; msg = 'Запись сохранена в месяц «' + monthTitle(key) + '»'; }
+    const lm = tx.kind === 'out' ? limitMessages(tx) : [];
+    if (lm.length) { msg = [msg, ...lm].join('\n'); kind = 'warn'; ms = 6500; }
   } else {
     const p = { id: d.id || uid(), kind: d.kind, title: (d.title || '').trim(), amount: round2(amt), cat, tags, date: isDate(d.date) ? d.date : '', note: (d.note || '').trim(), status: d.status || 'open', txId: d.txId || null, ts: d.ts || Date.now() };
     const i = plans.findIndex(x => x.id === p.id);
     if (i >= 0) plans[i] = p; else plans.push(p);
-    toast('План сохранён');
+    msg = 'План сохранён';
   }
-  persist(); lastFocus = null; closeModal(); render();
+  persist(); lastFocus = null; closeModal(); render(); toast(msg, kind, ms);
 }
 function deleteDraft() {
   const d = draft; if (!d || !d.id) return;
@@ -1073,45 +891,6 @@ function deleteDraft() {
     toast('Запись удалена');
   } else { plans = plans.filter(p => p.id !== d.id); toast('План удалён'); }
   persist(); lastFocus = null; closeModal(); render();
-}
-
-/* — receipt scan (agent) — */
-async function doScan(fileList) {
-  const files = Array.from(fileList || []).slice(0, 4);
-  if (!files.length || !draft || !ai.key) return;
-  syncDraft();
-  scanBusy = true; scanErr = ''; scanNote = null; scanStep = 'Готовлю фото…'; scanCtl = new AbortController(); renderModal();
-  const mine = draft;
-  try {
-    const r = await runAgent(files, scanCtl.signal, s => { scanStep = s; const el = $('#scanstatus'); if (el) el.textContent = s; });
-    if (draft === mine) applyScan(r);
-  } catch (e) {
-    scanErr = aiErrText(e);
-    if (e && (e.status === 401)) keyMsg = '';
-  } finally {
-    scanBusy = false; scanCtl = null;
-    if (draft === mine) renderModal();
-  }
-}
-function applyScan(r) {
-  const rc = r.data;
-  draft.items = rc.items;
-  if (rc.store && !draft.store) draft.store = rc.store;
-  if (rc.store && !draft.title) draft.title = rc.store;
-  if (rc.date && !draft.dateTouched) draft.date = rc.date;
-  const c = meta.cats.find(c => c.kind === 'out' && c.name.toLowerCase() === rc.category.toLowerCase());
-  if (c && !draft.cat && !draft.catNew) draft.cat = c.id;
-  if (rc.total > 0) { draft.amount = fmtIn(rc.total); draft.amountAuto = false; }
-  else { draft.amount = fmtIn(itemsSum()); draft.amountAuto = true; }
-  const retry = r.attempts > 1 ? ' после перепроверки' : '';
-  if (r.check.ok === true) scanNote = { ok: true, text: `Сумма позиций совпала с итогом чека${retry}` };
-  else if (r.check.ok === false) scanNote = { ok: false, text: `Позиции не сходятся с итогом на ${money(Math.abs(r.check.diff))}${retry}. Проверьте список.` };
-  else scanNote = { ok: null, text: 'Итог в чеке не нашёлся, сумма взята по позициям.' };
-}
-function setKey(val) {
-  val = (val || '').trim();
-  if (!/^sk-[\w-]{20,}$/.test(val)) { keyMsg = 'Похоже, это не ключ API: он начинается с sk-ant-.'; return false; }
-  ai.key = val; saveAi(); keyMsg = ''; return true;
 }
 
 /* ───────── export / import ───────── */
@@ -1142,11 +921,6 @@ function exportCsv() {
   const rows = [['Дата', 'Тип', 'Категория', 'Название', 'Магазин', 'Сумма', 'Теги', 'Заметка']];
   allTx().sort((a, b) => a.date.localeCompare(b.date)).forEach(t => rows.push([t.date, t.kind === 'in' ? 'Доход' : 'Расход', catName(t.cat), t.title, t.store || '', csvNum(t.amount), (t.tags || []).map(id => tagById(id)?.name).filter(Boolean).join(', '), t.note || '']));
   saveFile(`operations-${today()}.csv`, '\uFEFF' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv');
-}
-function exportItems() {
-  const rows = [['Дата', 'Магазин', 'Чек', 'Товар', 'Группа', 'Количество', 'Сумма', 'Цена за единицу']];
-  allTx().filter(t => t.items && t.items.length).sort((a, b) => a.date.localeCompare(b.date)).forEach(t => t.items.forEach(i => rows.push([t.date, t.store || '', t.title, i.n, i.g || '', csvNum(i.q), csvNum(i.s), csvNum(round2(i.s / i.q))])));
-  saveFile(`receipt-items-${today()}.csv`, '\uFEFF' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv');
 }
 async function readImport(file) {
   try {
@@ -1189,21 +963,6 @@ const actions = {
   },
   saveDraft() { saveDraft(); },
   delDraft(el) { twoStep(el, deleteDraft, 'Точно удалить?'); },
-  addItem() { syncDraft(); draft.items.push({ n: '', q: 1, s: NaN, g: '' }); renderModal(); const rows = $$('.irow .i-n'); rows[rows.length - 1]?.focus(); },
-  delItem(el) { syncDraft(); draft.items.splice(+el.dataset.i, 1); renderModal(); },
-  useItemsSum() { draft.amountAuto = true; const inp = $('#f-amount'); inp.value = fmtIn(itemsSum()); draft.amount = inp.value; refreshItemsSummary(); },
-  scanCam() { $('#scanCam')?.click(); },
-  scanPick() { $('#scanFile')?.click(); },
-  stopScan() { if (scanCtl) scanCtl.abort(); },
-  saveKeyDraft() { syncDraft(); if (setKey($('#f-key')?.value)) toast('Ключ сохранён'); renderModal(); },
-  saveKey() { if (setKey($('#s-key')?.value)) toast('Ключ сохранён'); render(); },
-  delKey() { ai.key = ''; saveAi(); keyMsg = ''; toast('Ключ удалён'); render(); },
-  async testKey(el) {
-    el.disabled = true; el.textContent = 'Проверяю…';
-    try { await callClaude({ model: aiModel(), max_tokens: 8, messages: [{ role: 'user', content: 'Ответь одним словом: ок' }] }); keyMsg = 'Ключ работает, модель отвечает.'; }
-    catch (e) { keyMsg = aiErrText(e) || 'Не удалось проверить ключ.'; }
-    render();
-  },
   setCur(el) { meta.currency = el.dataset.v; persist(); render(); },
   catColor(el) { const c = catById(el.dataset.id); if (c) { c.color = (c.color + 1) % PALETTE.length; persist(); render(); } },
   catDel(el) {
@@ -1219,16 +978,10 @@ const actions = {
   tagColor(el) { const t = tagById(el.dataset.id); if (t) { t.color = (t.color + 1) % PALETTE.length; persist(); render(); } },
   tagDel(el) { const t = tagById(el.dataset.id); if (!t) return; twoStep(el, () => { meta.tags = meta.tags.filter(x => x.id !== t.id); persist(); render(); }, 'Удалить?'); },
   tagAdd() { const inp = $('#new-tag'); const t = createTag(inp.value); if (!t) return inp.focus(); render(); },
-  exportJson, exportCsv, exportItems,
+  exportJson, exportCsv,
   importPick() { $('#importFile')?.click(); },
   importApply() { applyImport(); },
-  importCancel() { pendingImport = null; render(); },
-  openItem(el) { ui.openItem = ui.openItem === el.dataset.k ? null : el.dataset.k; renderItemsList(); },
-  renameItem(el) {
-    const name = ($('#ren')?.value || '').trim(), key = el.dataset.k; if (!name) return;
-    for (const list of Object.values(months)) for (const t of list) for (const it of (t.items || [])) if (normName(it.n) === key) it.n = name;
-    persist(); ui.openItem = normName(name); toast('Название обновлено'); renderItemsList();
-  }
+  importCancel() { pendingImport = null; render(); }
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
@@ -1236,40 +989,27 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target, k = t.dataset && t.dataset.change;
-  if (t.id === 'scanFile' || t.id === 'scanCam') { const files = Array.from(t.files || []); t.value = ''; doScan(files); return; }
   if (t.id === 'importFile') { const f = t.files[0]; t.value = ''; if (f) readImport(f); return; }
   if (!k) return;
   const v = t.value;
   switch (k) {
     case 'fcat': ui.f.cat = v; renderOpsList(); break;
     case 'ftag': ui.f.tag = v; renderOpsList(); break;
-    case 'iperiod': ui.iperiod = v; renderItemsList(); break;
-    case 'igroup': ui.igroup = v; renderItemsList(); break;
-    case 'isort': ui.isort = v; renderItemsList(); break;
-    case 'itemGroup': { const key = t.dataset.k; for (const list of Object.values(months)) for (const tx of list) for (const it of (tx.items || [])) if (normName(it.n) === key) it.g = v; persist(); renderItemsList(); break; }
     case 'dcat': syncDraft(); draft.catNew = v === '__new__'; draft.cat = draft.catNew ? '' : v; renderModal(); if (draft.catNew) $('#f-newcat')?.focus(); break;
     case 'catName': { const c = catById(t.dataset.id); if (c && v.trim()) { c.name = v.trim(); persist(); } else if (c) t.value = c.name; break; }
+    case 'catLimit': { const c = catById(t.dataset.id); if (c) { const n = parseNum(v); if (n > 0) { c.limit = round2(n); t.value = fmtIn(c.limit); } else { delete c.limit; t.value = ''; } persist(); } break; }
+    case 'totalLimit': { const n = parseNum(v); meta.totalLimit = n > 0 ? round2(n) : 0; t.value = n > 0 ? fmtIn(n) : ''; persist(); break; }
     case 'tagName': { const g = tagById(t.dataset.id); if (g && v.trim()) { g.name = v.trim(); persist(); } else if (g) t.value = g.name; break; }
     case 'opening': { const n = parseNum(v); meta.opening = Number.isFinite(n) ? round2(n) : 0; persist(); break; }
     case 'curCustom': if (v.trim()) { meta.currency = v.trim(); persist(); render(); } break;
-    case 'aiModel': ai.model = v; saveAi(); render(); break;
-    case 'aiCustom': ai.custom = v; saveAi(); break;
   }
 });
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'f-search') { ui.f.q = t.value; renderOpsList(); return; }
-  if (t.id === 'i-search') { ui.iq = t.value; renderItemsList(); return; }
   if (!draft) return;
-  if (t.id === 'f-amount') { draft.amountAuto = false; draft.amount = t.value; if (draft.type === 'tx') refreshItemsSummary(); return; }
-  if (t.id === 'f-date') { draft.dateTouched = true; return; }
-  const row = t.closest && t.closest('.irow'); if (!row) return;
-  const it = draft.items[+row.dataset.i]; if (!it) return;
-  if (t.classList.contains('i-n')) it.n = t.value;
-  else if (t.classList.contains('i-g')) it.g = t.value;
-  else if (t.classList.contains('i-q')) { const q = parseNum(t.value); it.q = Number.isFinite(q) ? q : NaN; }
-  else if (t.classList.contains('i-s')) { const s = parseNum(t.value); it.s = Number.isFinite(s) ? s : NaN; if (!$('#f-amount').value) draft.amountAuto = true; }
-  refreshItemsSummary();
+  if (t.id === 'f-amount') { draft.amount = t.value; refreshLimitHint(); }
+  else if (t.id === 'f-date') { draft.date = t.value; refreshLimitHint(); }
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#modal-root').firstChild) { closeModal(); return; }
@@ -1277,18 +1017,21 @@ document.addEventListener('keydown', e => {
   const t = e.target;
   if (draft) {
     if (t.id === 'f-newtag') { e.preventDefault(); actions.addTagDraft(); }
-    else if (t.id === 'f-key') { e.preventDefault(); actions.saveKeyDraft(); }
     else if (t.classList && t.classList.contains('entersave')) { e.preventDefault(); saveDraft(); }
   } else if (t.id === 'new-tag') actions.tagAdd();
-  else if (t.id === 's-key') actions.saveKey();
   else if (t.id && t.id.startsWith('new-cat-')) actions.catAdd({ dataset: { kind: t.id.slice(8) } });
 });
 
 /* ───────── boot ───────── */
+try { localStorage.removeItem('fin-ledger-ai'); } catch (e) { /* остатки прошлой версии: ключ API больше не нужен */ }
 loadState();
 setSave('saved');
 render();
-if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !draft && !saveT) location.reload(); });   // новая версия подхватывается сама
+}
 })();
 </script>
 </body>

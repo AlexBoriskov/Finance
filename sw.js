@@ -1,7 +1,7 @@
 /* Кэширует оболочку приложения, чтобы оно открывалось без интернета.
    Данные пользователя лежат в localStorage и этим файлом не затрагиваются.
    При выпуске новой версии меняйте номер в CACHE. */
-const CACHE = 'fin-ledger-shell-v4';
+const CACHE = 'fin-ledger-shell-v5';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

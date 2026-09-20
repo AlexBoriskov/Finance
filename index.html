@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Мои финансы</title>
+<title>Дела и деньги</title>
 <style>
 :root{
   --bg:#F2F4F0; --surface:#FFFFFF; --ink:#1B2A26; --muted:#5F6E68; --line:#DDE3DD; --soft:#E8EDE7;
@@ -240,6 +240,52 @@ details.help summary{cursor:pointer;font-weight:600}
 details.help p,details.help ol{margin:8px 0 0;font-size:.92rem}
 details.help ol{padding-left:20px}
 
+/* sub-navigation inside «Деньги» / «Дела» */
+.subnav{display:flex;gap:6px;margin:0 0 18px;overflow-x:auto;scrollbar-width:none}
+.subnav::-webkit-scrollbar{display:none}
+.subnav button{flex:1 0 auto;background:none;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-weight:600;font-size:.92rem;color:var(--muted);white-space:nowrap;min-height:40px}
+.subnav button[aria-current="true"]{background:var(--primary);color:var(--on-primary);border-color:transparent}
+
+/* today, tasks, projects */
+.todayhead{margin:0 0 14px}
+.todayhead .d{font-size:1.05rem;font-weight:700}
+.balstrip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
+.balstrip .lbl{font-size:.8rem;color:var(--muted);display:block}
+.balstrip b{font-size:1.25rem;letter-spacing:-.01em}
+.qadd{display:flex;gap:8px;margin:0 0 8px}
+.qadd input{flex:1;min-width:0;min-height:48px;border:1px solid var(--line);border-radius:12px;padding:8px 14px;background:var(--surface)}
+.qadd button{flex:none;width:48px;min-height:48px;border-radius:12px;border:0;background:var(--primary);color:var(--on-primary);font-size:1.5rem;line-height:1}
+.qchips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.tsec{margin:0 0 22px}
+.tsec>h3{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 2px;font-size:.86rem;color:var(--muted);font-weight:700}
+.tsec>h3.late{color:var(--expense)}
+.trow{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line)}
+.chk{position:relative;flex:none;width:46px;height:46px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center}
+.chk::before{content:"";width:24px;height:24px;border-radius:50%;border:2px solid var(--muted)}
+.chk.on::before{background:var(--income);border-color:var(--income)}
+.chk.on::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:12px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translate(-50%,-62%) rotate(45deg)}
+.trow-main{flex:1;min-width:0;background:none;border:0;text-align:left;padding:10px 4px;display:flex;flex-direction:column;gap:3px}
+.ttitle{font-weight:600;overflow-wrap:anywhere}
+.trow.done .ttitle{text-decoration:line-through;color:var(--muted)}
+.tmeta{display:flex;flex-wrap:wrap;gap:3px 10px;align-items:center;font-size:.8rem;color:var(--muted)}
+.pchip{--c:#748FA1;display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--ink)}
+.pchip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.nextlbl{font-weight:700;color:var(--primary)}
+.mini-act{flex:none;background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.78rem;font-weight:600;color:var(--muted);min-height:32px;margin-right:2px}
+.stepmove{display:flex;flex-direction:column;flex:none}
+.stepmove button{background:none;border:0;color:var(--muted);font-size:.7rem;line-height:1;width:34px;height:22px}
+.pcard{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.pcard .ph{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.pcard .pn{font-weight:700;display:flex;align-items:center;gap:8px;min-width:0}
+.pcard .dot,.ptitle .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.pcard .track{margin:10px 0 6px;height:10px}
+.pcard .pnext{font-size:.88rem;color:var(--muted);margin-top:6px}
+.pcard .pnext b{color:var(--ink);font-weight:600}
+.phead{display:flex;justify-content:space-between;gap:8px;margin:0 0 14px}
+.ptitle{display:flex;align-items:center;gap:10px;margin:0 0 6px;font-size:1.25rem}
+.pgoal{margin:0 0 12px;color:var(--muted);white-space:pre-line}
+.pbanner{background:color-mix(in srgb,var(--income) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--income) 45%,transparent);border-radius:12px;padding:12px 14px;margin:12px 0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
 /* fab */
 .fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:25;display:inline-flex;align-items:center;gap:10px;border:0;border-radius:999px;padding:0 22px 0 16px;height:56px;background:var(--primary);color:var(--on-primary);font-weight:700;box-shadow:var(--shadow)}
 .fab svg{width:22px;height:22px}
@@ -274,7 +320,7 @@ textarea.export{width:100%;min-height:220px;border:1px solid var(--line);border-
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand">Мои финансы</div>
+    <div class="brand" id="brand">Сегодня</div>
     <div class="savestate" id="savestate" role="status"></div>
     <div class="monthnav" id="monthnav" hidden>
       <button class="icon" data-act="month" data-d="-1" aria-label="Предыдущий месяц">‹</button>
@@ -285,11 +331,10 @@ textarea.export{width:100%;min-height:220px;border:1px solid var(--line);border-
   <main id="view"></main>
 </div>
 <nav class="tabs" role="tablist" aria-label="Разделы">
-  <button class="tab" role="tab" data-act="tab" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Обзор</span></button>
-  <button class="tab" role="tab" data-act="tab" data-v="ops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg><span>Операции</span></button>
-  <button class="tab" role="tab" data-act="tab" data-v="plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Планы</span></button>
-  <button class="tab" role="tab" data-act="tab" data-v="debts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg><span>Долги/цели</span></button>
-  <button class="tab" role="tab" data-act="tab" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Настройки</span></button>
+  <button class="tab" role="tab" data-act="tab" data-v="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></svg><span>Сегодня</span></button>
+  <button class="tab" role="tab" data-act="tab" data-v="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10M3.5 6l1.2 1.2L7 4.8M3.5 12l1.2 1.2L7 10.8M3.5 18l1.2 1.2L7 16.8"/></svg><span>Дела</span></button>
+  <button class="tab" role="tab" data-act="tab" data-v="money"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16.5 14.5h.01"/></svg><span>Деньги</span></button>
+  <button class="tab" role="tab" data-act="tab" data-v="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg><span>Ещё</span></button>
 </nav>
 <button class="fab" id="fab" data-act="add">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -357,6 +402,8 @@ let plans = [];      // {id, kind:'in'|'out', title, amount, cat, tags, date, no
 let months = {};     // 'YYYY-MM' -> [tx]
 let debts = [];      // {id, kind:'mortgage'|'loan'|'card', name, balance0, start, rate?, monthly?, payDay?, limit?, color, closed, adj:[{id,date,delta}]}
 let goals = [];      // {id, name, target, saved0, deadline?, color, done}
+let tasks = [];      // дела: {id, title, note?, due?, project?, repeat?, rday?, done, doneAt?, lastDone?, prevDue?, pos, ts}
+let projects = [];   // проекты: {id, name, goal?, due?, color, status:'active'|'paused'|'done', ts}; шаги проекта — дела с project = id
 let owed = [];       // «мне должны»: {id, name, base, start, due?, note?, color, closed}; остаток = base + выдано (lend) − возвращено (recv)
 /* tx.kind: 'lend' дал в долг (owed; уменьшает деньги, не расход) | 'recv' возврат долга мне (owed; увеличивает деньги, не доход) |
             'in' доход | 'out' расход (src = id кредитки, если оплачено ею) |
@@ -424,6 +471,46 @@ function owedStats(o, exclId) {
 const owedUsage = o => allTx().filter(t => t.owed === o.id).length;
 const owedOpen = () => owed.filter(o => !o.closed && owedStats(o).remaining > 0.005);
 const byDue = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.name.localeCompare(b.name, 'ru');
+/* — дела и проекты — */
+const taskById = id => tasks.find(t => t.id === id);
+const projectById = id => projects.find(p => p.id === id);
+const REPEATS = { daily: 'Каждый день', weekly: 'Каждую неделю', monthly: 'Каждый месяц', yearly: 'Каждый год' };
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const shiftDate = (ds, days) => { const [y, m, d] = ds.split('-').map(Number); return ymd(new Date(y, m - 1, d + days)); };
+/* следующая дата по простому правилу повтора (день, неделя, месяц, год); для месяца помним исходное число, чтобы 31-е не «уезжало» */
+function nextByRule(ds, rule, rday) {
+  const [y, m, d] = ds.split('-').map(Number);
+  if (rule === 'daily') return shiftDate(ds, 1);
+  if (rule === 'weekly') return shiftDate(ds, 7);
+  if (rule === 'monthly') return ymd(new Date(y, m, Math.min(rday || d, new Date(y, m + 1, 0).getDate())));
+  return ymd(new Date(y + 1, m - 1, Math.min(d, new Date(y + 1, m, 0).getDate())));
+}
+const projectSteps = p => tasks.filter(t => t.project === p.id).sort((a, b) => a.pos - b.pos);
+const nextStep = p => projectSteps(p).find(t => !t.done);
+const isDoneNow = t => t.done || (t.repeat && t.lastDone === today());
+const byTaskDue = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.pos - b.pos;
+function dueLabel(ds) {
+  const n = daysBetween(today(), ds);
+  if (n < 0) return `просрочено ${-n} ${plural(-n, DAYW)}`;
+  if (n === 0) return 'сегодня';
+  if (n === 1) return 'завтра';
+  if (n <= 6) { const [y, m, d] = ds.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' }); }
+  return shortDate(ds);
+}
+function completeTask(t) {
+  const t0 = today();
+  if (t.repeat) {
+    let nd = t.due || t0;
+    do { nd = nextByRule(nd, t.repeat, t.rday); } while (nd <= t0);
+    t.prevDue = t.due || ''; t.due = nd; t.lastDone = t0;
+    return `Сделано. Следующий раз: ${shortDate(nd)}`;
+  }
+  t.done = true; t.doneAt = t0; return 'Сделано';
+}
+function undoTask(t) {
+  if (t.repeat && t.lastDone === today()) { if (t.prevDue) t.due = t.prevDue; else delete t.due; delete t.lastDone; delete t.prevDue; }
+  else { t.done = false; delete t.doneAt; }
+}
 /* оценка процентов за период с прошлого платежа (по факту дней, год = 365) — подсказка, точные цифры берутся из графика банка */
 function estimateInterest(d, date, exclId) {
   if (!(d.rate > 0)) return NaN;
@@ -465,7 +552,7 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { volatile
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { volatile = true; if (k === LS_KEY) memRaw = v; return false; } }
 
 function exportObj() {
-  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, lastBackup: meta.lastBackup || null, cats: meta.cats, tags: meta.tags }, plans, debts, goals, owed, months };
+  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, lastBackup: meta.lastBackup || null, cats: meta.cats, tags: meta.tags }, plans, debts, goals, owed, tasks, projects, months };
 }
 function setSave(state) {
   const el = $('#savestate'); if (!el) return;
@@ -494,6 +581,8 @@ function hydrate(obj) {
   debts = Array.isArray(obj.debts) ? obj.debts.filter(d => d && d.id && d.name && Number.isFinite(d.balance0)).map(d => ({ ...d, adj: Array.isArray(d.adj) ? d.adj.filter(a => a && Number.isFinite(a.delta)) : [] })) : [];
   goals = Array.isArray(obj.goals) ? obj.goals.filter(g => g && g.id && g.name && g.target > 0) : [];
   owed = Array.isArray(obj.owed) ? obj.owed.filter(o => o && o.id && o.name).map(o => ({ ...o, base: Number.isFinite(o.base) ? o.base : 0 })) : [];
+  tasks = Array.isArray(obj.tasks) ? obj.tasks.filter(t => t && t.id && t.title).map(t => ({ ...t, pos: Number.isFinite(t.pos) ? t.pos : (t.ts || 0) })) : [];
+  projects = Array.isArray(obj.projects) ? obj.projects.filter(p => p && p.id && p.name).map(p => ({ status: 'active', ...p })) : [];
   months = {};
   for (const [k, list] of Object.entries(obj.months || {})) {
     if (!/^\d{4}-\d{2}$/.test(k) || !Array.isArray(list)) continue;
@@ -508,7 +597,7 @@ function loadState() {
 window.addEventListener('storage', e => { if (e.key === LS_KEY && !draft && !saveT) { loadState(); render(); } });
 
 /* ───────── ui state ───────── */
-const ui = { tab: 'overview', month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
+const ui = { tab: 'today', msub: 'overview', tsub: 'list', project: null, tproj: '', qd: { today: 'today', tasks: '' }, month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
 let draft = null, lastFocus = null, pendingImport = null;
 
 let toastT;
@@ -575,14 +664,27 @@ function limitMessages(tx) {
 }
 
 /* ───────── views ───────── */
+const TOP_TITLES = { today: 'Сегодня', tasks: 'Дела', money: 'Деньги', more: 'Настройки' };
+const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['plans', 'Планы'], ['debts', 'Долги/цели']];
+function fabLabel() {
+  if (ui.tab === 'more') return '';
+  if (ui.tab === 'today') return 'Дело';
+  if (ui.tab === 'tasks') return ui.project ? 'Шаг' : ui.tsub === 'projects' ? 'Проект' : 'Дело';
+  if (ui.msub === 'debts') return '';
+  return ui.msub === 'plans' ? 'Новый план' : 'Добавить';
+}
 function render() {
-  $('#monthnav').hidden = !(ui.tab === 'overview' || ui.tab === 'ops');
+  $('#monthnav').hidden = !(ui.tab === 'money' && (ui.msub === 'overview' || ui.msub === 'ops'));
   $('#monthlabel').textContent = monthTitle(ui.month);
+  $('#brand').textContent = TOP_TITLES[ui.tab];
   $$('.tab').forEach(b => { const on = b.dataset.v === ui.tab; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
-  const fab = $('#fab'); fab.hidden = ui.tab === 'settings' || ui.tab === 'debts';
-  $('#fablabel').textContent = ui.tab === 'plans' ? 'Новый план' : 'Добавить';
+  const fl = fabLabel(), fab = $('#fab'); fab.hidden = !fl; if (fl) $('#fablabel').textContent = fl;
   const v = $('#view'); v.innerHTML = '';
-  ({ overview: viewOverview, ops: viewOps, plans: viewPlans, debts: viewDebts, settings: viewSettings })[ui.tab](v);
+  ({ today: viewToday, tasks: viewTasks, money: viewMoney, more: viewSettings })[ui.tab](v);
+}
+function viewMoney(root) {
+  root.innerHTML = `<nav class="subnav" aria-label="Разделы денег">${MONEY_SUBS.map(([v, l]) => `<button data-act="tab" data-v="${v}" aria-current="${ui.msub === v}">${l}</button>`).join('')}</nav><div id="msub"></div>`;
+  ({ overview: viewOverview, ops: viewOps, plans: viewPlans, debts: viewDebts })[ui.msub]($('#msub'));
 }
 
 function curBanner() {
@@ -639,33 +741,38 @@ function balHeroHtml() {
   return `<section class="balhero" aria-label="Баланс на сегодня"><span class="lbl">Свободные деньги на сегодня</span><b class="bal num ${b < 0 ? 'out' : ''}">${money(b)}</b><span class="sub">${esc(dayTitle(today()))}</span></section>`;
 }
 
-/* ближайшие платежи: планы, платежи по графику долгов и записи на будущие даты — списком по датам, с нарастающим балансом */
-function plansTimelineHtml() {
-  const open = openPlans(), sched = scheduledPayments(), bal = balance(), t0 = today();
+/* всё, что в ближайшее время двигает деньги: планы, платежи по графику долгов, записи на будущие даты, ожидаемые возвраты */
+function moneyItems() {
+  const open = openPlans(), sched = scheduledPayments(), t0 = today();
   const recs = allTx().filter(t => t.date > t0 && cashDelta(t) !== 0).map(t => ({ rec: true, tx: t, date: t.date, ts: t.ts, kind: cashDelta(t) > 0 ? 'in' : 'out', amount: Math.abs(cashDelta(t)),
     title: t.kind === 'pay' ? `Платёж: ${debtById(t.debt)?.name || 'долг'}` : t.kind === 'goal' ? `${t.amount > 0 ? 'В цель' : 'Из цели'}: ${goalById(t.goal)?.name || ''}` : (t.title || catName(t.cat)) }));
   const owedItems = owedOpen().map(o => ({ owed: o, date: o.due || '', kind: 'in', amount: owedStats(o).remaining, title: `Вернёт ${o.name}`, ts: 0 }));
   const dated = [...open.filter(p => p.date), ...sched, ...recs, ...owedItems.filter(x => x.date)].sort(byPlanDate);
   const undated = [...open.filter(p => !p.date).sort(byPlanDate), ...owedItems.filter(x => !x.date)];
+  return { open, sched, recs, owedItems, dated, undated };
+}
+function tlRowHtml(p, running) {
+  const diff = p.date ? daysBetween(today(), p.date) : null;
+  const rel = diff === null ? '' : diff < 0 ? `просрочено на ${-diff} ${plural(-diff, DAYW)}` : diff === 0 ? 'сегодня' : diff === 1 ? 'завтра' : `через ${diff} ${plural(diff, DAYW)}`;
+  const attrs = p.sched ? `data-act="paySched" data-debt="${p.debt.id}" data-date="${p.date}"` : p.owed ? `data-act="recvOwed" data-id="${p.owed.id}"` : p.rec ? `data-act="editTx" data-id="${p.tx.id}"` : `data-act="editPlan" data-id="${p.id}"`;
+  const sub = p.sched ? '<span class="badge debt">платёж по графику</span>' : p.owed ? '<span class="badge">вам должны</span>' : p.rec ? '<span class="badge">записано на эту дату</span>' : `<span>${esc(catName(p.cat))}</span>${tagChipsHtml(p.tags)}`;
+  return `<li><button class="tlrow" ${attrs}>
+    <span class="tl-date"><b>${p.date ? esc(shortDate(p.date)) : '—'}</b>${rel ? `<small class="${diff < 0 ? 'late' : ''}">${rel}</small>` : ''}</span>
+    <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub">${sub}</span></span>
+    <span class="tl-amt"><span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span>${running !== undefined ? `<small class="num ${running < 0 ? 'out' : 'muted'}">баланс ${money(running)}</small>` : ''}</span></button></li>`;
+}
+/* ближайшие платежи: списком по датам, с нарастающим балансом */
+function plansTimelineHtml() {
+  const { open, sched, recs, owedItems, dated, undated } = moneyItems(), bal = balance();
   if (!dated.length && !undated.length && !allTx().length) return '';
-  const row = (p, running) => {
-    const diff = p.date ? daysBetween(t0, p.date) : null;
-    const rel = diff === null ? '' : diff < 0 ? `просрочено на ${-diff} ${plural(-diff, DAYW)}` : diff === 0 ? 'сегодня' : diff === 1 ? 'завтра' : `через ${diff} ${plural(diff, DAYW)}`;
-    const attrs = p.sched ? `data-act="paySched" data-debt="${p.debt.id}" data-date="${p.date}"` : p.owed ? `data-act="recvOwed" data-id="${p.owed.id}"` : p.rec ? `data-act="editTx" data-id="${p.tx.id}"` : `data-act="editPlan" data-id="${p.id}"`;
-    const sub = p.sched ? '<span class="badge debt">платёж по графику</span>' : p.owed ? '<span class="badge">вам должны</span>' : p.rec ? '<span class="badge">записано на эту дату</span>' : `<span>${esc(catName(p.cat))}</span>${tagChipsHtml(p.tags)}`;
-    return `<li><button class="tlrow" ${attrs}>
-      <span class="tl-date"><b>${p.date ? esc(shortDate(p.date)) : '—'}</b>${rel ? `<small class="${diff < 0 ? 'late' : ''}">${rel}</small>` : ''}</span>
-      <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub">${sub}</span></span>
-      <span class="tl-amt"><span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span>${running !== undefined ? `<small class="num ${running < 0 ? 'out' : 'muted'}">баланс ${money(running)}</small>` : ''}</span></button></li>`;
-  };
   let run = bal; const shownRows = []; let firstNeg = null;
   dated.forEach(p => { run = round2(run + (p.kind === 'in' ? p.amount : -p.amount)); if (run < 0 && !firstNeg) firstNeg = { p, run }; shownRows.push({ p, run }); });
   const LIM = 10;
   let html = `<section><h2>Ближайшие платежи</h2>`;
-  if (shownRows.length) html += `<p class="hint" style="margin:0 0 4px">Под каждой строкой — баланс после неё, считая от сегодняшнего.</p><ul class="tl">${shownRows.slice(0, LIM).map(r => row(r.p, r.run)).join('')}</ul>`;
+  if (shownRows.length) html += `<p class="hint" style="margin:0 0 4px">Под каждой строкой — баланс после неё, считая от сегодняшнего.</p><ul class="tl">${shownRows.slice(0, LIM).map(r => tlRowHtml(r.p, r.run)).join('')}</ul>`;
   if (shownRows.length > LIM) html += `<p class="hint">Ещё ${shownRows.length - LIM} — на вкладке «Планы».</p>`;
   if (firstNeg) html += `<p class="hint warnline">К ${esc(shortDate(firstNeg.p.date))} баланс по планам уходит в минус (${money(firstNeg.run)}).</p>`;
-  if (undated.length) html += `<h3 style="margin-top:16px">Без срока</h3><ul class="tl">${undated.slice(0, 5).map(p => row(p)).join('')}</ul>${undated.length > 5 ? `<p class="hint">И ещё ${undated.length - 5} — на вкладке «Планы».</p>` : ''}`;
+  if (undated.length) html += `<h3 style="margin-top:16px">Без срока</h3><ul class="tl">${undated.slice(0, 5).map(p => tlRowHtml(p)).join('')}</ul>${undated.length > 5 ? `<p class="hint">И ещё ${undated.length - 5} — на вкладке «Планы».</p>` : ''}`;
   if (open.length || sched.length || recs.length || owedItems.length) {
     const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount), sOut = sum(sched, p => p.amount);
     const rNet = sum(recs, r => r.kind === 'in' ? r.amount : -r.amount), oTot = sum(owedItems, x => x.amount), after = round2(bal + rNet - pOut + pIn - sOut + oTot);
@@ -959,6 +1066,127 @@ function viewDebts(root) {
   root.innerHTML = html + '</section>';
 }
 
+/* — «Сегодня», дела, проекты — */
+function tsec(title, inner, cls, extra) { return `<section class="tsec"><h3 class="${cls || ''}"><span>${title}</span>${extra || ''}</h3>${inner}</section>`; }
+function taskRowHtml(t, o = {}) {
+  const p = t.project ? projectById(t.project) : null, done = isDoneNow(t), late = !done && t.due && t.due < today();
+  const bits = [];
+  if (p && !o.noProject) bits.push(`<span class="pchip" style="--c:${col(p.color)}">${esc(p.name)}</span>`);
+  if (t.due && !o.noDue) bits.push(`<span class="${late ? 'late' : ''}">${esc(dueLabel(t.due))}</span>`);
+  if (t.repeat) bits.push(`<span class="badge">${esc(REPEATS[t.repeat].toLowerCase())}</span>`);
+  if (t.note) bits.push('<span class="badge">заметка</span>');
+  if (o.next) bits.push('<span class="nextlbl">следующий шаг</span>');
+  return `<div class="trow ${done ? 'done' : ''}">
+    <button class="chk ${done ? 'on' : ''}" data-act="toggleTask" data-id="${t.id}" aria-pressed="${done}" aria-label="${done ? 'Вернуть в работу' : 'Отметить выполненным'}"></button>
+    <button class="trow-main" data-act="editTask" data-id="${t.id}"><span class="ttitle">${esc(t.title)}</span>${bits.length ? `<span class="tmeta">${bits.join('')}</span>` : ''}</button>
+    ${o.today ? `<button class="mini-act" data-act="taskToday" data-id="${t.id}">на сегодня</button>` : ''}
+    ${o.move ? `<span class="stepmove"><button data-act="moveStep" data-id="${t.id}" data-d="-1" aria-label="Выше">▲</button><button data-act="moveStep" data-id="${t.id}" data-d="1" aria-label="Ниже">▼</button></span>` : ''}
+  </div>`;
+}
+function qaddHtml(scope, placeholder) {
+  return `<div class="qadd"><input id="q-title" data-scope="${scope}" placeholder="${placeholder}" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="${placeholder}"><button type="button" data-act="qadd" data-scope="${scope}" aria-label="Добавить">＋</button></div>
+  <div class="qchips" id="qchips">${[['today', 'Сегодня'], ['tomorrow', 'Завтра'], ['', 'Без срока']].map(([v, l]) => `<button type="button" class="chip ${ui.qd[scope] === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="qdue" data-scope="${scope}" data-v="${v}">${l}</button>`).join('')}</div>`;
+}
+function viewToday(root) {
+  const bal = balance();
+  root.innerHTML = `<section class="todayhead"><div class="d">${esc(dayTitle(today()))}</div></section>
+  <div class="balstrip"><div><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b></div><button type="button" class="btn sm ghost" data-act="addTx">＋ Трата</button></div>
+  ${qaddHtml('today', 'Новое дело на сегодня…')}
+  <div id="todayList"></div>`;
+  renderTodayList();
+}
+function renderTodayList() {
+  const box = $('#todayList'); if (!box) return;
+  const t0 = today();
+  const due = tasks.filter(t => !t.done && t.due && t.due <= t0).sort(byTaskDue);
+  const overdue = due.filter(t => t.due < t0), todays = due.filter(t => t.due === t0), shown = new Set(due.map(t => t.id));
+  const nexts = projects.filter(p => p.status === 'active').map(nextStep).filter(t => t && !shown.has(t.id)).slice(0, 6);
+  const doneToday = tasks.filter(t => (t.done && t.doneAt === t0) || (t.repeat && t.lastDone === t0));
+  const soon = moneyItems().dated.filter(p => p.date <= shiftDate(t0, 7));
+  let html = '';
+  if (overdue.length) html += tsec('Просрочено', overdue.map(t => taskRowHtml(t)).join(''), 'late');
+  if (todays.length) html += tsec('На сегодня', todays.map(t => taskRowHtml(t)).join(''));
+  if (!due.length) html += `<div class="empty" style="padding:6px 0 22px"><p>На сегодня дел нет. Добавьте дело выше или выберите следующий шаг проекта.</p></div>`;
+  if (due.length) html += `<div class="btnrow" style="margin:-8px 0 22px"><button type="button" class="btn ghost sm" data-act="rollover">Перенести несделанное на завтра (${due.length})</button></div>`;
+  if (nexts.length) html += tsec('Следующие шаги проектов', nexts.map(t => taskRowHtml(t, { today: true, noDue: !t.due })).join(''));
+  if (soon.length) html += tsec('Деньги на ближайшую неделю', `<ul class="tl">${soon.map(p => tlRowHtml(p)).join('')}</ul>`, '', `<button type="button" class="chip" data-act="tab" data-v="overview">Все платежи</button>`);
+  if (doneToday.length) html += `<details class="fold" style="margin-top:0"><summary>Сделано сегодня (${doneToday.length})</summary>${doneToday.map(t => taskRowHtml(t)).join('')}</details>`;
+  box.innerHTML = html;
+}
+
+function viewTasks(root) {
+  if (ui.project) return viewProject(root);
+  const sub = `<nav class="subnav" aria-label="Разделы дел">${[['list', 'Дела'], ['projects', 'Проекты']].map(([v, l]) => `<button data-act="tsub" data-v="${v}" aria-current="${ui.tsub === v}">${l}</button>`).join('')}</nav>`;
+  if (ui.tsub === 'projects') {
+    root.innerHTML = sub + `<div class="sechead"><h2>Проекты</h2><button type="button" class="btn sm ghost" data-act="newProject">＋ Проект</button></div><div id="projList"></div>`;
+    return renderProjectsList();
+  }
+  const filter = projects.length ? `<div class="field" style="margin:0 0 14px"><select data-change="tproj" aria-label="Проект"><option value="">Все дела</option><option value="-" ${ui.tproj === '-' ? 'selected' : ''}>Без проекта</option>${projects.map(p => `<option value="${p.id}" ${ui.tproj === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>` : '';
+  root.innerHTML = sub + qaddHtml('tasks', 'Новое дело…') + filter + `<div id="taskList"></div>`;
+  renderTaskList();
+}
+function renderTaskList() {
+  const box = $('#taskList'); if (!box) return;
+  const t0 = today(), tom = shiftDate(t0, 1), week = shiftDate(t0, 7);
+  const pass = t => !ui.tproj || (ui.tproj === '-' ? !t.project : t.project === ui.tproj);
+  const open = tasks.filter(t => !t.done && pass(t)).sort(byTaskDue);
+  const groups = [
+    ['Просрочено', open.filter(t => t.due && t.due < t0), 'late'], ['Сегодня', open.filter(t => t.due === t0)], ['Завтра', open.filter(t => t.due === tom)],
+    ['На неделе', open.filter(t => t.due > tom && t.due <= week)], ['Позже', open.filter(t => t.due > week)], ['Без срока', open.filter(t => !t.due)]
+  ];
+  let html = groups.filter(g => g[1].length).map(([title, list, cls]) => tsec(`${title} (${list.length})`, list.map(t => taskRowHtml(t, { noDue: title === 'Сегодня' || title === 'Завтра' })).join(''), cls)).join('');
+  if (!open.length) html += `<div class="empty"><p>Дел пока нет. Впишите первое в строке выше, а для дел из нескольких шагов заведите проект.</p></div>`;
+  const done = tasks.filter(t => t.done && pass(t)).sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || '')).slice(0, 30);
+  if (done.length) html += `<details class="fold"><summary>Сделано (${done.length})</summary>${done.map(t => taskRowHtml(t)).join('')}</details>`;
+  box.innerHTML = html;
+}
+
+function projectCardHtml(p) {
+  const steps = projectSteps(p), done = steps.filter(t => t.done).length, total = steps.length, share = total ? done / total : 0, nx = nextStep(p);
+  const late = p.status !== 'done' && p.due && p.due < today();
+  return `<button type="button" class="pcard" data-act="openProject" data-id="${p.id}">
+    <div class="ph"><span class="pn"><span class="dot" style="background:${col(p.color)}"></span><span style="overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</span></span>
+      <span class="tmeta">${p.status === 'paused' ? '<span class="badge">на паузе</span>' : ''}${p.status === 'done' ? '<span class="badge in">завершён</span>' : ''}${p.due ? `<span class="${late ? 'late' : ''}">${esc(dueLabel(p.due))}</span>` : ''}</span></div>
+    <div class="track"><span class="fill" style="width:${Math.max(done ? 2 : 0, share * 100)}%;background:${col(p.color)}"></span></div>
+    <div class="dprog"><span>${done} из ${total} ${plural(total, ['шага', 'шагов', 'шагов'])}</span><span>${Math.round(share * 100)}%</span></div>
+    <div class="pnext">${nx ? `Следующий шаг: <b>${esc(nx.title)}</b>` : total ? 'Все шаги выполнены' : 'Шагов пока нет'}</div>
+  </button>`;
+}
+function renderProjectsList() {
+  const box = $('#projList'); if (!box) return;
+  if (!projects.length) { box.innerHTML = `<div class="empty"><p>Проект — это дело из нескольких шагов: ремонт, поездка, подготовка к событию. У него есть цель, срок и список шагов. В «Сегодня» попадает только следующий шаг, остальные не мешают.</p><button type="button" class="btn" data-act="newProject">Создать проект</button></div>`; return; }
+  const by = st => projects.filter(p => p.status === st).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || (a.ts || 0) - (b.ts || 0));
+  const act = by('active'), paused = by('paused'), fin = by('done');
+  let html = act.map(projectCardHtml).join('');
+  if (paused.length) html += `<details class="fold"><summary>На паузе (${paused.length})</summary>${paused.map(projectCardHtml).join('')}</details>`;
+  if (fin.length) html += `<details class="fold"><summary>Завершённые (${fin.length})</summary>${fin.map(projectCardHtml).join('')}</details>`;
+  box.innerHTML = html;
+}
+function viewProject(root) {
+  const p = projectById(ui.project);
+  if (!p) { ui.project = null; return viewTasks(root); }
+  root.innerHTML = `<div class="phead"><button type="button" class="btn sm ghost" data-act="closeProject">‹ Проекты</button><button type="button" class="btn sm ghost" data-act="editProject" data-id="${p.id}">Изменить</button></div>
+  <section><h2 class="ptitle"><span class="dot" style="background:${col(p.color)}"></span><span>${esc(p.name)}</span></h2>${p.goal ? `<p class="pgoal">${esc(p.goal)}</p>` : ''}<div id="projBody"></div></section>`;
+  renderProjectBody();
+}
+function renderProjectBody() {
+  const box = $('#projBody'), p = projectById(ui.project); if (!box || !p) return;
+  const steps = projectSteps(p), open = steps.filter(t => !t.done), done = steps.filter(t => t.done), share = steps.length ? done.length / steps.length : 0;
+  const late = p.status !== 'done' && p.due && p.due < today();
+  let html = `<div class="track" style="height:12px"><span class="fill" style="width:${Math.max(done.length ? 2 : 0, share * 100)}%;background:${col(p.color)}"></span></div>
+    <div class="dprog" style="margin:6px 0 14px"><span>Выполнено ${done.length} из ${steps.length}</span><span class="tmeta">${p.status === 'paused' ? '<span class="badge">на паузе</span>' : ''}${p.status === 'done' ? '<span class="badge in">завершён</span>' : ''}${p.due ? `<span class="${late ? 'late' : ''}">срок: ${esc(shortDate(p.due))}, ${esc(dueLabel(p.due))}</span>` : ''}</span></div>`;
+  if (p.status === 'active' && steps.length && !open.length) html += `<div class="pbanner"><span>Все шаги выполнены.</span><button type="button" class="btn sm" data-act="projStatus" data-id="${p.id}" data-v="done">Завершить проект</button></div>`;
+  html += `<div class="qadd"><input id="s-title" placeholder="Новый шаг…" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="Новый шаг"><button type="button" data-act="stepAdd" aria-label="Добавить шаг">＋</button></div>`;
+  html += open.length ? open.map((t, i) => taskRowHtml(t, { noProject: true, move: open.length > 1, next: i === 0 && p.status === 'active' })).join('') : (steps.length ? '' : `<p class="hint">Разбейте проект на шаги: каждый шаг — небольшое конкретное действие. Первый невыполненный станет «следующим шагом» и появится в «Сегодня».</p>`);
+  if (done.length) html += `<details class="fold"><summary>Выполненные шаги (${done.length})</summary>${done.map(t => taskRowHtml(t, { noProject: true })).join('')}</details>`;
+  html += `<div class="btnrow" style="margin-top:22px">${p.status === 'active' ? `<button type="button" class="btn ghost sm" data-act="projStatus" data-id="${p.id}" data-v="paused">Поставить на паузу</button>` : `<button type="button" class="btn ghost sm" data-act="projStatus" data-id="${p.id}" data-v="active">Вернуть в работу</button>`}${p.status === 'active' ? `<button type="button" class="btn ghost sm" data-act="projStatus" data-id="${p.id}" data-v="done">Завершить</button>` : ''}</div>`;
+  box.innerHTML = html;
+}
+function renderLists() {
+  if (ui.tab === 'today') renderTodayList();
+  else if (ui.tab === 'tasks') { if (ui.project) renderProjectBody(); else if (ui.tsub === 'projects') renderProjectsList(); else renderTaskList(); }
+}
+
 /* — settings — */
 const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 function viewSettings(root) {
@@ -1023,7 +1251,7 @@ function kindSeg(list) {
   const all = { out: ['Расход', 'k-out'], in: ['Доход', 'k-in'], pay: ['Долг', 'k-pay'], goal: ['Цель', 'k-goal'] };
   return `<div class="seg2 kind" role="group" aria-label="Тип записи" style="margin-bottom:16px">${list.map(k => `<button type="button" class="${all[k][1]}" data-act="setKind" data-v="${k}" aria-pressed="${draft.kind === k}">${all[k][0]}</button>`).join('')}</div>`;
 }
-const FIELDS = { 'f-amount': 'amount', 'f-date': 'date', 'f-title': 'title', 'f-note': 'note', 'f-store': 'store', 'f-int': 'interest', 'f-after': 'after', 'f-debt': 'debt', 'f-goal': 'goal', 'f-src': 'src', 'f-actual': 'actual', 'f-owed': 'owed', 'o-name': 'oname', 'o-amount': 'oamount', 'o-date': 'odate', 'o-due': 'odue', 'o-note': 'onote', 'o-base': 'obase',
+const FIELDS = { 'f-amount': 'amount', 'f-date': 'date', 'f-title': 'title', 'f-note': 'note', 'f-store': 'store', 'f-int': 'interest', 'f-after': 'after', 'f-debt': 'debt', 'f-goal': 'goal', 'f-src': 'src', 'f-actual': 'actual', 't-title': 'ttitle', 't-note': 'tnote', 't-due': 'tdue', 't-project': 'tproject', 't-repeat': 'trepeat', 'p-name': 'pname', 'p-goal': 'pgoal', 'p-due': 'pdue', 'p-status': 'pstatus', 'f-owed': 'owed', 'o-name': 'oname', 'o-amount': 'oamount', 'o-date': 'odate', 'o-due': 'odue', 'o-note': 'onote', 'o-base': 'obase',
   'd-name': 'name', 'd-kind': 'dkind', 'd-bal0': 'bal0', 'd-start': 'start', 'd-rate': 'rate', 'd-monthly': 'monthly', 'd-payday': 'payday', 'd-limit': 'limit', 'gx-name': 'gname', 'gx-target': 'target', 'gx-saved0': 'saved0', 'gx-deadline': 'deadline' };
 function syncDraft() {
   if (!draft) return;
@@ -1134,7 +1362,7 @@ function openTx(opts = {}) {
 }
 function renderModal() {
   const box = $('#mcontent'); if (!box || !draft) return;
-  box.innerHTML = ({ tx: txHtml, plan: planHtml, debt: debtHtml, goalx: goalxHtml, recon: reconHtml, owed: owedHtml })[draft.type]();
+  box.innerHTML = ({ tx: txHtml, plan: planHtml, debt: debtHtml, goalx: goalxHtml, recon: reconHtml, owed: owedHtml, task: taskHtml, project: projectHtml })[draft.type]();
   if (draft.type === 'tx') { refreshLimitHint(); if (draft.kind === 'pay') refreshPayCalc(); if (draft.kind === 'goal') refreshGoalCalc(); if (draft.kind === 'recv' || draft.kind === 'lend') refreshOwedCalc(); }
 }
 const TX_TITLES = { out: 'Расход', in: 'Доход', pay: 'Платёж по долгу', goal: 'Взнос в цель', lend: 'Дал в долг', recv: 'Возврат долга' };
@@ -1375,6 +1603,70 @@ function saveOwed() {
   finish(`Добавлено: ${name} должен ${money(amt)}`);
 }
 
+/* — дело и проект — */
+function openTask(opts = {}) {
+  lastFocus = document.activeElement;
+  const ex = opts.id ? taskById(opts.id) : null;
+  draft = { type: 'task', id: ex ? ex.id : null, ttitle: ex ? ex.title : '', tnote: ex ? (ex.note || '') : '', tdue: ex ? (ex.due || '') : (opts.due || ''), tproject: ex ? (ex.project || '') : (opts.project || ''), trepeat: ex ? (ex.repeat || '') : '' };
+  openSheet(); renderModal(); if (!ex && !IS_MOBILE) $('#t-title')?.focus(); else $('.sheet').focus();
+}
+function taskHtml() {
+  const d = draft, t0 = today(), plist = projects.filter(p => p.status !== 'done' || p.id === d.tproject);
+  return `<div class="mhead"><h2 id="mtitle">${d.id ? 'Дело' : 'Новое дело'}</h2><button type="button" class="icon" data-act="closeModal" aria-label="Закрыть">×</button></div>
+  <div class="field"><span>Что нужно сделать</span><input id="t-title" class="entersave" value="${esc(d.ttitle)}" maxlength="120" placeholder="Например, позвонить в банк"></div>
+  <div class="field"><span>Срок (необязательно)</span><input id="t-due" type="date" value="${esc(d.tdue)}">
+    <div class="chips" style="margin-top:8px">${[['Сегодня', t0], ['Завтра', shiftDate(t0, 1)], ['Через неделю', shiftDate(t0, 7)], ['Без срока', '']].map(([l, v]) => `<button type="button" class="chip ${d.tdue === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="setTdue" data-v="${v}">${l}</button>`).join('')}</div></div>
+  ${plist.length ? `<div class="field"><span>Проект (необязательно)</span><select id="t-project" data-change="tproject"><option value="">Без проекта</option>${plist.map(p => `<option value="${p.id}" ${p.id === d.tproject ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>` : ''}
+  ${d.tproject ? '' : `<div class="field"><span>Повторять</span><select id="t-repeat"><option value="">Не повторять</option>${Object.entries(REPEATS).map(([k, l]) => `<option value="${k}" ${k === d.trepeat ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`}
+  <div class="field"><span>Заметка (необязательно)</span><textarea id="t-note" maxlength="500">${esc(d.tnote)}</textarea></div>
+  <div class="ferr" id="ferr" role="alert"></div>
+  <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
+    <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
+}
+function saveTask() {
+  const d = draft, title = (d.ttitle || '').trim();
+  if (!title) return formErr('Введите, что нужно сделать', 't-title');
+  const repeat = d.tproject ? '' : (d.trepeat || ''), due = isDate(d.tdue) ? d.tdue : (repeat ? today() : '');
+  const ex = d.id ? taskById(d.id) : null, t = ex || { id: 'k' + uid(), done: false, pos: Date.now(), ts: Date.now() };
+  t.title = title;
+  if ((d.tnote || '').trim()) t.note = d.tnote.trim(); else delete t.note;
+  if (d.tproject) t.project = d.tproject; else delete t.project;
+  if (repeat) t.repeat = repeat; else { delete t.repeat; delete t.lastDone; delete t.prevDue; }
+  if (due) t.due = due; else delete t.due;
+  if (repeat === 'monthly') t.rday = +due.slice(8); else delete t.rday;
+  if (!ex) tasks.push(t);
+  finish(ex ? 'Сохранено' : 'Дело добавлено');
+}
+function openProject(id) {
+  lastFocus = document.activeElement;
+  const ex = id ? projectById(id) : null;
+  draft = { type: 'project', id: ex ? ex.id : null, pname: ex ? ex.name : '', pgoal: ex ? (ex.goal || '') : '', pdue: ex ? (ex.due || '') : '', pstatus: ex ? ex.status : 'active' };
+  openSheet(); renderModal(); if (!ex && !IS_MOBILE) $('#p-name')?.focus(); else $('.sheet').focus();
+}
+function projectHtml() {
+  const d = draft, n = d.id ? projectSteps(projectById(d.id)).length : 0;
+  return `<div class="mhead"><h2 id="mtitle">${d.id ? 'Проект' : 'Новый проект'}</h2><button type="button" class="icon" data-act="closeModal" aria-label="Закрыть">×</button></div>
+  <div class="field"><span>Название</span><input id="p-name" class="entersave" value="${esc(d.pname)}" maxlength="80" placeholder="Например, ремонт на кухне"></div>
+  <div class="field"><span>Зачем и что должно получиться (необязательно)</span><textarea id="p-goal" maxlength="500">${esc(d.pgoal)}</textarea></div>
+  <div class="field"><span>Срок (необязательно)</span><input id="p-due" type="date" value="${esc(d.pdue)}"></div>
+  ${d.id ? `<div class="field"><span>Состояние</span><select id="p-status"><option value="active" ${d.pstatus === 'active' ? 'selected' : ''}>В работе</option><option value="paused" ${d.pstatus === 'paused' ? 'selected' : ''}>На паузе</option><option value="done" ${d.pstatus === 'done' ? 'selected' : ''}>Завершён</option></select></div>${n ? `<p class="hint" style="margin:-6px 0 12px">При удалении проекта удалятся и его шаги (${n}).</p>` : ''}` : ''}
+  <div class="ferr" id="ferr" role="alert"></div>
+  <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
+    <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
+}
+function saveProject() {
+  const d = draft, name = (d.pname || '').trim();
+  if (!name) return formErr('Введите название проекта', 'p-name');
+  const ex = d.id ? projectById(d.id) : null, p = ex || { id: 'j' + uid(), color: (projects.length * 5 + 1) % PALETTE.length, status: 'active', ts: Date.now() };
+  p.name = name;
+  if ((d.pgoal || '').trim()) p.goal = d.pgoal.trim(); else delete p.goal;
+  if (isDate(d.pdue)) p.due = d.pdue; else delete p.due;
+  if (ex) p.status = d.pstatus || p.status;
+  if (!ex) projects.push(p);
+  if (!ex) ui.project = p.id;   // после создания сразу открываем проект, чтобы добавить шаги
+  finish(ex ? 'Проект сохранён' : 'Проект создан. Добавьте шаги');
+}
+
 function resolveCat(d) {
   if (d.catNew) {
     const name = (d.newCatName || '').trim(); if (!name) return '';
@@ -1409,6 +1701,8 @@ function saveDraft() {
   if (d.type === 'goalx') return saveGoal();
   if (d.type === 'recon') return saveRecon();
   if (d.type === 'owed') return saveOwed();
+  if (d.type === 'task') return saveTask();
+  if (d.type === 'project') return saveProject();
   const amt = parseNum(d.amount);
   if (!(amt > 0)) return formErr('Введите сумму больше нуля', 'f-amount');
   if (d.type === 'tx' && !isDate(d.date)) return formErr('Укажите дату', 'f-date');
@@ -1520,6 +1814,8 @@ function deleteDraft() {
     if (n) return formErr(`В цель уже вносились деньги (${n}). Удалите взносы или отметьте цель достигнутой.`);
     goals = goals.filter(y => y.id !== d.id); return finish('Цель удалена');
   }
+  if (d.type === 'task') { tasks = tasks.filter(t => t.id !== d.id); return finish('Дело удалено'); }
+  if (d.type === 'project') { tasks = tasks.filter(t => t.project !== d.id); projects = projects.filter(p => p.id !== d.id); if (ui.project === d.id) ui.project = null; return finish('Проект удалён'); }
   if (d.type === 'owed') {
     const x = owedById(d.id), n = x ? owedUsage(x) : 0;
     if (n) return formErr(`По этой записи есть операции (${n}). Удалите их или отметьте её закрытой.`);
@@ -1550,7 +1846,7 @@ const csvCell = v => { const s = String(v ?? ''); return /[";\r\n]/.test(s) ? '"
 const csvNum = x => String(x).replace('.', ',');
 async function exportJson() {
   const ok = await saveFile(`finance-${today()}.json`, JSON.stringify(exportObj(), null, 1), 'application/json');
-  if (ok) { meta.lastBackup = new Date().toISOString(); persist(); if (ui.tab === 'overview' || ui.tab === 'settings') render(); toast('Копия сохранена'); }
+  if (ok) { meta.lastBackup = new Date().toISOString(); persist(); render(); toast('Копия сохранена'); }
 }
 function exportCsv() {
   const KIND = { in: 'Доход', out: 'Расход', pay: 'Платёж по долгу', goal: 'Взнос в цель', lend: 'Дал в долг', recv: 'Возврат долга' };
@@ -1574,10 +1870,65 @@ function applyImport() {
 
 /* ───────── events ───────── */
 const actions = {
-  tab(el) { ui.tab = el.dataset.v; window.scrollTo(0, 0); render(); },
+  tab(el) {
+    const v = el.dataset.v;
+    if (MONEY_SUBS.some(([k]) => k === v)) { ui.tab = 'money'; ui.msub = v; }
+    else if (v === 'settings') ui.tab = 'more';
+    else ui.tab = v;
+    if (ui.tab !== 'tasks') ui.project = null;
+    window.scrollTo(0, 0); render();
+  },
   month(el) { const [y, m] = ui.month.split('-').map(Number); const d = new Date(y, m - 1 + (+el.dataset.d), 1); ui.month = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; render(); },
   monthToday() { ui.month = mkey(today()); render(); },
-  add() { ui.tab === 'plans' ? openPlan() : openTx(); },
+  add() {
+    if (ui.tab === 'today') return openTask({ due: today() });
+    if (ui.tab === 'tasks') return ui.project ? openTask({ project: ui.project }) : ui.tsub === 'projects' ? openProject() : openTask({});
+    if (ui.msub === 'plans') openPlan(); else openTx();
+  },
+  addTx() { openTx(); },
+  tsub(el) { ui.tsub = el.dataset.v; ui.project = null; render(); },
+  toggleTask(el) {
+    const t = taskById(el.dataset.id); if (!t) return;
+    let msg = '';
+    if (isDoneNow(t)) undoTask(t);
+    else {
+      msg = completeTask(t);
+      const pr = t.project ? projectById(t.project) : null;
+      if (pr && pr.status === 'active' && projectSteps(pr).every(x => x.done)) msg = `Все шаги проекта «${pr.name}» выполнены. Можно завершить проект`;
+    }
+    persist(); renderLists(); if (msg) toast(msg);
+  },
+  editTask(el) { openTask({ id: el.dataset.id }); },
+  taskToday(el) { const t = taskById(el.dataset.id); if (t) { t.due = today(); persist(); renderLists(); toast('Добавлено на сегодня'); } },
+  setTdue(el) { syncDraft(); draft.tdue = el.dataset.v; renderModal(); },
+  qdue(el) { const sc = el.dataset.scope; ui.qd[sc] = el.dataset.v; $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc])); $('#q-title')?.focus(); },
+  qadd(el) {
+    const sc = el.dataset.scope, inp = $('#q-title'), title = (inp?.value || '').trim(); if (!title) return inp && inp.focus();
+    const v = ui.qd[sc], due = v === 'today' ? today() : v === 'tomorrow' ? shiftDate(today(), 1) : '';
+    const t = { id: 'k' + uid(), title, done: false, pos: Date.now(), ts: Date.now() }; if (due) t.due = due;
+    tasks.push(t); inp.value = ''; persist(); renderLists(); inp.focus();
+  },
+  stepAdd() {
+    const inp = $('#s-title'), title = (inp?.value || '').trim(); if (!title) return inp && inp.focus();
+    tasks.push({ id: 'k' + uid(), title, project: ui.project, done: false, pos: Date.now(), ts: Date.now() });
+    inp.value = ''; persist(); renderProjectBody(); $('#s-title')?.focus();
+  },
+  moveStep(el) {
+    const p = projectById(ui.project); if (!p) return;
+    const open = projectSteps(p).filter(t => !t.done), i = open.findIndex(t => t.id === el.dataset.id), j = i + (+el.dataset.d);
+    if (i < 0 || j < 0 || j >= open.length) return;
+    const a = open[i], b = open[j], pa = a.pos; a.pos = b.pos; b.pos = pa;
+    persist(); renderProjectBody();
+  },
+  rollover(el) {
+    const t0 = today(), list = tasks.filter(t => !t.done && t.due && t.due <= t0);
+    twoStep(el, () => { const tom = shiftDate(t0, 1); list.forEach(t => { t.due = tom; }); persist(); renderLists(); toast(`Перенесено на завтра: ${list.length}`); }, 'Перенести на завтра?');
+  },
+  newProject() { openProject(); },
+  editProject(el) { openProject(el.dataset.id); },
+  openProject(el) { ui.project = el.dataset.id; render(); window.scrollTo(0, 0); },
+  closeProject() { ui.project = null; render(); },
+  projStatus(el) { const p = projectById(el.dataset.id); if (!p) return; p.status = el.dataset.v; persist(); if (p.status === 'done') toast(`Проект «${p.name}» завершён`); renderProjectBody(); },
   editTx(el) { openTx({ id: el.dataset.id }); },
   editPlan(el) { openPlan({ id: el.dataset.id }); },
   planDo(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) openTx({ prefill: { kind: p.kind, amount: p.amount, title: p.title, cat: p.cat, tags: p.tags || [], note: p.note || '', date: today(), planId: p.id } }); },
@@ -1666,6 +2017,8 @@ document.addEventListener('change', e => {
     case 'dsrc': syncDraft(); refreshLimitHint(); break;
     case 'ddebt': syncDraft(); draft.interest = ''; draft.estimated = false; initPay(); renderModal(); break;
     case 'dgoal': syncDraft(); refreshGoalCalc(); break;
+    case 'tproject': syncDraft(); if (draft.tproject) draft.trepeat = ''; renderModal(); break;
+    case 'tproj': ui.tproj = v; renderTaskList(); break;
     case 'dowed': syncDraft(); if (draft.kind === 'recv' && !draft.id) { const o = owedById(draft.owed); if (o) draft.amount = fmtIn(Math.max(0, owedStats(o).remaining)); } renderModal(); break;
     case 'dkind': syncDraft(); renderModal(); break;
     case 'extra': { const n = parseNum(v); ui.extra[t.dataset.id] = n > 0 ? n : 0; render(); break; }
@@ -1696,7 +2049,9 @@ document.addEventListener('keydown', e => {
   if (draft) {
     if (t.id === 'f-newtag') { e.preventDefault(); actions.addTagDraft(); }
     else if (t.classList && t.classList.contains('entersave')) { e.preventDefault(); saveDraft(); }
-  } else if (t.id === 'new-tag') actions.tagAdd();
+  } else if (t.id === 'q-title') { e.preventDefault(); actions.qadd({ dataset: { scope: t.dataset.scope } }); }
+  else if (t.id === 's-title') { e.preventDefault(); actions.stepAdd(); }
+  else if (t.id === 'new-tag') actions.tagAdd();
   else if (t.id && t.id.startsWith('new-cat-')) actions.catAdd({ dataset: { kind: t.id.slice(8) } });
 });
 
@@ -1724,6 +2079,7 @@ function initBackGuard() {
     const st = e.state || {};
     if (st.m) return;                                                  // вернулись на рабочую запись — ничего не делаем
     if ($('#modal-root').firstChild) { closeModal(); try { history.forward(); } catch (x) { /* не критично */ } return; }
+    if (ui.tab === 'tasks' && ui.project) { ui.project = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     backArmed = true; toast('Нажмите «Назад» ещё раз, чтобы выйти', '', 2000);
     clearTimeout(backT); backT = setTimeout(disarmBack, 2000);          // не нажали второй раз — возвращаемся на рабочую запись
   });

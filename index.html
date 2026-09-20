@@ -147,24 +147,10 @@ section{margin:0 0 32px}
 .warnline{color:var(--plan);font-weight:600}
 .late{color:var(--expense)!important;font-weight:600}
 
-/* forecast */
-.trend{width:100%;height:auto;display:block}
-.trend text{fill:var(--muted);font-size:13px;font-family:inherit}
-.trend .bi{fill:var(--income)} .trend .bo{fill:var(--expense)}
-.trend .pi{stroke:var(--income);stroke-width:1.2} .trend .po{stroke:var(--expense);stroke-width:1.2}
-.trend .pbi{fill:var(--income);opacity:.14} .trend .pli{fill:var(--income);opacity:.55}
-.trend .pbo{fill:var(--expense);opacity:.14} .trend .plo{fill:var(--expense);opacity:.55}
-.trend .cur{fill:var(--soft)}
-.tlegend{display:flex;gap:18px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin:6px 0 12px}
-.tlegend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.tlegend i.solid{background:var(--muted)}
-.tlegend i.hatch{border:1px solid var(--muted);background:repeating-linear-gradient(45deg,var(--muted) 0 2px,transparent 2px 5px)}
-.ftable{width:100%;border-collapse:collapse;font-size:.9rem}
-.ftable th{text-align:left;color:var(--muted);font-weight:500;padding:4px 6px 4px 0;font-size:.82rem}
-.ftable td{padding:8px 6px 8px 0;border-top:1px solid var(--line);vertical-align:top}
-.ftable .r{text-align:right}
-.ftable td:last-child,.ftable th:last-child{padding-right:0}
-.ftable small{display:block;font-size:.72rem;color:var(--muted)}
+.balhero{display:flex;flex-direction:column;gap:2px;margin:0 0 24px}
+.balhero .lbl{font-size:.88rem;color:var(--muted);font-weight:500}
+.balhero .bal{font-size:2.3rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.balhero .sub{font-size:.8rem;color:var(--muted)}
 
 /* lists */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
@@ -389,7 +375,7 @@ const allTx = () => Object.values(months).flat();
 const findTx = id => { for (const [key, list] of Object.entries(months)) { const tx = list.find(t => t.id === id); if (tx) return { tx, key }; } return null; };
 /* влияние записи на свободные деньги: покупка кредиткой деньги не тратит, платёж по долгу и взнос в цель — тратят */
 const cashDelta = t => t.kind === 'in' ? t.amount : t.kind === 'out' ? (t.src ? 0 : -t.amount) : (t.kind === 'pay' || t.kind === 'goal') ? -t.amount : 0;
-const balance = () => round2((meta.opening || 0) + allTx().reduce((a, t) => a + cashDelta(t), 0));
+const balance = (asOf = today()) => round2((meta.opening || 0) + allTx().reduce((a, t) => t.date <= asOf ? a + cashDelta(t) : a, 0));
 const openPlans = () => plans.filter(p => p.status === 'open');
 const catUsage = id => allTx().filter(t => t.cat === id).length + plans.filter(p => p.cat === id).length;
 const tagUsage = id => allTx().filter(t => (t.tags || []).includes(id)).length + plans.filter(p => (p.tags || []).includes(id)).length;
@@ -568,24 +554,6 @@ function limitMessages(tx) {
   return msgs;
 }
 
-/* — прогноз денег: текущий месяц и два следующих; факт + планы + платежи по графику долгов — */
-function forecastData() {
-  const n = new Date(), keys = [];
-  for (let i = 0; i < 3; i++) { const d = new Date(n.getFullYear(), n.getMonth() + i, 1); keys.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`); }
-  const open = openPlans().filter(p => p.date), sched = scheduledPayments();
-  return keys.map((k, i) => {
-    const list = months[k] || [];
-    const inBucket = p => mkey(p.date) === k || (i === 0 && mkey(p.date) < k);   // просроченное — в текущий месяц
-    const pl = open.filter(inBucket), sp = sched.filter(inBucket);
-    const [y, m] = k.split('-').map(Number);
-    return { k, m: m - 1, y,
-      inc: sum(list.filter(t => t.kind === 'in'), t => t.amount),
-      out: sum(list.filter(t => t.kind === 'out' || t.kind === 'pay'), t => t.kind === 'out' ? (t.src ? 0 : t.amount) : t.amount),
-      pIn: sum(pl.filter(p => p.kind === 'in'), p => p.amount),
-      pOut: round2(sum(pl.filter(p => p.kind === 'out'), p => p.amount) + sum(sp, p => p.amount)) };
-  });
-}
-
 /* ───────── views ───────── */
 function render() {
   $('#monthnav').hidden = !(ui.tab === 'overview' || ui.tab === 'ops');
@@ -638,64 +606,44 @@ function debtsGoalsOverviewHtml() {
   return html + '</section>';
 }
 
-/* планы и платежи по долгам списком по датам, с нарастающим балансом */
+/* баланс на сегодня — самый верх «Обзора» (записи на будущие даты в него не входят) */
+function balHeroHtml() {
+  const b = balance();
+  return `<section class="balhero" aria-label="Баланс на сегодня"><span class="lbl">Свободные деньги на сегодня</span><b class="bal num ${b < 0 ? 'out' : ''}">${money(b)}</b><span class="sub">${esc(dayTitle(today()))}</span></section>`;
+}
+
+/* ближайшие платежи: планы, платежи по графику долгов и записи на будущие даты — списком по датам, с нарастающим балансом */
 function plansTimelineHtml() {
-  const open = openPlans(), sched = scheduledPayments(), bal = balance();
-  if (!allTx().length && !meta.opening && !open.length && !sched.length) return '';
-  const dated = [...open.filter(p => p.date), ...sched].sort(byPlanDate), undated = open.filter(p => !p.date).sort(byPlanDate);
+  const open = openPlans(), sched = scheduledPayments(), bal = balance(), t0 = today();
+  const recs = allTx().filter(t => t.date > t0 && cashDelta(t) !== 0).map(t => ({ rec: true, tx: t, date: t.date, ts: t.ts, kind: cashDelta(t) > 0 ? 'in' : 'out', amount: Math.abs(cashDelta(t)),
+    title: t.kind === 'pay' ? `Платёж: ${debtById(t.debt)?.name || 'долг'}` : t.kind === 'goal' ? `${t.amount > 0 ? 'В цель' : 'Из цели'}: ${goalById(t.goal)?.name || ''}` : (t.title || catName(t.cat)) }));
+  const dated = [...open.filter(p => p.date), ...sched, ...recs].sort(byPlanDate), undated = open.filter(p => !p.date).sort(byPlanDate);
+  if (!dated.length && !undated.length && !allTx().length) return '';
   const row = (p, running) => {
-    const diff = p.date ? daysBetween(today(), p.date) : null;
+    const diff = p.date ? daysBetween(t0, p.date) : null;
     const rel = diff === null ? '' : diff < 0 ? `просрочено на ${-diff} ${plural(-diff, DAYW)}` : diff === 0 ? 'сегодня' : diff === 1 ? 'завтра' : `через ${diff} ${plural(diff, DAYW)}`;
-    const attrs = p.sched ? `data-act="paySched" data-debt="${p.debt.id}" data-date="${p.date}"` : `data-act="editPlan" data-id="${p.id}"`;
+    const attrs = p.sched ? `data-act="paySched" data-debt="${p.debt.id}" data-date="${p.date}"` : p.rec ? `data-act="editTx" data-id="${p.tx.id}"` : `data-act="editPlan" data-id="${p.id}"`;
+    const sub = p.sched ? '<span class="badge debt">платёж по графику</span>' : p.rec ? '<span class="badge">записано на эту дату</span>' : `<span>${esc(catName(p.cat))}</span>${tagChipsHtml(p.tags)}`;
     return `<li><button class="tlrow" ${attrs}>
       <span class="tl-date"><b>${p.date ? esc(shortDate(p.date)) : '—'}</b>${rel ? `<small class="${diff < 0 ? 'late' : ''}">${rel}</small>` : ''}</span>
-      <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub">${p.sched ? '<span class="badge debt">платёж по графику</span>' : `<span>${esc(catName(p.cat))}</span>${tagChipsHtml(p.tags)}`}</span></span>
+      <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub">${sub}</span></span>
       <span class="tl-amt"><span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span>${running !== undefined ? `<small class="num ${running < 0 ? 'out' : 'muted'}">баланс ${money(running)}</small>` : ''}</span></button></li>`;
   };
   let run = bal; const shownRows = []; let firstNeg = null;
   dated.forEach(p => { run = round2(run + (p.kind === 'in' ? p.amount : -p.amount)); if (run < 0 && !firstNeg) firstNeg = { p, run }; shownRows.push({ p, run }); });
   const LIM = 10;
-  let html = `<section><h2>Баланс и ближайшие платежи</h2><dl class="kv" style="margin-bottom:8px"><dt>Свободные деньги сейчас</dt><dd class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</dd></dl>`;
-  if (shownRows.length) html += `<ul class="tl">${shownRows.slice(0, LIM).map(r => row(r.p, r.run)).join('')}</ul>`;
+  let html = `<section><h2>Ближайшие платежи</h2>`;
+  if (shownRows.length) html += `<p class="hint" style="margin:0 0 4px">Под каждой строкой — баланс после неё, считая от сегодняшнего.</p><ul class="tl">${shownRows.slice(0, LIM).map(r => row(r.p, r.run)).join('')}</ul>`;
   if (shownRows.length > LIM) html += `<p class="hint">Ещё ${shownRows.length - LIM} — на вкладке «Планы».</p>`;
   if (firstNeg) html += `<p class="hint warnline">К ${esc(shortDate(firstNeg.p.date))} баланс по планам уходит в минус (${money(firstNeg.run)}).</p>`;
   if (undated.length) html += `<h3 style="margin-top:16px">Без срока</h3><ul class="tl">${undated.slice(0, 5).map(p => row(p)).join('')}</ul>${undated.length > 5 ? `<p class="hint">И ещё ${undated.length - 5} — на вкладке «Планы».</p>` : ''}`;
-  if (open.length || sched.length) {
-    const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount), sOut = sum(sched, p => p.amount), after = round2(bal - pOut + pIn - sOut);
-    html += `<dl class="kv" style="margin-top:14px">${pOut ? `<dt>Запланированные расходы</dt><dd class="num out">−${money(pOut)}</dd>` : ''}${pIn ? `<dt>Запланированные доходы</dt><dd class="num in">+${money(pIn)}</dd>` : ''}${sOut ? `<dt>Платежи по долгам (3 месяца)</dt><dd class="num out">−${money(sOut)}</dd>` : ''}<div class="sep"></div><dt>После всех планов и платежей</dt><dd class="num ${after < 0 ? 'out' : ''}">${money(after)}</dd></dl>
+  if (open.length || sched.length || recs.length) {
+    const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount), sOut = sum(sched, p => p.amount);
+    const rNet = sum(recs, r => r.kind === 'in' ? r.amount : -r.amount), after = round2(bal + rNet - pOut + pIn - sOut);
+    html += `<dl class="kv" style="margin-top:14px">${pOut ? `<dt>Запланированные расходы</dt><dd class="num out">−${money(pOut)}</dd>` : ''}${pIn ? `<dt>Запланированные доходы</dt><dd class="num in">+${money(pIn)}</dd>` : ''}${sOut ? `<dt>Платежи по долгам по графику (3 месяца)</dt><dd class="num out">−${money(sOut)}</dd>` : ''}${recs.length ? `<dt>Записи на будущие даты</dt><dd class="num ${rNet < 0 ? 'out' : 'in'}">${money(rNet, true)}</dd>` : ''}<div class="sep"></div><dt>После всех платежей и планов</dt><dd class="num ${after < 0 ? 'out' : ''}">${money(after)}</dd></dl>
       <p class="hint"><button class="chip" data-act="tab" data-v="plans">Все планы</button></p>`;
   } else html += `<p class="hint">Планов пока нет. Добавьте их на вкладке «Планы», и здесь появится список по датам.</p>`;
   return html + '</section>';
-}
-
-function forecastHtml() {
-  const data = forecastData();
-  const max = Math.max(1, ...data.flatMap(d => [d.inc + d.pIn, d.out + d.pOut]));
-  const W = 600, H = 176, base = 142, top = 14, bw = 44, gap = 6, cw = W / 3, sc = (base - top) / max;
-  let s = `<svg class="trend" viewBox="0 0 ${W} ${H}" role="img" aria-label="Поступления и выплаты на три месяца, включая планы и платежи по долгам">
-    <defs><pattern id="hin" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="pbi" width="7" height="7"/><rect class="pli" width="3" height="7"/></pattern>
-    <pattern id="hout" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="pbo" width="7" height="7"/><rect class="plo" width="3" height="7"/></pattern></defs>`;
-  data.forEach((d, i) => {
-    const cx = (i + .5) * cw, xi = cx - bw - gap / 2, xo = cx + gap / 2;
-    const fi = d.inc * sc, pi = d.pIn * sc, fo = d.out * sc, po = d.pOut * sc;
-    if (d.k === ui.month) s += `<rect class="cur" x="${i * cw + 4}" y="0" width="${cw - 8}" height="${H}" rx="12"/>`;
-    if (fi > 0) s += `<rect class="bi" x="${xi}" y="${base - fi}" width="${bw}" height="${Math.max(fi, 2)}" rx="4"/>`;
-    if (pi > 0) s += `<rect class="pi" fill="url(#hin)" x="${xi}" y="${base - fi - pi}" width="${bw}" height="${Math.max(pi, 2)}" rx="4"><title>План: поступления ${esc(money(d.pIn))}</title></rect>`;
-    if (fo > 0) s += `<rect class="bo" x="${xo}" y="${base - fo}" width="${bw}" height="${Math.max(fo, 2)}" rx="4"/>`;
-    if (po > 0) s += `<rect class="po" fill="url(#hout)" x="${xo}" y="${base - fo - po}" width="${bw}" height="${Math.max(po, 2)}" rx="4"><title>План: выплаты ${esc(money(d.pOut))}</title></rect>`;
-    s += `<text x="${cx}" y="${H - 12}" text-anchor="middle">${MON_S[d.m]}${i === 0 ? ' · сейчас' : ''}</text>`;
-  });
-  s += '</svg>';
-  const undated = openPlans().filter(p => !p.date).length;
-  return `<section><h2>Ближайшие три месяца</h2>${s}
-    <div class="tlegend"><span><i class="solid"></i>Записано</span><span><i class="hatch"></i>Планы и платежи по долгам</span></div>
-    <table class="ftable"><thead><tr><th>Месяц</th><th class="r">Поступления</th><th class="r">Выплаты</th><th class="r">Итог</th></tr></thead><tbody>
-    ${data.map(d => { const net = round2(d.inc + d.pIn - d.out - d.pOut);
-      return `<tr><td>${MONTHS[d.m]}</td>
-      <td class="r num in">${money(d.inc + d.pIn)}${d.pIn ? `<small>из них план ${money(d.pIn)}</small>` : ''}</td>
-      <td class="r num out">${money(d.out + d.pOut)}${d.pOut ? `<small>из них план ${money(d.pOut)}</small>` : ''}</td>
-      <td class="r num ${net < 0 ? 'out' : 'in'}">${money(net, true)}</td></tr>`; }).join('')}</tbody></table>
-    <p class="hint">«Выплаты» — деньги, которые уходят со счёта: траты своими деньгами и платежи по долгам. Покупки кредиткой попадут сюда, когда вы будете гасить карту.${undated ? ' Планы без срока в прогноз не входят.' : ''}</p></section>`;
 }
 
 function viewOverview(root) {
@@ -705,7 +653,7 @@ function viewOverview(root) {
   const goalPos = Math.max(0, st.goal), used = round2(st.spend + st.principal + goalPos), base = Math.max(st.inc, used);
   const lims = limitRows(ui.month), overs = lims.filter(l => l.spent > l.limit);
   const overCats = new Set(overs.map(l => l.id).filter(Boolean));
-  let html = meta.currency == null ? curBanner() : '';
+  let html = balHeroHtml() + (meta.currency == null ? curBanner() : '');
   if (backupDue()) html += `<div class="banner"><p>Сделайте резервную копию: данные хранятся только на этом устройстве.</p><button class="btn sm" data-act="exportJson">Сохранить копию</button></div>`;
   if (overs.length) html += `<div class="banner alert"><p>Превышены лимиты</p><div class="alist">${overs.map(l => `<span>${esc(l.name)} <b class="out num">+${money(l.spent - l.limit)}</b></span>`).join('')}</div></div>`;
 
@@ -753,7 +701,6 @@ function viewOverview(root) {
     const mx = inc2[0].amt || 1;
     html += `<section><h2>Доходы по категориям</h2><ul class="bars">${inc2.map(t => `<li><span>${esc(t.name)}</span><span class="track"><span class="fill" style="width:${Math.max(3, t.amt / mx * 100)}%;background:var(--income)"></span></span><span class="num">${money(t.amt)}</span></li>`).join('')}</ul></section>`;
   }
-  html += forecastHtml();
   root.innerHTML = html;
 }
 
@@ -1592,6 +1539,30 @@ try { localStorage.removeItem('fin-ledger-ai'); } catch (e) { /* остатки 
 loadState();
 setSave('saved');
 render();
+/* ───────── кнопка «Назад» на телефоне ─────────
+   Открыто окно — «Назад» закрывает его. Ничего не открыто — остаёмся на текущем разделе,
+   а выход из приложения происходит по второму нажатию в течение двух секунд. */
+let backReady = false, backArmed = false, backT = null;
+function disarmBack() { if (!backArmed) return; backArmed = false; clearTimeout(backT); try { history.forward(); } catch (e) { /* не критично */ } }
+function initBackGuard() {
+  if (!(IS_MOBILE || isStandalone())) return;
+  if (history.state && history.state.m) backReady = true;             // страница перезагружена, страховочная запись уже есть
+  else {
+    // страховочную запись добавляем после первого касания: Chrome пропускает записи, созданные страницей без участия пользователя
+    const arm = () => { if (backReady) return; try { history.replaceState({ g: 1 }, ''); history.pushState({ m: 1 }, ''); backReady = true; } catch (e) { /* не критично */ } };
+    ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(ev => document.addEventListener(ev, arm, { once: true, capture: true }));
+  }
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (backArmed) disarmBack(); }, true));
+  window.addEventListener('popstate', e => {
+    if (!backReady) return;
+    const st = e.state || {};
+    if (st.m) return;                                                  // вернулись на рабочую запись — ничего не делаем
+    if ($('#modal-root').firstChild) { closeModal(); try { history.forward(); } catch (x) { /* не критично */ } return; }
+    backArmed = true; toast('Нажмите «Назад» ещё раз, чтобы выйти', '', 2000);
+    clearTimeout(backT); backT = setTimeout(disarmBack, 2000);          // не нажали второй раз — возвращаемся на рабочую запись
+  });
+}
+initBackGuard();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js').catch(() => {});

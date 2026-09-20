@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#F2F4F0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121816" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F1F3F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1120" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Дела и деньги">
@@ -16,21 +16,29 @@
 <title>Дела и деньги</title>
 <style>
 :root{
-  --bg:#F2F4F0; --surface:#FFFFFF; --ink:#1B2A26; --muted:#5F6E68; --line:#DDE3DD; --soft:#E8EDE7;
-  --primary:#2F55E0; --on-primary:#FFFFFF; --income:#12805C; --expense:#C2385A; --plan:#A86B00; --on-plan:#FFFFFF; --goal:#0F7C87;
-  --shadow:0 18px 50px rgba(20,40,30,.22);
+  --bg:#F1F3F9; --surface:#FFFFFF; --ink:#171B2B; --muted:#5F6580; --line:#E6E9F2; --soft:#EEF0F8;
+  --primary:#4263EB; --on-primary:#FFFFFF; --income:#0B8A66; --expense:#D02F58; --plan:#A86B00; --on-plan:#FFFFFF; --goal:#0E8794;
+  --shadow:0 20px 60px rgba(30,40,90,.2);
+  --card-shadow:0 1px 2px rgba(30,40,90,.04),0 10px 28px rgba(30,40,90,.06);
+  --grad:linear-gradient(135deg,#3B5BDB 0%,#5C7CFA 62%,#8592FF 100%);
+  --hero-shadow:0 14px 34px rgba(59,91,219,.28); --fab-shadow:0 10px 26px rgba(59,91,219,.4);
+  --nav-bg:rgba(255,255,255,.94); --nav-shadow:0 10px 30px rgba(30,40,90,.18);
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#121816; --surface:#1A2320; --ink:#E6EEEA; --muted:#93A39C; --line:#2B3833; --soft:#222D29;
-    --primary:#7D9BFF; --on-primary:#0E1530; --income:#4FD1A1; --expense:#FF7C9C; --plan:#E0AE55; --on-plan:#2A1D00; --goal:#4FC3CF;
-    --shadow:0 18px 50px rgba(0,0,0,.55);
+    --bg:#0E1120; --surface:#181C2E; --ink:#E8EAF6; --muted:#98A0BE; --line:#272C46; --soft:#20253B;
+    --primary:#8199FF; --on-primary:#0B1030; --income:#3DDBA8; --expense:#FF7C9C; --plan:#E8B04A; --on-plan:#2A1D00; --goal:#4FC3CF;
+    --shadow:0 20px 60px rgba(0,0,0,.6);
+    --card-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 8px 24px rgba(0,0,0,.35);
+    --grad:linear-gradient(135deg,#3346B8 0%,#4B5FD6 62%,#6572E6 100%);
+    --hero-shadow:0 14px 34px rgba(0,0,0,.45); --fab-shadow:0 10px 26px rgba(0,0,0,.5);
+    --nav-bg:rgba(24,28,46,.94); --nav-shadow:0 10px 30px rgba(0,0,0,.5);
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;line-height:1.45;font-feature-settings:"tnum" 1;overscroll-behavior-y:none}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;line-height:1.45;font-feature-settings:"tnum" 1;overscroll-behavior-y:none}
 button,input,select,textarea{font:inherit;color:inherit;touch-action:manipulation}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
@@ -426,6 +434,89 @@ textarea.export{width:100%;min-height:220px;border:1px solid var(--line);border-
 #toast.warn{background:var(--plan);color:var(--on-plan)}
 @media (min-width:720px){#toast{bottom:96px}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}#toast{transition:none}}
+/* ===== оформление: карточки, блоки «Сегодня», шрифт Inter ===== */
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(fonts/inter-cyrillic-ext-wght-normal.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(fonts/inter-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(fonts/inter-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(fonts/inter-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+body{letter-spacing:-.005em}
+.top{padding:24px 0 10px}
+.brand{font-size:1.7rem;font-weight:800;letter-spacing:-.03em}
+.savestate{opacity:.6;font-size:.7rem}
+h2{font-weight:700;letter-spacing:-.01em}
+.todayhead .d{font-size:.95rem;font-weight:500;color:var(--muted)}
+section:not(.todayhead):not(.balhero),.banner,.dcard,.pcard,details.fold,.empty,.hcard{background:var(--surface);border:0;border-radius:22px;box-shadow:var(--card-shadow)}
+section:not(.todayhead):not(.balhero){padding:18px 18px 8px;margin:0 0 14px}
+.tsec{padding:16px 18px 6px}
+.tsec>h3{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+details.fold{padding:4px 18px;margin:0 0 14px}
+.hcard{padding:8px 16px 12px;margin-bottom:12px}
+.hcard .hrow{border-bottom:0}
+.empty{padding:18px}
+.tl li:last-child .tlrow,.trow:last-child,.row:last-child,.legend li:last-child{border-bottom:0}
+.balhero{background:var(--grad);color:#fff;border-radius:24px;padding:22px 22px 20px;box-shadow:var(--hero-shadow);margin:0 0 14px}
+.balhero .lbl,.balhero .sub{color:rgba(255,255,255,.82)}
+.balhero .bal{color:#fff;font-weight:700;letter-spacing:-.035em}
+.btn{border-radius:14px;font-weight:600}
+.btn:not(.ghost):not(.danger){background:var(--grad);color:#fff}
+.btn.ghost{background:var(--soft);border-color:transparent}
+.chip{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.chip.on{background:color-mix(in srgb,var(--c) 16%,var(--surface));border-color:var(--c)}
+.cico{background:color-mix(in srgb,var(--c) 17%,var(--surface))}
+.field input,.field select,.field textarea{border-color:transparent;background:var(--soft);border-radius:14px}
+.qadd input{border-color:transparent;background:var(--surface);border-radius:14px;box-shadow:var(--card-shadow)}
+.qadd button{border-radius:14px;background:var(--grad);color:#fff}
+.qmode{border:0;background:var(--surface);box-shadow:var(--card-shadow)}
+.subnav button{border-color:transparent;background:var(--surface);color:var(--muted);box-shadow:var(--card-shadow)}
+.subnav button[aria-current="true"]{background:var(--primary);color:var(--on-primary)}
+.seg2{border:0;background:var(--soft);padding:3px;border-radius:13px}
+.seg2 button{border-radius:10px;min-height:38px}
+.tabs{left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));border-radius:24px;border:0;background:var(--nav-bg);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:var(--nav-shadow);padding:4px}
+@media (min-width:720px){
+  .tabs{position:static;left:auto;right:auto;bottom:auto;width:auto;background:none;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;margin:8px 0 22px;gap:8px}
+  .tab{flex:none;flex-direction:row;font-size:.95rem;padding:10px 18px;border-radius:999px;margin:0;background:var(--surface);box-shadow:var(--card-shadow)}
+  .tab svg{display:none}
+  .tab[aria-selected="true"]{background:var(--primary);color:var(--on-primary)}
+  .fab{bottom:24px}
+}
+.tab{border-top:0;border-radius:18px;padding:8px 0 7px;margin-top:0;font-weight:600}
+.tab[aria-selected="true"]{background:color-mix(in srgb,var(--primary) 12%,var(--surface));border-top-color:transparent}
+.fab{bottom:calc(92px + env(safe-area-inset-bottom));background:var(--grad);color:#fff;box-shadow:var(--fab-shadow)}
+.flow{border-radius:12px}
+.scrim{background:rgba(23,27,43,.4)}
+.sheet{border-radius:28px 28px 0 0}
+.sheet::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 14px}
+.amountwrap input{background:transparent;padding-left:14px;font-weight:700;letter-spacing:-.03em}
+.hbtn{background:var(--surface)}
+/* «Сегодня»: блоки */
+.bento{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}
+.bt{background:var(--surface);border-radius:22px;padding:14px 16px;box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:2px;min-width:0}
+button.bt{border:0;text-align:left;width:100%}
+.bt.hero{grid-column:1/-1;background:var(--grad);color:#fff;padding:20px 20px 18px;position:relative;overflow:hidden;box-shadow:var(--hero-shadow)}
+.bt.hero::after{content:"";position:absolute;right:-40px;bottom:-60px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
+.bt.hero .lbl{color:rgba(255,255,255,.82);font-size:.85rem;font-weight:500}
+.bt.hero b{font-size:clamp(1.9rem,9.5vw,2.6rem);font-weight:700;letter-spacing:-.035em;line-height:1.12}
+.bt.hero .sub{color:rgba(255,255,255,.9);font-size:.84rem;margin-top:8px;position:relative;z-index:1;overflow-wrap:anywhere}
+.bt.hero .btn{position:absolute;right:14px;top:14px;background:rgba(255,255,255,.22);color:#fff;border:0;z-index:1}
+.bt.tile{flex-direction:row;align-items:center;gap:12px;padding:14px}
+.bt .ring{width:46px;height:46px;flex:none}
+.bt b{font-size:1.1rem;font-weight:700;display:block;letter-spacing:-.01em}
+.bt .cap{font-size:.78rem;color:var(--muted);display:block;line-height:1.25;overflow-wrap:anywhere}
+.bt.next{grid-column:1/-1;padding:12px 16px 6px}
+.bt.next>h3{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.bt .nx{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;padding:9px 0;color:inherit}
+.bt .nx+.nx{border-top:1px solid var(--line)}
+.bt .nx.past{opacity:.55}
+.bt .nx b{font-size:.98rem}
+.bt .nx>div{min-width:0}
+
+/* карточка внутри карточки — плоская; контраст в тёмной теме */
+section section:not(.todayhead):not(.balhero){background:none;box-shadow:none;border-radius:0;padding:0;margin:0 0 14px}
+section .dcard,section .pcard{background:var(--soft);box-shadow:none;border-radius:18px}
+@media (prefers-color-scheme: dark){
+  .seg2.kind button[aria-pressed="true"].k-out,.seg2.kind button[aria-pressed="true"].k-in,.seg2.kind button[aria-pressed="true"].k-goal,.btn.danger.armed{color:#0B1030}
+}
+section .dcard .btn.ghost,section .pcard .btn.ghost{background:var(--surface)}
 </style>
 </head>
 <body>
@@ -493,7 +584,7 @@ const nf0 = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
 const nf2 = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const num = x => { x = round2(x); return Number.isInteger(x) ? nf0.format(x) : nf2.format(x); };
 
-const PALETTE = ['#4C6EF5','#12B886','#F59F00','#E64980','#7950F2','#15AABF','#FA5252','#82C91E','#FD7E14','#3B5BDB','#AE3EC9','#748FA1'];
+const PALETTE = ['#4C6EF5','#12B886','#F59F00','#E64980','#7950F2','#15AABF','#FA5252','#66A80F','#FD7E14','#3B5BDB','#AE3EC9','#748FA1'];
 const col = i => PALETTE[((i ?? 11) % PALETTE.length + PALETTE.length) % PALETTE.length];
 const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 1 && /Mac/i.test(navigator.platform || ''));
 const LIMIT_WARN = 0.8;
@@ -1089,7 +1180,7 @@ const TOP_TITLES = { today: 'Сегодня', cal: 'Календарь', tasks: 
 const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['plans', 'Планы'], ['debts', 'Долги/цели']];
 function fabLabel() {
   if (ui.tab === 'more') return '';
-  if (ui.tab === 'today') return ui.qmode === 'money' ? 'Трата' : 'Дело';
+  if (ui.tab === 'today') return '';
   if (ui.tab === 'cal') return ui.person ? 'Подарок' : ui.csub === 'bdays' ? 'День рождения' : 'Событие';
   if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? 'Проект' : ui.tsub === 'habits' ? 'Привычка' : 'Дело';
   if (ui.msub === 'debts') return '';
@@ -1650,27 +1741,42 @@ function qaddHtml(scope, placeholder) {
   return `<div class="qadd"><input id="q-title" data-scope="${scope}" placeholder="${placeholder}" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="${placeholder}"><button type="button" data-act="qadd" data-scope="${scope}" aria-label="Добавить">＋</button></div>
   <div class="qchips" id="qchips">${[['today', 'Сегодня'], ['tomorrow', 'Завтра'], ['', 'Без срока']].map(([v, l]) => `<button type="button" class="chip ${ui.qd[scope] === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="qdue" data-scope="${scope}" data-v="${v}">${l}</button>`).join('')}</div>`;
 }
+function ringSvg(share, color) { const R = 17, C = 2 * Math.PI * R; return `<svg viewBox="0 0 44 44" class="ring" aria-hidden="true"><circle cx="22" cy="22" r="${R}" fill="none" style="stroke:var(--line)" stroke-width="5"/><circle cx="22" cy="22" r="${R}" fill="none" style="stroke:${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(0, Math.min(1, share)) * C} ${C}" transform="rotate(-90 22 22)"/></svg>`; }
+/* верх «Сегодня»: баланс, кольца дел и привычек, ближайшие события и дни рождения */
+function bentoHtml() {
+  const t0 = today(), bal = balance(), now = new Date(), hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const open = tasks.filter(t => !t.done && t.due && t.due <= t0).length, done = tasks.filter(t => (t.done && t.doneAt === t0) || (t.repeat && t.lastDone === t0)).length, total = open + done;
+  const hab = habits.filter(h => !h.archived && habitScheduled(h, t0)), hDone = hab.filter(h => habitDone(h, t0)).length;
+  const pay = moneyItems().dated.find(p => p.date >= t0 && p.date <= shiftDate(t0, 14));
+  const cal = calendarIndex(t0, shiftDate(t0, 7)), rows = [];
+  (cal.get(t0) || { events: [] }).events.slice(0, 3).forEach(e => rows.push({ act: 'editEvent', id: e.ev.id, ico: '🕒', c: 7, title: e.ev.title, cap: `сегодня, ${e.ev.time || 'весь день'}${e.ev.place ? ' · ' + e.ev.place : ''}`, past: !!e.ev.time && e.ev.time < hhmm }));
+  for (let i = 1; i <= 7; i++) { const e = ((cal.get(shiftDate(t0, i)) || { events: [] }).events)[0]; if (e) { rows.push({ act: 'editEvent', id: e.ev.id, ico: '📅', c: 2, title: e.ev.title, cap: `${dueLabel(e.ds)}${e.ev.time ? ', ' + e.ev.time : ''}` }); break; } }
+  people.map(q => ({ q, nb: nextBirthday(q) })).filter(x => x.nb.days <= (x.q.remind || 14)).sort((a, b) => a.nb.days - b.nb.days).slice(0, 2)
+    .forEach(({ q, nb }) => rows.push({ act: 'openPerson', id: q.id, ico: '🎂', c: 3, title: `${q.name}: день рождения`, cap: `${nb.days === 0 ? 'сегодня' : nb.days === 1 ? 'завтра' : `через ${nb.days} ${plural(nb.days, DAYW)}`}${nb.age ? `, исполнится ${nb.age}` : ''}` }));
+  return `<div class="bento">
+    <div class="bt hero"><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b>${pay ? `<span class="sub">${esc(shortDate(pay.date))} · ${esc(pay.title || catName(pay.cat))} ${pay.kind === 'in' ? '+' : '−'}${money(pay.amount)}</span>` : ''}<button type="button" class="btn sm" data-act="addTx">＋ Трата</button></div>
+    <button type="button" class="bt tile" data-act="tsub" data-v="list">${ringSvg(total ? done / total : 0, 'var(--primary)')}<div><b>${total ? `${done} из ${total}` : '—'}</b><span class="cap">${total ? 'дел на сегодня' : 'дел на сегодня нет'}</span></div></button>
+    <button type="button" class="bt tile" data-act="habitsGo">${ringSvg(hab.length ? hDone / hab.length : 0, 'var(--income)')}<div><b>${hab.length ? `${hDone} из ${hab.length}` : '—'}</b><span class="cap">${hab.length ? 'привычек' : 'привычек пока нет'}</span></div></button>
+    ${rows.length ? `<div class="bt next"><h3>Скоро</h3>${rows.map(r => `<button type="button" class="nx ${r.past ? 'past' : ''}" data-act="${r.act}" data-id="${r.id}"><span class="cico" style="--c:${col(r.c)}">${r.ico}</span><div><b>${esc(r.title)}</b><span class="cap">${esc(r.cap)}</span></div></button>`).join('')}</div>` : ''}
+  </div>`;
+}
 function viewToday(root) {
-  const bal = balance();
   root.innerHTML = `<section class="todayhead"><div class="d">${esc(dayTitle(today()))}</div></section>
-  <div class="balstrip"><div><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b></div><button type="button" class="btn sm ghost" data-act="addTx">＋ Трата</button></div>
+  <div id="bentoBox"></div>
   ${qbarHtml()}
   <div id="todayList"></div>`;
   renderTodayList();
 }
 function renderTodayList() {
   const box = $('#todayList'); if (!box) return;
+  const bb = $('#bentoBox'); if (bb) bb.innerHTML = bentoHtml();
   const t0 = today();
   const due = tasks.filter(t => !t.done && t.due && t.due <= t0).sort(byTaskDue);
   const overdue = due.filter(t => t.due < t0), todays = due.filter(t => t.due === t0), shown = new Set(due.map(t => t.id));
   const nexts = projects.filter(p => p.status === 'active').map(nextStep).filter(t => t && !shown.has(t.id)).slice(0, 6);
   const doneToday = tasks.filter(t => (t.done && t.doneAt === t0) || (t.repeat && t.lastDone === t0));
   const soon = moneyItems().dated.filter(p => p.date <= shiftDate(t0, 7));
-  const cal = calendarIndex(t0, shiftDate(t0, 7)), evToday = (cal.get(t0) || { events: [] }).events, evSoon = [];
-  for (let i = 1; i <= 7; i++) ((cal.get(shiftDate(t0, i)) || { events: [] }).events).forEach(e => evSoon.push(e));
-  const bdSoon = people.map(q => ({ q, nb: nextBirthday(q) })).filter(x => x.nb.days <= (x.q.remind || 14)).sort((a, b) => a.nb.days - b.nb.days);
   let html = '';
-  if (evToday.length) html += tsec('Встречи и события', `<ul class="tl">${evToday.map(e => eventRowHtml(e.ev, e.ds)).join('')}</ul>`);
   if (overdue.length) html += tsec('Просрочено', overdue.map(t => taskRowHtml(t)).join(''), 'late');
   if (todays.length) html += tsec('На сегодня', todays.map(t => taskRowHtml(t)).join(''));
   if (!due.length) html += `<div class="empty" style="padding:6px 0 22px"><p>На сегодня дел нет. Добавьте дело выше или выберите следующий шаг проекта.</p></div>`;
@@ -1678,8 +1784,6 @@ function renderTodayList() {
   const hToday = habits.filter(h => !h.archived && habitScheduled(h, t0));
   if (hToday.length) html += tsec('Привычки', hToday.map(h => habitRowHtml(h)).join(''), '', `<button type="button" class="chip" data-act="habitsGo">${hToday.filter(h => habitDone(h, t0)).length} из ${hToday.length}</button>`);
   if (nexts.length) html += tsec('Следующие шаги проектов', nexts.map(t => taskRowHtml(t, { today: true, noDue: !t.due })).join(''));
-  if (bdSoon.length) html += tsec('Дни рождения', `<ul class="tl">${bdSoon.map(({ q, nb }) => bdayRowHtml(q, nb)).join('')}</ul>`, '', `<button type="button" class="chip" data-act="csubGo">Все</button>`);
-  if (evSoon.length) html += tsec('Ближайшие события', `<ul class="tl">${evSoon.slice(0, 6).map(e => eventRowHtml(e.ev, e.ds, { rel: true })).join('')}</ul>`, '', `<button type="button" class="chip" data-act="tab" data-v="cal">Календарь</button>`);
   if (soon.length) html += tsec('Деньги на ближайшую неделю', `<ul class="tl">${soon.map(p => tlRowHtml(p)).join('')}</ul>`, '', `<button type="button" class="chip" data-act="tab" data-v="overview">Все платежи</button>`);
   if (doneToday.length) html += `<details class="fold" style="margin-top:0"><summary>Сделано сегодня (${doneToday.length})</summary>${doneToday.map(t => taskRowHtml(t)).join('')}</details>`;
   box.innerHTML = html;

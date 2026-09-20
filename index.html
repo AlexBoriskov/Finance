@@ -77,6 +77,7 @@ section{margin:0 0 32px}
 .pad{padding:24px 0}
 .btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;border-radius:12px;border:1px solid transparent;background:var(--primary);color:var(--on-primary);padding:10px 18px;font-weight:600;min-height:46px}
 .btn:hover{filter:brightness(1.06)}
+a.btn{text-decoration:none}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn.ghost:hover{background:var(--soft)}
 .btn.sm{min-height:40px;padding:6px 14px;font-size:.92rem;border-radius:10px}
@@ -326,7 +327,44 @@ details.help ol{padding-left:20px}
 .giftsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(96px,100%),1fr));gap:8px;margin:0 0 14px}
 .giftsum div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
 .giftsum small{display:block;font-size:.74rem;color:var(--muted)}
-.giftsum b{font-size:.98rem;overflow-wrap:anywhere}
+.giftsum b{font-size:min(.98rem,4.2vw);overflow-wrap:anywhere}
+
+/* habits */
+.hcard{border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
+.hrow{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}
+.hcard .hrow{border-bottom:0}
+.hmain{flex:1;min-width:0;background:none;border:0;text-align:left;padding:10px 4px;display:flex;flex-direction:column;gap:4px}
+.hrow.done .ttitle{color:var(--muted)}
+.hbar{height:8px;margin-top:2px}
+.hctl{display:flex;gap:8px;flex:none}
+.hbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:1.3rem;line-height:1;font-weight:600;color:var(--ink)}
+.hbtn.on{background:var(--c);border-color:var(--c);color:#fff}
+.hrow .chk.on::before{background:var(--c);border-color:var(--c)}
+.hfoot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:0 4px 6px}
+.hweek{display:inline-flex;gap:4px}
+.hweek .hc{width:14px;height:14px;border-radius:4px;padding:0}
+.hgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.hgrid .hc{aspect-ratio:1;min-height:34px;font-size:.78rem;font-weight:600;color:var(--muted)}
+.hc{display:block;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0}
+.hc.done{background:var(--c);border-color:var(--c);color:#fff}
+.hc.part{background:color-mix(in srgb,var(--c) 35%,var(--surface));border-color:var(--c);color:var(--ink)}
+.hc.miss{border-style:dashed;border-color:var(--muted)}
+.hc.todo{border-color:var(--c)}
+.hc.off{background:var(--soft);opacity:.55}
+.hc.future,.hc.pre{opacity:.28}
+.hc.now{outline:2px solid var(--primary);outline-offset:1px}
+.statgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 14px}
+@media (min-width:520px){.statgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.statgrid div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.statgrid small{display:block;font-size:.74rem;color:var(--muted)}
+.statgrid b{font-size:min(1.1rem,5vw);overflow-wrap:anywhere}
+
+/* календарь телефона */
+.optrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.optrow input[type=checkbox]{width:22px;height:22px;flex:none;margin:0}
+.optrow>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.optrow small{display:block;margin-top:2px}
+.optrow input.timein{flex:0 0 auto;width:132px;min-height:40px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:var(--surface)}
 
 /* fab */
 .fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:25;display:inline-flex;align-items:center;gap:10px;border:0;border-radius:999px;padding:0 22px 0 16px;height:56px;background:var(--primary);color:var(--on-primary);font-weight:700;box-shadow:var(--shadow)}
@@ -438,7 +476,7 @@ function defaultMeta() {
   const cats = [];
   DEF_OUT.forEach((n, i) => cats.push({ id: 'e' + i, kind: 'out', name: n, color: i % PALETTE.length }));
   DEF_IN.forEach((n, i) => cats.push({ id: 'i' + i, kind: 'in', name: n, color: (i + 3) % PALETTE.length }));
-  return { currency: null, opening: 0, totalLimit: 0, limMonths: {}, lastBackup: null, cats, tags: [{ id: 't0', name: 'Важно', color: 6 }, { id: 't1', name: 'Можно отложить', color: 11 }] };
+  return { currency: null, opening: 0, totalLimit: 0, limMonths: {}, ics: defaultIcs(), lastBackup: null, cats, tags: [{ id: 't0', name: 'Важно', color: 6 }, { id: 't1', name: 'Можно отложить', color: 11 }] };
 }
 let meta = defaultMeta();
 let plans = [];      // {id, kind:'in'|'out', title, amount, cat, tags, date, note, status, txId, ts}
@@ -447,6 +485,7 @@ let debts = [];      // {id, kind:'mortgage'|'loan'|'card', name, balance0, star
 let goals = [];      // {id, name, target, saved0, deadline?, color, done}
 let tasks = [];      // дела: {id, title, note?, due?, project?, repeat?, rday?, done, doneAt?, lastDone?, prevDue?, pos, ts}
 let projects = [];   // проекты: {id, name, goal?, due?, color, status:'active'|'paused'|'done', ts}; шаги проекта — дела с project = id
+let habits = [];     // привычки: {id, name, type:'check'|'count', goal?, unit?, step?, days:null|[0..6] (0=Пн), color, start, archived?, log:{'YYYY-MM-DD': значение}, ts}
 let events = [];     // события: {id, title, date, time?, place?, note?, repeat?, rday?, ts}
 let people = [];     // дни рождения: {id, name, day, month, year?, note?, budget?, remind, gifts:[{id,text,price?,bought}], planId?, ts}
 let owed = [];       // «мне должны»: {id, name, base, start, due?, note?, color, closed}; остаток = base + выдано (lend) − возвращено (recv)
@@ -610,6 +649,155 @@ function bdayRowHtml(q, nb) {
     <span class="row-main"><span class="row-title">${esc(q.name)}</span><span class="row-sub"><span class="badge bday">день рождения</span>${nb.age ? `<span>исполнится ${nb.age}</span>` : ''}${ideas ? `<span>идей подарка: ${ideas}</span>` : ''}</span></span></button></li>`;
 }
 
+/* — привычки — */
+const habitById = id => habits.find(h => h.id === id);
+const WD_S = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const wdOf = ds => { const [y, m, d] = ds.split('-').map(Number); return (new Date(y, m - 1, d).getDay() + 6) % 7; };   // 0 = понедельник
+const fmtNum = x => String(round2(x)).replace('.', ',');
+const habitScheduled = (h, ds) => !h.days || !h.days.length || h.days.includes(wdOf(ds));
+const habitVal = (h, ds) => h.log[ds] || 0;
+const habitDone = (h, ds) => h.type === 'count' ? habitVal(h, ds) >= h.goal : habitVal(h, ds) >= 1;
+function habitSet(h, ds, v) { v = Math.max(0, round2(v)); if (v > 0) h.log[ds] = v; else delete h.log[ds]; }
+/* серия — подряд выполненные запланированные дни; сегодняшний невыполненный день серию ещё не обрывает */
+function habitStats(h) {
+  const t0 = today(), from30 = shiftDate(t0, -29);
+  let run = 0, best = 0, total = 0, sched30 = 0, done30 = 0;
+  for (let d = h.start || t0; d <= t0; d = shiftDate(d, 1)) {
+    if (!habitScheduled(h, d)) continue;
+    const dn = habitDone(h, d);
+    if (dn) { run++; total++; if (run > best) best = run; } else if (d !== t0) run = 0;
+    if (d >= from30) { sched30++; if (dn) done30++; }
+  }
+  return { cur: run, best, total, rate30: sched30 ? Math.round(done30 / sched30 * 100) : null };
+}
+function habitCell(h, ds) {
+  const t0 = today();
+  if (ds > t0) return 'future';
+  if (ds < (h.start || t0)) return 'pre';
+  if (!habitScheduled(h, ds)) return 'off';
+  if (habitDone(h, ds)) return 'done';
+  return habitVal(h, ds) > 0 ? 'part' : (ds === t0 ? 'todo' : 'miss');
+}
+const HABIT_TPL = { water: { hname: 'Пить воду', htype: 'count', hgoal: '8', hunit: 'стаканов', hstep: '1' }, exercise: { hname: 'Зарядка', htype: 'check' }, read: { hname: 'Чтение', htype: 'count', hgoal: '20', hunit: 'мин', hstep: '5' } };
+/* — календарь телефона: файл .ics и ссылки для Google Календаря —
+   Приложение не может напоминать, пока закрыто, поэтому напоминания делает календарь телефона. */
+function defaultIcs() { return { birthdays: true, events: true, debts: true, plans: true, owed: true, tasks: false, projects: false, habits: false, habitTime: '20:00', timedAlarm: '15', dayAlarm: 'eve', amounts: true, notes: false }; }
+const ICS_TYPES = [['birthdays', 'Дни рождения'], ['events', 'События и встречи'], ['debts', 'Платежи по долгам по графику'], ['plans', 'Планы со сроком'], ['owed', 'Ожидаемые возвраты долгов'], ['tasks', 'Дела со сроком'], ['projects', 'Сроки проектов'], ['habits', 'Привычки, напоминание в']];
+const ICS_DAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+/* правило повтора; для 29–31 числа месяца берём «последний из существующих дней», как делает само приложение */
+function icsRrule(rule, date, rday) {
+  const d = +date.slice(8), mo = +date.slice(5, 7);
+  if (rule === 'daily') return 'FREQ=DAILY';
+  if (rule === 'weekly') return 'FREQ=WEEKLY';
+  if (rule === 'monthly') { const day = rday || d; return day <= 28 ? `FREQ=MONTHLY;BYMONTHDAY=${day}` : `FREQ=MONTHLY;BYMONTHDAY=${Array.from({ length: day - 27 }, (_, i) => 28 + i).join(',')};BYSETPOS=-1`; }
+  return mo === 2 && d === 29 ? 'FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=28,29;BYSETPOS=-1' : 'FREQ=YEARLY';
+}
+function nextMonthlyDate(day, from) {
+  const [y, m] = from.split('-').map(Number), mk = (yy, mm) => ymd(new Date(yy, mm - 1, Math.min(day, new Date(yy, mm, 0).getDate())));
+  let c = mk(y, m); if (c < from) { const n = new Date(y, m, 1); c = mk(n.getFullYear(), n.getMonth() + 1); }
+  return c;
+}
+function icsEntries(p, only) {
+  const t0 = today(), out = [], mny = x => money(x).replace(/\u00a0/g, ' ');
+  const want = (type, id) => only ? (only.type === type && only.id === id) : !!p[type];
+  const amt = str => p.amounts ? str : '';
+  const note = str => p.notes && str ? str : '';
+  for (const q of people) if (want('birthdays', q.id)) {
+    const nb = nextBirthday(q), desc = [`${fmtBirth(q)}${q.year ? ', ' + q.year + ' год рождения' : ''}`];
+    if (p.notes) {
+      if (q.note) desc.push('Как празднуем: ' + q.note);
+      const g = (q.gifts || []).filter(x => !x.bought).map(x => x.text); if (g.length) desc.push('Идеи подарков: ' + g.join(', '));
+      if (q.budget > 0 && p.amounts) desc.push('Бюджет: ' + mny(q.budget));
+    }
+    out.push({ type: 'birthdays', id: q.id, title: `День рождения: ${q.name}`, desc: desc.join('\n'), date: nb.date, rrule: icsRrule('yearly', `2024-${pad(q.month)}-${pad(q.day)}`) });   // правило считаем по настоящему дню рождения, а не по ближайшей дате (29 февраля)
+  }
+  for (const ev of events) if (want('events', ev.id)) {
+    const date = ev.repeat ? occurrences(ev, t0, shiftDate(t0, 800))[0] : (ev.date >= t0 ? ev.date : null);
+    if (date) out.push({ type: 'events', id: ev.id, title: ev.title, desc: note(ev.note), date, time: ev.time || '', dur: 60, place: ev.place || '', rrule: ev.repeat ? icsRrule(ev.repeat, date, ev.rday) : '' });
+  }
+  for (const d of debts) if (want('debts', d.id) && !d.closed && d.monthly > 0 && d.payDay >= 1) {
+    const bal = debtBalance(d); if (bal <= 0.005) continue;
+    const sp = scheduledPayments().find(x => x.debt.id === d.id), first = sp && sp.date >= t0 ? sp.date : nextMonthlyDate(d.payDay, t0), am = amortize(bal, d.rate || 0, d.monthly);
+    let rr = icsRrule('monthly', first, d.payDay); if (am.ok && am.months > 0 && am.months <= 600) rr += `;COUNT=${am.months}`;
+    out.push({ type: 'debts', id: d.id, title: `Платёж по долгу: ${d.name}${amt(' — ' + mny(d.monthly))}`, desc: 'Ежемесячный платёж по графику.', date: first, rrule: rr });
+  }
+  for (const pl of plans) if (want('plans', pl.id) && pl.status === 'open' && pl.date && pl.date >= t0)
+    out.push({ type: 'plans', id: pl.id, title: `${pl.kind === 'in' ? 'Ожидается' : 'Оплатить'}: ${pl.title || catName(pl.cat)}${amt(' — ' + mny(pl.amount))}`, desc: note(pl.note), date: pl.date });
+  for (const o of owed) if (want('owed', o.id) && !o.closed && o.due && o.due >= t0) {
+    const rem = owedStats(o).remaining; if (rem <= 0.005) continue;
+    out.push({ type: 'owed', id: o.id, title: `Вернёт ${o.name}${amt(': ' + mny(rem))}`, desc: note(o.note), date: o.due });
+  }
+  for (const t of tasks) if (want('tasks', t.id) && !t.done && t.due && t.due >= t0) {
+    const pr = t.project ? projectById(t.project) : null;
+    out.push({ type: 'tasks', id: t.id, title: `Дело: ${t.title}`, desc: p.notes ? [pr ? 'Проект: ' + pr.name : '', t.note || ''].filter(Boolean).join('\n') : '', date: t.due, rrule: t.repeat ? icsRrule(t.repeat, t.due, t.rday) : '' });
+  }
+  for (const pr of projects) if (want('projects', pr.id) && pr.status === 'active' && pr.due && pr.due >= t0)
+    out.push({ type: 'projects', id: pr.id, title: `Срок проекта: ${pr.name}`, desc: note(pr.goal), date: pr.due });
+  for (const h of habits) if (want('habits', h.id) && !h.archived) {
+    let date = t0; for (let i = 0; i < 7 && !habitScheduled(h, date); i++) date = shiftDate(date, 1);
+    out.push({ type: 'habits', id: h.id, title: h.type === 'count' ? `${h.name}: ${fmtNum(h.goal)}${h.unit ? ' ' + h.unit : ''}` : h.name, desc: 'Отметьте в приложении «Дела и деньги».', date, time: p.habitTime || '20:00', dur: 15, rrule: h.days ? `FREQ=WEEKLY;BYDAY=${h.days.map(i => ICS_DAYS[i]).join(',')}` : 'FREQ=DAILY', habit: true });
+  }
+  return out;
+}
+const icsEsc = s => String(s ?? '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+function icsFold(line) {   // строки длиннее 75 байт переносятся (RFC 5545), многобайтовые символы не режем
+  const enc = new TextEncoder(); let out = '', cur = '', bytes = 0;
+  for (const ch of line) { const b = enc.encode(ch).length; if (bytes + b > 75) { out += cur + '\r\n '; cur = ch; bytes = 1 + b; } else { cur += ch; bytes += b; } }
+  return out + cur;
+}
+const icsDT = (date, time) => `${date.replace(/-/g, '')}T${time.replace(':', '')}00`;
+function icsDTplus(date, time, min) { const [y, m, d] = date.split('-').map(Number), [hh, mm] = time.split(':').map(Number), x = new Date(y, m - 1, d, hh, mm + min); return `${x.getFullYear()}${pad(x.getMonth() + 1)}${pad(x.getDate())}T${pad(x.getHours())}${pad(x.getMinutes())}00`; }
+function icsAlarms(e, p) {
+  if (e.habit) return ['PT0S'];
+  if (e.time) { const m = +p.timedAlarm; return m < 0 || isNaN(m) ? [] : [m === 0 ? 'PT0S' : m % 1440 === 0 ? `-P${m / 1440}D` : m % 60 === 0 ? `-PT${m / 60}H` : `-PT${m}M`]; }
+  const k = p.dayAlarm, al = [];   // для событий «на весь день» время отсчитывается от полуночи: -15 ч = накануне в 9:00, +9 ч = в день в 9:00
+  if (k === 'week') al.push('-P6DT15H');
+  if (k === 'eve' || k === 'week') al.push('-PT15H');
+  if (k === 'day' || k === 'eve' || k === 'week') al.push('PT9H');
+  return al;
+}
+function buildIcs(entries, p) {
+  const L = [], add = str => L.push(icsFold(str)), stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Dela i dengi//RU', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:Дела и деньги'].forEach(add);
+  for (const e of entries) {
+    add('BEGIN:VEVENT'); add(`UID:${e.type}-${e.id}@dela-i-dengi`); add(`DTSTAMP:${stamp}`);
+    if (e.time) { add(`DTSTART:${icsDT(e.date, e.time)}`); add(`DTEND:${icsDTplus(e.date, e.time, e.dur || 60)}`); }
+    else { add(`DTSTART;VALUE=DATE:${e.date.replace(/-/g, '')}`); add(`DTEND;VALUE=DATE:${shiftDate(e.date, 1).replace(/-/g, '')}`); }
+    if (e.rrule) add(`RRULE:${e.rrule}`);
+    add(`SUMMARY:${icsEsc(e.title)}`);
+    if (e.desc) add(`DESCRIPTION:${icsEsc(e.desc)}`);
+    if (e.place) add(`LOCATION:${icsEsc(e.place)}`);
+    for (const tr of icsAlarms(e, p)) { add('BEGIN:VALARM'); add('ACTION:DISPLAY'); add(`DESCRIPTION:${icsEsc(e.title)}`); add(`TRIGGER:${tr}`); add('END:VALARM'); }
+    add('END:VEVENT');
+  }
+  add('END:VCALENDAR');
+  return L.join('\r\n') + '\r\n';
+}
+/* ссылка «добавить в Google Календарь»: открывает форму нового события, уже заполненную; напоминание выбирается там же */
+function gcalUrl(e) {
+  const dates = e.time ? `${icsDT(e.date, e.time)}/${icsDTplus(e.date, e.time, e.dur || 60)}` : `${e.date.replace(/-/g, '')}/${shiftDate(e.date, 1).replace(/-/g, '')}`;
+  const u = new URL('https://calendar.google.com/calendar/render');
+  u.searchParams.set('action', 'TEMPLATE'); u.searchParams.set('text', e.title); u.searchParams.set('dates', dates);
+  if (e.desc) u.searchParams.set('details', e.desc); if (e.place) u.searchParams.set('location', e.place); if (e.rrule) u.searchParams.set('recur', 'RRULE:' + e.rrule);
+  return u.toString();
+}
+function icsCounts() { const all = { ...meta.ics, ...Object.fromEntries(ICS_TYPES.map(([k]) => [k, true])) }, c = {}; for (const e of icsEntries(all)) c[e.type] = (c[e.type] || 0) + 1; return c; }
+function icsSettingsHtml() {
+  const c = icsCounts(), o = meta.ics, n = ICS_TYPES.filter(([k]) => o[k]).reduce((a, [k]) => a + (c[k] || 0), 0);
+  return `<section><h2>Календарь телефона</h2>
+    <p class="hint" style="margin:0 0 12px">Приложение не может напоминать, пока закрыто. Создайте файл календаря (.ics) и добавьте его в календарь телефона: напоминания сделает сам телефон. Повторный импорт того же файла обычно обновляет события, а не дублирует их.</p>
+    <div>${ICS_TYPES.map(([k, l]) => `<label class="optrow"><input type="checkbox" data-change="icsopt" data-k="${k}" ${o[k] ? 'checked' : ''}><span>${esc(l)} <span class="badge">${c[k] || 0}</span></span>${k === 'habits' ? `<input type="time" data-change="icsopt" data-k="habitTime" value="${esc(o.habitTime)}" aria-label="Время напоминания о привычках" class="timein">` : ''}</label>`).join('')}</div>
+    <div class="field" style="margin-top:14px"><span>Напоминание о событиях со временем</span><select data-change="icsopt" data-k="timedAlarm">${[['-1', 'Не напоминать'], ['0', 'В момент начала'], ['15', 'За 15 минут'], ['60', 'За час'], ['1440', 'За день']].map(([v, l]) => `<option value="${v}" ${o.timedAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><span>Напоминание о датах без времени (дни рождения, платежи, дела)</span><select data-change="icsopt" data-k="dayAlarm">${[['none', 'Не напоминать'], ['day', 'В день, в 9:00'], ['eve', 'Накануне и в день, в 9:00'], ['week', 'За неделю, накануне и в день, в 9:00']].map(([v, l]) => `<option value="${v}" ${o.dayAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    <label class="optrow"><input type="checkbox" data-change="icsopt" data-k="amounts" ${o.amounts ? 'checked' : ''}><span>Указывать суммы в названиях</span></label>
+    <label class="optrow"><input type="checkbox" data-change="icsopt" data-k="notes" ${o.notes ? 'checked' : ''}><span>Добавлять заметки и идеи подарков в описание <small class="muted">если календарь общий, их увидят другие</small></span></label>
+    <div class="btnrow" style="margin-top:14px"><button type="button" class="btn" data-act="icsMake" ${n ? '' : 'disabled'}>Создать файл календаря${n ? ` (${n})` : ''}</button></div>
+    <details class="help"><summary>Как добавить файл в календарь и про напоминания</summary>
+      <ol><li><b>iPhone:</b> сохраните файл в «Файлы», нажмите на него и выберите «Добавить все».</li>
+      <li><b>Android:</b> попробуйте открыть файл в календарном приложении телефона: если оно принимает такие файлы, предложит добавить события. В справке Google импорт файлов описан для компьютера (calendar.google.com → Настройки → Импорт и экспорт), в приложении на телефоне он может быть недоступен. Надёжный способ на телефоне — добавлять по одному кнопкой «В Google Календарь» на странице дня рождения и в карточке события.</li>
+      <li><b>Напоминания:</b> одни календари берут их из файла, другие игнорируют. Тогда откройте настройки календаря, в который импортировали события, и задайте уведомления по умолчанию (для событий на весь день удобно «накануне в 9:00»). Лучше импортировать в отдельный календарь.</li></ol></details>
+  </section>`;
+}
 /* оценка процентов за период с прошлого платежа (по факту дней, год = 365) — подсказка, точные цифры берутся из графика банка */
 function estimateInterest(d, date, exclId) {
   if (!(d.rate > 0)) return NaN;
@@ -651,7 +839,7 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { volatile
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { volatile = true; if (k === LS_KEY) memRaw = v; return false; } }
 
 function exportObj() {
-  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, limMonths: meta.limMonths || {}, lastBackup: meta.lastBackup || null, cats: meta.cats, tags: meta.tags }, plans, debts, goals, owed, tasks, projects, events, people, months };
+  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, limMonths: meta.limMonths || {}, ics: meta.ics, lastBackup: meta.lastBackup || null, cats: meta.cats, tags: meta.tags }, plans, debts, goals, owed, tasks, projects, events, people, habits, months };
 }
 function setSave(state) {
   const el = $('#savestate'); if (!el) return;
@@ -677,6 +865,7 @@ function hydrate(obj) {
   if (meta.currency === undefined) meta.currency = null;
   if (!(meta.totalLimit > 0)) meta.totalLimit = 0;
   if (!meta.limMonths || typeof meta.limMonths !== 'object' || Array.isArray(meta.limMonths)) meta.limMonths = {};
+  meta.ics = { ...defaultIcs(), ...(meta.ics && typeof meta.ics === 'object' ? meta.ics : {}) };
   plans = Array.isArray(obj.plans) ? obj.plans.filter(p => p && p.id && (p.kind === 'in' || p.kind === 'out') && Number.isFinite(p.amount)) : [];
   debts = Array.isArray(obj.debts) ? obj.debts.filter(d => d && d.id && d.name && Number.isFinite(d.balance0)).map(d => ({ ...d, adj: Array.isArray(d.adj) ? d.adj.filter(a => a && Number.isFinite(a.delta)) : [] })) : [];
   goals = Array.isArray(obj.goals) ? obj.goals.filter(g => g && g.id && g.name && g.target > 0) : [];
@@ -684,6 +873,7 @@ function hydrate(obj) {
   tasks = Array.isArray(obj.tasks) ? obj.tasks.filter(t => t && t.id && t.title).map(t => ({ ...t, pos: Number.isFinite(t.pos) ? t.pos : (t.ts || 0) })) : [];
   events = Array.isArray(obj.events) ? obj.events.filter(e => e && e.id && e.title && isDate(e.date)) : [];
   people = Array.isArray(obj.people) ? obj.people.filter(q => q && q.id && q.name && q.day >= 1 && q.day <= 31 && q.month >= 1 && q.month <= 12).map(q => ({ remind: 14, ...q, gifts: Array.isArray(q.gifts) ? q.gifts : [] })) : [];
+  habits = Array.isArray(obj.habits) ? obj.habits.filter(h => h && h.id && h.name).map(h => ({ type: 'check', days: null, start: today(), ...h, days: Array.isArray(h.days) && h.days.length && h.days.length < 7 ? h.days : null, log: h.log && typeof h.log === 'object' ? h.log : {} })) : [];
   projects = Array.isArray(obj.projects) ? obj.projects.filter(p => p && p.id && p.name).map(p => ({ status: 'active', ...p })) : [];
   months = {};
   for (const [k, list] of Object.entries(obj.months || {})) {
@@ -699,7 +889,7 @@ function loadState() {
 window.addEventListener('storage', e => { if (e.key === LS_KEY && !draft && !saveT) { loadState(); render(); } });
 
 /* ───────── ui state ───────── */
-const ui = { tab: 'today', msub: 'overview', tsub: 'list', project: null, person: null, cal: mkey(today()), calDay: today(), csub: 'month', limScope: '', tproj: '', qd: { today: 'today', tasks: '' }, month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
+const ui = { tab: 'today', msub: 'overview', tsub: 'list', project: null, habit: null, person: null, cal: mkey(today()), calDay: today(), csub: 'month', limScope: '', tproj: '', qd: { today: 'today', tasks: '' }, month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
 let draft = null, lastFocus = null, pendingImport = null;
 
 let toastT;
@@ -777,7 +967,7 @@ function fabLabel() {
   if (ui.tab === 'more') return '';
   if (ui.tab === 'today') return 'Дело';
   if (ui.tab === 'cal') return ui.person ? 'Подарок' : ui.csub === 'bdays' ? 'День рождения' : 'Событие';
-  if (ui.tab === 'tasks') return ui.project ? 'Шаг' : ui.tsub === 'projects' ? 'Проект' : 'Дело';
+  if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? 'Проект' : ui.tsub === 'habits' ? 'Привычка' : 'Дело';
   if (ui.msub === 'debts') return '';
   return ui.msub === 'plans' ? 'Новый план' : 'Добавить';
 }
@@ -1228,10 +1418,67 @@ function renderPersonBody() {
   html += plan
     ? `<div class="pbanner" style="margin:0 0 14px"><span>Расход запланирован: <b class="num">${money(plan.amount)}</b>${plan.date ? `, до ${esc(shortDate(plan.date))}` : ''}</span><button type="button" class="btn sm ghost" data-act="editPlan" data-id="${plan.id}">Открыть план</button></div>`
     : `<div class="btnrow" style="margin:0 0 16px"><button type="button" class="btn ghost sm" data-act="planGift" data-id="${q.id}">Запланировать расход на подарок</button></div>`;
+  const oneB = icsEntries(meta.ics, { type: 'birthdays', id: q.id })[0];
+  html += `<div class="btnrow" style="margin:0 0 16px"><button type="button" class="btn ghost sm" data-act="icsOne" data-t="birthdays" data-id="${q.id}">Файл для календаря</button><a class="btn ghost sm" href="${esc(gcalUrl(oneB))}" target="_blank" rel="noopener">В Google Календарь</a></div>`;
   html += `<h3>Идеи подарков</h3><div class="qadd"><input id="g-text" placeholder="Идея подарка…" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="Идея подарка"><input id="g-price" class="small" inputmode="decimal" placeholder="Цена" aria-label="Цена"><button type="button" data-act="giftAdd" aria-label="Добавить идею">＋</button></div>`;
   const grow = g => `<div class="trow ${g.bought ? 'done' : ''}"><button type="button" class="chk ${g.bought ? 'on' : ''}" data-act="giftToggle" data-id="${g.id}" aria-pressed="${!!g.bought}" aria-label="${g.bought ? 'Вернуть в идеи' : 'Отметить купленным'}"></button><button type="button" class="trow-main" data-act="editGift" data-id="${g.id}"><span class="ttitle">${esc(g.text)}</span>${g.price ? `<span class="tmeta"><span class="num">${esc(money(g.price))}</span></span>` : ''}</button></div>`;
   html += idea.length ? idea.map(grow).join('') : `<p class="hint">${gifts.length ? 'Все идеи куплены.' : 'Записывайте, что человек любит или просил: к моменту покупки ничего не забудется.'}</p>`;
   if (got.length) html += `<details class="fold"><summary>Куплено (${got.length})</summary>${got.map(grow).join('')}</details>`;
+  box.innerHTML = html;
+}
+
+/* — привычки — */
+function habitRowHtml(h, o = {}) {
+  const t0 = today(), v = habitVal(h, t0), done = habitDone(h, t0), st = habitStats(h), c = col(h.color), count = h.type === 'count', off = !habitScheduled(h, t0);
+  const share = count ? Math.min(1, v / h.goal) : (v ? 1 : 0);
+  const prog = off ? 'сегодня без этой привычки' : count ? `${fmtNum(v)} из ${fmtNum(h.goal)}${h.unit ? ' ' + h.unit : ''}` : (done ? 'выполнено' : 'сегодня');
+  return `<div class="hrow ${done ? 'done' : ''}" style="--c:${c}">
+    <button type="button" class="hmain" data-act="openHabit" data-id="${h.id}">${o.noTitle ? '' : `<span class="ttitle">${esc(h.name)}</span>`}
+      <span class="tmeta"><span>${esc(prog)}</span>${st.cur > 0 ? `<span class="badge">серия ${st.cur} ${plural(st.cur, DAYW)}</span>` : ''}</span>
+      ${count && !off ? `<span class="track hbar"><span class="fill" style="width:${Math.max(v > 0 ? 3 : 0, share * 100)}%;background:${c}"></span></span>` : ''}</button>
+    ${off ? '' : count ? `<span class="hctl"><button type="button" class="hbtn" data-act="habitStep" data-id="${h.id}" data-d="-1" aria-label="Меньше">−</button><button type="button" class="hbtn on" data-act="habitStep" data-id="${h.id}" data-d="1" aria-label="Больше">＋</button></span>`
+      : `<button type="button" class="chk ${done ? 'on' : ''}" data-act="habitToggle" data-id="${h.id}" aria-pressed="${done}" aria-label="${done ? 'Снять отметку' : 'Отметить выполненной'}"></button>`}
+  </div>`;
+}
+function weekStrip(h) {
+  const t0 = today();
+  return `<span class="hweek" style="--c:${col(h.color)}" aria-hidden="true">${Array.from({ length: 7 }, (_, i) => { const ds = shiftDate(t0, i - 6); return `<i class="hc ${habitCell(h, ds)} ${ds === t0 ? 'now' : ''}"></i>`; }).join('')}</span>`;
+}
+function scheduleText(h) { return !h.days ? 'каждый день' : h.days.map(i => WD_S[i]).join(', '); }
+function renderHabitsList() {
+  const box = $('#habitList'); if (!box) return;
+  if (!habits.length) {
+    box.innerHTML = `<div class="empty"><p>Привычка — это то, что вы хотите делать регулярно: пить воду, делать зарядку, читать. Отмечайте выполнение каждый день, приложение считает серию дней подряд. Начните с готового шаблона или создайте свою.</p>
+      <div class="chips" style="margin-bottom:14px">${[['water', 'Пить воду'], ['exercise', 'Зарядка'], ['read', 'Чтение']].map(([k, l]) => `<button type="button" class="chip" style="--c:#4C6EF5" data-act="newHabitTpl" data-v="${k}">＋ ${l}</button>`).join('')}</div>
+      <button type="button" class="btn" data-act="newHabit">Создать свою</button></div>`;
+    return;
+  }
+  const card = h => { const st = habitStats(h); return `<div class="hcard">${habitRowHtml(h)}<div class="hfoot">${weekStrip(h)}<span class="hint" style="margin:0">${esc(scheduleText(h))}${st.best > 1 ? `, лучшая серия ${st.best}` : ''}</span></div></div>`; };
+  const act = habits.filter(h => !h.archived), arch = habits.filter(h => h.archived);
+  let html = act.length ? act.map(card).join('') : `<p class="hint">Все привычки в архиве.</p>`;
+  if (arch.length) html += `<details class="fold"><summary>Архив (${arch.length})</summary>${arch.map(card).join('')}</details>`;
+  box.innerHTML = html;
+}
+function viewHabit(root) {
+  const h = habitById(ui.habit);
+  if (!h) { ui.habit = null; return viewTasks(root); }
+  root.innerHTML = `<div class="phead"><button type="button" class="btn sm ghost" data-act="closeHabit">‹ Привычки</button><button type="button" class="btn sm ghost" data-act="editHabit" data-id="${h.id}">Изменить</button></div>
+  <section><h2 class="ptitle"><span class="dot" style="background:${col(h.color)}"></span><span>${esc(h.name)}</span></h2><div id="habitBody"></div></section>`;
+  renderHabitBody();
+}
+function renderHabitBody() {
+  const box = $('#habitBody'), h = habitById(ui.habit); if (!box || !h) return;
+  const t0 = today(), st = habitStats(h), c = col(h.color);
+  const goalText = h.type === 'count' ? `Цель: ${fmtNum(h.goal)}${h.unit ? ' ' + h.unit : ''} в день, шаг ${fmtNum(h.step || 1)}` : 'Отмечать: сделал или нет';
+  const wdStart = shiftDate(t0, -wdOf(t0) - 28);   // понедельник, с которого начинается сетка из пяти недель
+  const cells = Array.from({ length: 35 }, (_, i) => shiftDate(wdStart, i));
+  let html = `<p class="hint" style="margin:0 0 12px">${esc(goalText)}. Дни: ${esc(scheduleText(h))}.${h.archived ? ' Привычка в архиве.' : ''}</p>`;
+  if (!h.archived && habitScheduled(h, t0)) html += `<div class="hcard">${habitRowHtml(h, { noTitle: true })}</div>`;
+  else if (!h.archived) html += `<p class="hint">Сегодня выходной от этой привычки.</p>`;
+  html += `<div class="statgrid" style="margin-top:14px"><div><small>Серия</small><b class="num">${st.cur}</b></div><div><small>Лучшая серия</small><b class="num">${st.best}</b></div><div><small>За 30 дней</small><b class="num">${st.rate30 === null ? '—' : st.rate30 + '%'}</b></div><div><small>Всего дней</small><b class="num">${st.total}</b></div></div>
+  <h3 style="margin:18px 0 8px">История, пять недель</h3><p class="hint" style="margin:-4px 0 8px">Нажмите на день, чтобы исправить отметку.</p>
+  <div class="hgrid" style="--c:${c}">${WD_S.map(w => `<div class="cwd">${w}</div>`).join('')}${cells.map(ds => { const s2 = habitCell(h, ds); return `<button type="button" class="hc ${s2} ${ds === t0 ? 'now' : ''}" data-act="habitDay" data-id="${h.id}" data-d="${ds}" ${s2 === 'future' ? 'disabled' : ''} aria-label="${esc(dayTitle(ds))}">${+ds.slice(8)}</button>`; }).join('')}</div>
+  <div class="callegend"><span><i class="cd" style="background:${c}"></i>выполнено</span><span><i class="cd" style="background:color-mix(in srgb,${c} 35%,var(--surface));box-shadow:0 0 0 1px ${c}"></i>частично</span><span><i class="cd" style="border:1px dashed var(--muted)"></i>пропуск</span></div>`;
   box.innerHTML = html;
 }
 
@@ -1281,6 +1528,8 @@ function renderTodayList() {
   if (todays.length) html += tsec('На сегодня', todays.map(t => taskRowHtml(t)).join(''));
   if (!due.length) html += `<div class="empty" style="padding:6px 0 22px"><p>На сегодня дел нет. Добавьте дело выше или выберите следующий шаг проекта.</p></div>`;
   if (due.length) html += `<div class="btnrow" style="margin:-8px 0 22px"><button type="button" class="btn ghost sm" data-act="rollover">Перенести несделанное на завтра (${due.length})</button></div>`;
+  const hToday = habits.filter(h => !h.archived && habitScheduled(h, t0));
+  if (hToday.length) html += tsec('Привычки', hToday.map(h => habitRowHtml(h)).join(''), '', `<button type="button" class="chip" data-act="habitsGo">${hToday.filter(h => habitDone(h, t0)).length} из ${hToday.length}</button>`);
   if (nexts.length) html += tsec('Следующие шаги проектов', nexts.map(t => taskRowHtml(t, { today: true, noDue: !t.due })).join(''));
   if (bdSoon.length) html += tsec('Дни рождения', `<ul class="tl">${bdSoon.map(({ q, nb }) => bdayRowHtml(q, nb)).join('')}</ul>`, '', `<button type="button" class="chip" data-act="csubGo">Все</button>`);
   if (evSoon.length) html += tsec('Ближайшие события', `<ul class="tl">${evSoon.slice(0, 6).map(e => eventRowHtml(e.ev, e.ds, { rel: true })).join('')}</ul>`, '', `<button type="button" class="chip" data-act="tab" data-v="cal">Календарь</button>`);
@@ -1290,11 +1539,16 @@ function renderTodayList() {
 }
 
 function viewTasks(root) {
+  if (ui.habit) return viewHabit(root);
   if (ui.project) return viewProject(root);
-  const sub = `<nav class="subnav" aria-label="Разделы дел">${[['list', 'Дела'], ['projects', 'Проекты']].map(([v, l]) => `<button data-act="tsub" data-v="${v}" aria-current="${ui.tsub === v}">${l}</button>`).join('')}</nav>`;
+  const sub = `<nav class="subnav" aria-label="Разделы дел">${[['list', 'Дела'], ['projects', 'Проекты'], ['habits', 'Привычки']].map(([v, l]) => `<button data-act="tsub" data-v="${v}" aria-current="${ui.tsub === v}">${l}</button>`).join('')}</nav>`;
   if (ui.tsub === 'projects') {
     root.innerHTML = sub + `<div class="sechead"><h2>Проекты</h2><button type="button" class="btn sm ghost" data-act="newProject">＋ Проект</button></div><div id="projList"></div>`;
     return renderProjectsList();
+  }
+  if (ui.tsub === 'habits') {
+    root.innerHTML = sub + `<div class="sechead"><h2>Привычки</h2><button type="button" class="btn sm ghost" data-act="newHabit">＋ Привычка</button></div><div id="habitList"></div>`;
+    return renderHabitsList();
   }
   const filter = projects.length ? `<div class="field" style="margin:0 0 14px"><select data-change="tproj" aria-label="Проект"><option value="">Все дела</option><option value="-" ${ui.tproj === '-' ? 'selected' : ''}>Без проекта</option>${projects.map(p => `<option value="${p.id}" ${ui.tproj === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>` : '';
   root.innerHTML = sub + qaddHtml('tasks', 'Новое дело…') + filter + `<div id="taskList"></div>`;
@@ -1360,7 +1614,7 @@ function renderProjectBody() {
 function renderLists() {
   if (ui.tab === 'today') renderTodayList();
   else if (ui.tab === 'cal') { if (ui.person) renderPersonBody(); else if (ui.csub === 'bdays') renderBdaysList(); else renderCalBody(); }
-  else if (ui.tab === 'tasks') { if (ui.project) renderProjectBody(); else if (ui.tsub === 'projects') renderProjectsList(); else renderTaskList(); }
+  else if (ui.tab === 'tasks') { if (ui.habit) renderHabitBody(); else if (ui.project) renderProjectBody(); else if (ui.tsub === 'habits') renderHabitsList(); else if (ui.tsub === 'projects') renderProjectsList(); else renderTaskList(); }
 }
 
 /* — settings — */
@@ -1408,6 +1662,7 @@ function viewSettings(root) {
   ${limitsSettingsHtml()}
   <div class="two"><section><h2>Категории расходов</h2>${catList('out')}</section><section><h2>Категории доходов</h2>${catList('in')}</section></div>
   <section><h2>Теги</h2><p class="hint" style="margin:0 0 10px">Например, для важности: обязательное, желаемое, можно отложить. Цифра справа — сколько записей и планов используют тег.</p>${tagList}</section>
+  ${icsSettingsHtml()}
   <section><h2>Данные</h2>
     <p class="hint" style="margin:0 0 12px">Всё хранится в памяти этого браузера на устройстве, никуда не отправляется. Сейчас: ${nTx} ${plural(nTx, ['запись', 'записи', 'записей'])}, ${debts.length} ${plural(debts.length, ['долг', 'долга', 'долгов'])}, ${goals.length} ${plural(goals.length, ['цель', 'цели', 'целей'])}. Последняя копия: ${lastB}.</p>
     ${location.protocol === 'file:' ? `<div class="notice warn"><p style="margin:0">Вы открыли приложение прямо из файла. В таком режиме браузер может очистить данные, а на экран «Домой» оно не устанавливается. Надёжнее разместить его по ссылке, см. README в архиве.</p></div>` : ''}
@@ -1444,7 +1699,7 @@ function kindSeg(list) {
   const all = { out: ['Расход', 'k-out'], in: ['Доход', 'k-in'], pay: ['Долг', 'k-pay'], goal: ['Цель', 'k-goal'] };
   return `<div class="seg2 kind" role="group" aria-label="Тип записи" style="margin-bottom:16px">${list.map(k => `<button type="button" class="${all[k][1]}" data-act="setKind" data-v="${k}" aria-pressed="${draft.kind === k}">${all[k][0]}</button>`).join('')}</div>`;
 }
-const FIELDS = { 'f-amount': 'amount', 'f-date': 'date', 'f-title': 'title', 'f-note': 'note', 'f-store': 'store', 'f-int': 'interest', 'f-after': 'after', 'f-debt': 'debt', 'f-goal': 'goal', 'f-src': 'src', 'f-actual': 'actual', 'e-title': 'etitle', 'e-date': 'edate', 'e-time': 'etime', 'e-place': 'eplace', 'e-note': 'enote', 'e-repeat': 'erepeat', 'b-name': 'bname', 'b-day': 'bday', 'b-month': 'bmonth', 'b-year': 'byear', 'b-remind': 'bremind', 'b-note': 'bnote', 'b-budget': 'bbudget', 'gm-text': 'gtext', 'gm-price': 'gprice', 't-title': 'ttitle', 't-note': 'tnote', 't-due': 'tdue', 't-project': 'tproject', 't-repeat': 'trepeat', 'p-name': 'pname', 'p-goal': 'pgoal', 'p-due': 'pdue', 'p-status': 'pstatus', 'f-owed': 'owed', 'o-name': 'oname', 'o-amount': 'oamount', 'o-date': 'odate', 'o-due': 'odue', 'o-note': 'onote', 'o-base': 'obase',
+const FIELDS = { 'f-amount': 'amount', 'f-date': 'date', 'f-title': 'title', 'f-note': 'note', 'f-store': 'store', 'f-int': 'interest', 'f-after': 'after', 'f-debt': 'debt', 'f-goal': 'goal', 'f-src': 'src', 'f-actual': 'actual', 'h-name': 'hname', 'h-goal': 'hgoal', 'h-unit': 'hunit', 'h-step': 'hstep', 'hl-val': 'hlval', 'e-title': 'etitle', 'e-date': 'edate', 'e-time': 'etime', 'e-place': 'eplace', 'e-note': 'enote', 'e-repeat': 'erepeat', 'b-name': 'bname', 'b-day': 'bday', 'b-month': 'bmonth', 'b-year': 'byear', 'b-remind': 'bremind', 'b-note': 'bnote', 'b-budget': 'bbudget', 'gm-text': 'gtext', 'gm-price': 'gprice', 't-title': 'ttitle', 't-note': 'tnote', 't-due': 'tdue', 't-project': 'tproject', 't-repeat': 'trepeat', 'p-name': 'pname', 'p-goal': 'pgoal', 'p-due': 'pdue', 'p-status': 'pstatus', 'f-owed': 'owed', 'o-name': 'oname', 'o-amount': 'oamount', 'o-date': 'odate', 'o-due': 'odue', 'o-note': 'onote', 'o-base': 'obase',
   'd-name': 'name', 'd-kind': 'dkind', 'd-bal0': 'bal0', 'd-start': 'start', 'd-rate': 'rate', 'd-monthly': 'monthly', 'd-payday': 'payday', 'd-limit': 'limit', 'gx-name': 'gname', 'gx-target': 'target', 'gx-saved0': 'saved0', 'gx-deadline': 'deadline' };
 function syncDraft() {
   if (!draft) return;
@@ -1452,6 +1707,8 @@ function syncDraft() {
   const cl = $('#d-closed'); if (cl) draft.closed = cl.checked;
   const oc = $('#o-closed'); if (oc) draft.oclosed = oc.checked;
   const gb = $('#gm-bought'); if (gb) draft.gbought = gb.checked;
+  const ha = $('#h-arch'); if (ha) draft.harch = ha.checked;
+  const hc = $('#hl-chk'); if (hc) draft.hlchk = hc.checked;
   const nc = $('#f-newcat'); if (nc) draft.newCatName = nc.value;
 }
 
@@ -1557,7 +1814,7 @@ function openTx(opts = {}) {
 }
 function renderModal() {
   const box = $('#mcontent'); if (!box || !draft) return;
-  box.innerHTML = ({ tx: txHtml, plan: planHtml, debt: debtHtml, goalx: goalxHtml, recon: reconHtml, owed: owedHtml, task: taskHtml, project: projectHtml, event: eventHtml, person: personHtml, gift: giftHtml })[draft.type]();
+  box.innerHTML = ({ tx: txHtml, plan: planHtml, debt: debtHtml, goalx: goalxHtml, recon: reconHtml, owed: owedHtml, task: taskHtml, project: projectHtml, event: eventHtml, person: personHtml, gift: giftHtml, habit: habitHtml, hlog: hlogHtml })[draft.type]();
   if (draft.type === 'tx') { refreshLimitHint(); if (draft.kind === 'pay') refreshPayCalc(); if (draft.kind === 'goal') refreshGoalCalc(); if (draft.kind === 'recv' || draft.kind === 'lend') refreshOwedCalc(); }
 }
 const TX_TITLES = { out: 'Расход', in: 'Доход', pay: 'Платёж по долгу', goal: 'Взнос в цель', lend: 'Дал в долг', recv: 'Возврат долга' };
@@ -1882,6 +2139,7 @@ function eventHtml() {
   <div class="field"><span>Повторять</span><select id="e-repeat"><option value="">Не повторять</option>${Object.entries(REPEATS).map(([k, l]) => `<option value="${k}" ${k === d.erepeat ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
   ${d.id && d.erepeat ? `<p class="hint" style="margin:-6px 0 12px">Изменения и удаление касаются всех повторов этого события.</p>` : ''}
   <div class="field"><span>Заметка (необязательно)</span><textarea id="e-note" maxlength="500">${esc(d.enote)}</textarea></div>
+  ${d.id && eventById(d.id) ? (() => { const oe = icsEntries(meta.ics, { type: 'events', id: d.id })[0]; return oe ? `<div class="btnrow" style="margin:-4px 0 12px"><button type="button" class="btn ghost sm" data-act="icsOne" data-t="events" data-id="${d.id}">Файл для календаря</button><a class="btn ghost sm" href="${esc(gcalUrl(oe))}" target="_blank" rel="noopener">В Google Календарь</a></div>` : ''; })() : ''}
   <div class="ferr" id="ferr" role="alert"></div>
   <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
     <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
@@ -1969,6 +2227,69 @@ function saveGift() {
   finish(ex ? 'Сохранено' : 'Идея добавлена');
 }
 
+/* — привычка и отметка за день — */
+function openHabit(opts = {}) {
+  lastFocus = document.activeElement;
+  const ex = opts.id ? habitById(opts.id) : null, tpl = opts.tpl ? HABIT_TPL[opts.tpl] : null;
+  draft = ex
+    ? { type: 'habit', id: ex.id, hname: ex.name, htype: ex.type, hgoal: ex.goal ? fmtNum(ex.goal) : '', hunit: ex.unit || '', hstep: ex.step ? fmtNum(ex.step) : '1', hdays: ex.days ? [...ex.days] : [0, 1, 2, 3, 4, 5, 6], harch: !!ex.archived }
+    : { type: 'habit', id: null, hname: '', htype: 'check', hgoal: '8', hunit: '', hstep: '1', hdays: [0, 1, 2, 3, 4, 5, 6], harch: false, ...(tpl || {}) };
+  openSheet(); renderModal(); if (!ex && !IS_MOBILE) $('#h-name')?.focus(); else $('.sheet').focus();
+}
+function habitHtml() {
+  const d = draft, count = d.htype === 'count';
+  return `<div class="mhead"><h2 id="mtitle">${d.id ? 'Привычка' : 'Новая привычка'}</h2><button type="button" class="icon" data-act="closeModal" aria-label="Закрыть">×</button></div>
+  <div class="field"><span>Название</span><input id="h-name" class="entersave" value="${esc(d.hname)}" maxlength="60" placeholder="Например, пить воду"></div>
+  <div class="seg2 kind" role="group" aria-label="Как отмечать" style="margin-bottom:16px"><button type="button" class="k-pay" data-act="setHtype" data-v="check" aria-pressed="${!count}">Да / нет</button><button type="button" class="k-pay" data-act="setHtype" data-v="count" aria-pressed="${count}">Счётчик</button></div>
+  ${count ? `<div class="grid2"><div class="field"><span>Цель на день</span><input id="h-goal" class="entersave" inputmode="decimal" value="${esc(d.hgoal)}"></div><div class="field"><span>Единица (необязательно)</span><input id="h-unit" class="entersave" maxlength="16" placeholder="стаканов" value="${esc(d.hunit)}"></div></div>
+  <div class="field"><span>Шаг одного нажатия «＋»</span><input id="h-step" class="entersave" inputmode="decimal" value="${esc(d.hstep)}"></div>` : ''}
+  <div class="field"><span>В какие дни</span><div class="chips">${WD_S.map((l, i) => `<button type="button" class="chip ${d.hdays.includes(i) ? 'on' : ''}" style="--c:#4C6EF5" data-act="toggleHday" data-v="${i}" aria-pressed="${d.hdays.includes(i)}">${l}</button>`).join('')}</div></div>
+  ${d.id ? `<label class="field check"><input id="h-arch" type="checkbox" ${d.harch ? 'checked' : ''}><span style="font-size:.95rem;color:var(--ink)">В архив: скрыть из «Сегодня», история сохранится</span></label><p class="hint" style="margin:-6px 0 10px">При удалении привычки вся история отметок удаляется.</p>` : ''}
+  <div class="ferr" id="ferr" role="alert"></div>
+  <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
+    <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
+}
+function saveHabit() {
+  const d = draft, name = (d.hname || '').trim(), count = d.htype === 'count';
+  if (!name) return formErr('Введите название', 'h-name');
+  let goal = 0, step = 1;
+  if (count) {
+    goal = parseNum(d.hgoal); if (!(goal > 0)) return formErr('Цель на день — число больше нуля', 'h-goal');
+    step = (d.hstep || '').trim() === '' ? 1 : parseNum(d.hstep); if (!(step > 0)) return formErr('Шаг — число больше нуля', 'h-step');
+  }
+  if (!d.hdays.length) return formErr('Выберите хотя бы один день');
+  const ex = d.id ? habitById(d.id) : null, h = ex || { id: 'y' + uid(), color: (habits.length * 5 + 3) % PALETTE.length, start: today(), log: {}, ts: Date.now() };
+  h.name = name; h.type = d.htype;
+  if (count) { h.goal = round2(goal); h.step = round2(step); if ((d.hunit || '').trim()) h.unit = d.hunit.trim(); else delete h.unit; }
+  else { delete h.goal; delete h.step; delete h.unit; }
+  h.days = d.hdays.length === 7 ? null : [...d.hdays].sort((a, b) => a - b);
+  if (d.harch) h.archived = true; else delete h.archived;
+  if (!ex) habits.push(h);
+  finish(ex ? 'Привычка сохранена' : 'Привычка добавлена');
+}
+function openHlog(id, ds) {
+  const h = habitById(id); if (!h) return;
+  lastFocus = document.activeElement;
+  draft = { type: 'hlog', hid: id, hdate: ds, hlval: h.type === 'count' && habitVal(h, ds) ? fmtNum(habitVal(h, ds)) : '', hlchk: h.type === 'check' && habitVal(h, ds) >= 1 };
+  openSheet(); renderModal(); $('.sheet').focus();
+}
+function hlogHtml() {
+  const d = draft, h = habitById(d.hid), count = h.type === 'count';
+  return `<div class="mhead"><h2 id="mtitle">Отметка за день</h2><button type="button" class="icon" data-act="closeModal" aria-label="Закрыть">×</button></div>
+  <p class="hint" style="margin:0 0 12px"><b>${esc(h.name)}</b>, ${esc(dayTitle(d.hdate))}.</p>
+  ${count ? `<div class="field"><span>Сколько сделано${h.unit ? ', ' + esc(h.unit) : ''} (цель ${fmtNum(h.goal)})</span><input id="hl-val" class="entersave" inputmode="decimal" placeholder="0" value="${esc(d.hlval)}"></div>`
+    : `<label class="field check"><input id="hl-chk" type="checkbox" ${d.hlchk ? 'checked' : ''}><span style="font-size:.98rem;color:var(--ink)">Выполнено</span></label>`}
+  <div class="ferr" id="ferr" role="alert"></div>
+  <div class="mfoot"><span></span><div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
+}
+function saveHlog() {
+  const d = draft, h = habitById(d.hid); if (!h) return closeModal();
+  let v;
+  if (h.type === 'count') { v = (d.hlval || '').trim() === '' ? 0 : parseNum(d.hlval); if (!(v >= 0)) return formErr('Введите число', 'hl-val'); }
+  else v = d.hlchk ? 1 : 0;
+  habitSet(h, d.hdate, v); finish('Отметка сохранена');
+}
+
 function resolveCat(d) {
   if (d.catNew) {
     const name = (d.newCatName || '').trim(); if (!name) return '';
@@ -2008,6 +2329,8 @@ function saveDraft() {
   if (d.type === 'event') return saveEvent();
   if (d.type === 'person') return savePerson();
   if (d.type === 'gift') return saveGift();
+  if (d.type === 'habit') return saveHabit();
+  if (d.type === 'hlog') return saveHlog();
   const amt = parseNum(d.amount);
   if (!(amt > 0)) return formErr('Введите сумму больше нуля', 'f-amount');
   if (d.type === 'tx' && !isDate(d.date)) return formErr('Укажите дату', 'f-date');
@@ -2119,6 +2442,7 @@ function deleteDraft() {
     if (n) return formErr(`В цель уже вносились деньги (${n}). Удалите взносы или отметьте цель достигнутой.`);
     goals = goals.filter(y => y.id !== d.id); return finish('Цель удалена');
   }
+  if (d.type === 'habit') { habits = habits.filter(h => h.id !== d.id); if (ui.habit === d.id) ui.habit = null; return finish('Привычка удалена'); }
   if (d.type === 'event') { events = events.filter(e => e.id !== d.id); return finish('Событие удалено'); }
   if (d.type === 'person') { people = people.filter(q => q.id !== d.id); if (ui.person === d.id) ui.person = null; return finish('День рождения удалён'); }
   if (d.type === 'gift') { const q = personById(d.pid); if (q) q.gifts = (q.gifts || []).filter(g => g.id !== d.id); return finish('Идея удалена'); }
@@ -2180,10 +2504,11 @@ function applyImport() {
 const actions = {
   tab(el) {
     const v = el.dataset.v;
+    if (v === ui.tab && el.classList.contains('tab')) { if (v === 'tasks') { ui.project = null; ui.habit = null; } if (v === 'cal') ui.person = null; }   // повторный тап по активной вкладке возвращает к её началу
     if (MONEY_SUBS.some(([k]) => k === v)) { ui.tab = 'money'; ui.msub = v; }
     else if (v === 'settings') ui.tab = 'more';
     else ui.tab = v;
-    if (ui.tab !== 'tasks') ui.project = null;
+    if (ui.tab !== 'tasks') { ui.project = null; ui.habit = null; }
     if (ui.tab !== 'cal') ui.person = null;
     window.scrollTo(0, 0); render();
   },
@@ -2192,11 +2517,13 @@ const actions = {
   add() {
     if (ui.tab === 'today') return openTask({ due: today() });
     if (ui.tab === 'cal') { if (ui.person) return openGift(); if (ui.csub === 'bdays') return openPerson(); return openEvent({ date: ui.calDay }); }
+    if (ui.tab === 'tasks' && ui.habit) return;
+    if (ui.tab === 'tasks' && ui.tsub === 'habits') return openHabit();
     if (ui.tab === 'tasks') return ui.project ? openTask({ project: ui.project }) : ui.tsub === 'projects' ? openProject() : openTask({});
     if (ui.msub === 'plans') openPlan(); else openTx();
   },
   addTx() { openTx(); },
-  tsub(el) { ui.tsub = el.dataset.v; ui.project = null; render(); },
+  tsub(el) { ui.tsub = el.dataset.v; ui.project = null; ui.habit = null; render(); },
   toggleTask(el) {
     const t = taskById(el.dataset.id); if (!t) return;
     let msg = '';
@@ -2249,6 +2576,16 @@ const actions = {
   openPerson(el) { ui.tab = 'cal'; ui.csub = 'bdays'; ui.person = el.dataset.id; render(); window.scrollTo(0, 0); },
   closePerson() { ui.person = null; render(); },
   editGift(el) { openGift(el.dataset.id); },
+  async icsMake() {
+    const list = icsEntries(meta.ics); if (!list.length) return toast('Нечего добавлять: включите нужные разделы', 'err');
+    const ok = await saveFile(`dela-i-dengi-${today()}.ics`, buildIcs(list, meta.ics), 'text/calendar');
+    if (ok) toast(`Файл календаря готов: ${list.length} ${plural(list.length, ['событие', 'события', 'событий'])}`);
+  },
+  async icsOne(el) {
+    const list = icsEntries(meta.ics, { type: el.dataset.t, id: el.dataset.id }); if (!list.length) return toast('Это событие уже прошло', 'err');
+    const ok = await saveFile(`dela-i-dengi-${el.dataset.t}-${today()}.ics`, buildIcs(list, meta.ics), 'text/calendar');
+    if (ok) toast('Файл календаря готов');
+  },
   giftAdd() {
     const q = personById(ui.person), inp = $('#g-text'), pr = $('#g-price'); if (!q) return;
     const text = (inp?.value || '').trim(); if (!text) return inp && inp.focus();
@@ -2265,6 +2602,27 @@ const actions = {
     const pl = { id: uid(), kind: 'out', title: `Подарок: ${q.name}`, amount: round2(amount), cat: cat ? cat.id : '', tags: [], date, note: `День рождения ${fmtBirth(q)}`, status: 'open', txId: null, ts: Date.now() };
     plans.push(pl); q.planId = pl.id; persist(); renderPersonBody(); toast(`Расход ${money(pl.amount)} запланирован на ${shortDate(date)}`);
   },
+  newHabit() { openHabit(); },
+  newHabitTpl(el) { openHabit({ tpl: el.dataset.v }); },
+  editHabit(el) { openHabit({ id: el.dataset.id }); },
+  openHabit(el) { ui.tab = 'tasks'; ui.tsub = 'habits'; ui.habit = el.dataset.id; ui.project = null; render(); window.scrollTo(0, 0); },
+  closeHabit() { ui.habit = null; render(); },
+  habitsGo() { ui.tab = 'tasks'; ui.tsub = 'habits'; ui.habit = null; ui.project = null; window.scrollTo(0, 0); render(); },
+  habitStep(el) {
+    const h = habitById(el.dataset.id); if (!h) return;
+    const t0 = today(), was = habitDone(h, t0);
+    habitSet(h, t0, habitVal(h, t0) + (+el.dataset.d) * (h.step || 1)); persist(); renderLists();
+    if (!was && habitDone(h, t0)) toast(`Цель на сегодня выполнена: «${h.name}». Серия: ${habitStats(h).cur} ${plural(habitStats(h).cur, DAYW)}`);
+  },
+  habitToggle(el) {
+    const h = habitById(el.dataset.id); if (!h) return;
+    const t0 = today(), was = habitDone(h, t0);
+    habitSet(h, t0, was ? 0 : 1); persist(); renderLists();
+    if (!was) toast(`Отмечено: «${h.name}». Серия: ${habitStats(h).cur} ${plural(habitStats(h).cur, DAYW)}`);
+  },
+  habitDay(el) { openHlog(el.dataset.id, el.dataset.d); },
+  setHtype(el) { syncDraft(); draft.htype = el.dataset.v; renderModal(); },
+  toggleHday(el) { syncDraft(); const i = +el.dataset.v, k = draft.hdays.indexOf(i); if (k >= 0) draft.hdays.splice(k, 1); else draft.hdays.push(i); renderModal(); },
   newProject() { openProject(); },
   editProject(el) { openProject(el.dataset.id); },
   openProject(el) { ui.project = el.dataset.id; render(); window.scrollTo(0, 0); },
@@ -2386,6 +2744,7 @@ document.addEventListener('change', e => {
       persist(); break;
     }
     case 'tagName': { const g = tagById(t.dataset.id); if (g && v.trim()) { g.name = v.trim(); persist(); } else if (g) t.value = g.name; break; }
+    case 'icsopt': { const k = t.dataset.k; meta.ics[k] = t.type === 'checkbox' ? t.checked : v; persist(); if (t.type === 'checkbox' || k === 'habitTime') render(); break; }
     case 'opening': { const n = parseNum(v); meta.opening = Number.isFinite(n) ? round2(n) : 0; persist(); break; }
     case 'curCustom': if (v.trim()) { meta.currency = v.trim(); persist(); render(); } break;
   }
@@ -2441,6 +2800,7 @@ function initBackGuard() {
     if (st.m) return;                                                  // вернулись на рабочую запись — ничего не делаем
     if ($('#modal-root').firstChild) { closeModal(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if (ui.tab === 'tasks' && ui.project) { ui.project = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
+    if (ui.tab === 'tasks' && ui.habit) { ui.habit = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if (ui.tab === 'cal' && ui.person) { ui.person = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     backArmed = true; toast('Нажмите «Назад» ещё раз, чтобы выйти', '', 2000);
     clearTimeout(backT); backT = setTimeout(disarmBack, 2000);          // не нажали второй раз — возвращаемся на рабочую запись

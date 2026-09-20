@@ -517,6 +517,23 @@ section .dcard,section .pcard{background:var(--soft);box-shadow:none;border-radi
   .seg2.kind button[aria-pressed="true"].k-out,.seg2.kind button[aria-pressed="true"].k-in,.seg2.kind button[aria-pressed="true"].k-goal,.btn.danger.armed{color:#0B1030}
 }
 section .dcard .btn.ghost,section .pcard .btn.ghost{background:var(--surface)}
+/* «Сегодня»: план месяца и планы без срока */
+.tsec details.mmonth>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 0 10px}
+.tsec details.mmonth>summary::-webkit-details-marker{display:none}
+.mmh{min-width:0}
+.mmh h3{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 3px}
+.mmh .cap{display:block;font-size:.9rem;color:var(--muted);overflow-wrap:anywhere}
+.mmh .cap b{color:var(--ink)}
+.mm-chev{flex:none;width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.mm-chev::after{content:"▾";color:var(--primary);font-size:1rem}
+details.mmonth[open] .mm-chev::after{content:"▴"}
+.mmbody{padding-bottom:6px}
+.mmsub{margin:14px 0 2px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tlrow.lim{cursor:default}
+.urow{border-bottom:1px solid var(--line);padding-bottom:10px}
+.urow .row{border-bottom:0;padding-bottom:4px}
+.urow .mini-act{display:block;margin:0 0 0 auto}
+.urow:last-of-type{border-bottom:0}
 </style>
 </head>
 <body>
@@ -1767,6 +1784,36 @@ function viewToday(root) {
   <div id="todayList"></div>`;
   renderTodayList();
 }
+/* план месяца: всё, что запланировано на нынешний месяц (приходы и расходы, в том числе просроченное), и то, что заложено лимитами */
+const lastDayOfMonth = key => { const [y, m] = key.split('-').map(Number); return `${key}-${pad(new Date(y, m, 0).getDate())}`; };
+function monthPlan() {
+  const t0 = today(), key = mkey(t0), end = lastDayOfMonth(key), bal = balance();
+  const items = moneyItems().dated.filter(p => p.date <= end);
+  const inc = round2(sum(items.filter(p => p.kind === 'in'), p => p.amount)), out = round2(sum(items.filter(p => p.kind === 'out'), p => p.amount));
+  const lims = limitRows(key), tot = lims.find(l => l.total);
+  // заложенное лимитами: остаток общего лимита, а если его нет — остатки лимитов категорий; уже запланированные траты не считаются дважды
+  const reserve = tot ? Math.max(0, round2(tot.limit - tot.spent - tot.planned)) : round2(sum(lims, l => Math.max(0, l.limit - l.spent - l.planned)));
+  return { key, end, items, inc, out, lims, reserve, after: round2(bal + inc - out - reserve) };
+}
+function monthMoneyHtml(mp) {
+  if (!mp.items.length && !mp.lims.length) return '';
+  const n = mp.items.length;
+  const limRows = mp.lims.map(l => `<li><div class="tlrow lim"><span class="tl-date"><b>лимит</b></span><span class="row-main"><span class="row-title">${l.total ? esc(l.name) : `${catIco(l.id, 'sm')} ${esc(l.name)}`}</span><span class="row-sub"><span>${l.spent > l.limit ? 'превышен на ' + money(l.spent - l.limit) : 'осталось ' + money(l.limit - l.spent)} из ${money(l.limit)}</span></span></span></div></li>`).join('');
+  return `<section class="tsec"><details class="mmonth" ${ui.monthOpen ? 'open' : ''}>
+    <summary><div class="mmh"><h3>Деньги на нынешний месяц</h3><span class="cap">${n ? `${n} ${plural(n, ['пункт', 'пункта', 'пунктов'])}` : 'только лимиты'} · к концу месяца ≈ <b class="num ${mp.after < 0 ? 'out' : ''}">${money(mp.after)}</b></span></div><span class="mm-chev" aria-hidden="true"></span></summary>
+    <div class="mmbody">
+      ${n ? `<ul class="tl">${mp.items.map(p => tlRowHtml(p)).join('')}</ul>` : ''}
+      ${limRows ? `<h4 class="mmsub">Лимиты месяца</h4><ul class="tl">${limRows}</ul>` : ''}
+      <dl class="kv" style="margin:12px 0 4px">${mp.inc ? `<dt>Приходы по плану</dt><dd class="num in">+${money(mp.inc)}</dd>` : ''}${mp.out ? `<dt>Расходы по плану</dt><dd class="num out">−${money(mp.out)}</dd>` : ''}${mp.reserve ? `<dt>Заложено по лимитам</dt><dd class="num out">−${money(mp.reserve)}</dd>` : ''}<div class="sep"></div><dt>К концу месяца</dt><dd class="num ${mp.after < 0 ? 'out' : ''}">${money(mp.after)}</dd></dl>
+    </div></details></section>`;
+}
+/* планы без срока, на которые к концу месяца хватает денег (по порядку добавления, пока остаток позволяет) */
+function undatedFitHtml(mp) {
+  let room = mp.after; const fit = [];
+  if (room > 0) for (const p of plans.filter(x => x.status === 'open' && !x.date && x.kind === 'out').sort((a, b) => (a.ts || 0) - (b.ts || 0))) if (p.amount <= room + 0.005) { fit.push(p); room = round2(room - p.amount); }
+  if (!fit.length) return '';
+  return tsec('Планы без срока', fit.map(p => `<div class="urow"><button type="button" class="row" data-act="editPlan" data-id="${p.id}">${catIco(p.cat)}<span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub"><span>${esc(catName(p.cat))}</span></span></span><span class="amt num out">−${money(p.amount)}</span></button><button type="button" class="mini-act" data-act="planToMonth" data-id="${p.id}">в этом месяце</button></div>`).join('') + `<p class="hint" style="margin:8px 0 4px">К концу месяца хватает средств, останется ≈ ${money(room)}</p>`);
+}
 function renderTodayList() {
   const box = $('#todayList'); if (!box) return;
   const bb = $('#bentoBox'); if (bb) bb.innerHTML = bentoHtml();
@@ -1775,16 +1822,15 @@ function renderTodayList() {
   const overdue = due.filter(t => t.due < t0), todays = due.filter(t => t.due === t0), shown = new Set(due.map(t => t.id));
   const nexts = projects.filter(p => p.status === 'active').map(nextStep).filter(t => t && !shown.has(t.id)).slice(0, 6);
   const doneToday = tasks.filter(t => (t.done && t.doneAt === t0) || (t.repeat && t.lastDone === t0));
-  const soon = moneyItems().dated.filter(p => p.date <= shiftDate(t0, 7));
+  const mp = monthPlan();
   let html = '';
   if (overdue.length) html += tsec('Просрочено', overdue.map(t => taskRowHtml(t)).join(''), 'late');
   if (todays.length) html += tsec('На сегодня', todays.map(t => taskRowHtml(t)).join(''));
-  if (!due.length) html += `<div class="empty" style="padding:6px 0 22px"><p>На сегодня дел нет. Добавьте дело выше или выберите следующий шаг проекта.</p></div>`;
   if (due.length) html += `<div class="btnrow" style="margin:-8px 0 22px"><button type="button" class="btn ghost sm" data-act="rollover">Перенести несделанное на завтра (${due.length})</button></div>`;
   const hToday = habits.filter(h => !h.archived && habitScheduled(h, t0));
   if (hToday.length) html += tsec('Привычки', hToday.map(h => habitRowHtml(h)).join(''), '', `<button type="button" class="chip" data-act="habitsGo">${hToday.filter(h => habitDone(h, t0)).length} из ${hToday.length}</button>`);
   if (nexts.length) html += tsec('Следующие шаги проектов', nexts.map(t => taskRowHtml(t, { today: true, noDue: !t.due })).join(''));
-  if (soon.length) html += tsec('Деньги на ближайшую неделю', `<ul class="tl">${soon.map(p => tlRowHtml(p)).join('')}</ul>`, '', `<button type="button" class="chip" data-act="tab" data-v="overview">Все платежи</button>`);
+  html += monthMoneyHtml(mp) + undatedFitHtml(mp);
   if (doneToday.length) html += `<details class="fold" style="margin-top:0"><summary>Сделано сегодня (${doneToday.length})</summary>${doneToday.map(t => taskRowHtml(t)).join('')}</details>`;
   box.innerHTML = html;
 }
@@ -2799,6 +2845,7 @@ const actions = {
     if (ui.msub === 'plans') openPlan(); else openTx();
   },
   addTx() { openTx(); },
+  planToMonth(el) { const p = plans.find(x => x.id === el.dataset.id); if (!p) return; p.date = lastDayOfMonth(mkey(today())); persist(); renderLists(); toast('План добавлен на этот месяц'); },
   pickCat(el) {
     syncDraft(); const v = el.dataset.v, wasNew = draft.catNew;
     if (v === '__new__') { draft.catNew = !draft.catNew; if (draft.catNew) draft.cat = ''; renderModal(); if (draft.catNew) $('#f-newcat')?.focus(); return; }
@@ -3096,7 +3143,7 @@ if (window.visualViewport) { visualViewport.addEventListener('resize', () => { s
 window.addEventListener('orientationchange', () => setTimeout(() => { kbBase = window.innerHeight; syncKeyboard(); }, 400));
 document.addEventListener('focusin', () => revealSoon(350));
 document.addEventListener('focusout', () => setTimeout(syncKeyboard, 120));
-document.addEventListener('toggle', e => { if (draft && e.target.classList && e.target.classList.contains('more')) draft.moreOpen = e.target.open; }, true);
+document.addEventListener('toggle', e => { const c = e.target.classList; if (!c) return; if (draft && c.contains('more')) draft.moreOpen = e.target.open; if (c.contains('mmonth')) ui.monthOpen = e.target.open; }, true);
 
 /* ───────── boot ───────── */
 try { localStorage.removeItem('fin-ledger-ai'); } catch (e) { /* остатки прошлой версии: ключ API больше не нужен */ }

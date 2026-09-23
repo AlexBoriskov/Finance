@@ -644,7 +644,6 @@ let goals = [];      // {id, name, target, saved0, deadline?, color, done}
 let tasks = [];      // дела: {id, title, note?, due?, project?, repeat?, rday?, done, doneAt?, lastDone?, prevDue?, pos, ts}
 let projects = [];   // проекты: {id, name, goal?, due?, color, status:'active'|'paused'|'done', ts}; шаги проекта — дела с project = id
 let habits = [];     // привычки: {id, name, type:'check'|'count', goal?, unit?, step?, days:null|[0..6] (0=Пн), color, start, archived?, log:{'YYYY-MM-DD': значение}, ts}
-let events = [];     // события: {id, title, date, time?, place?, note?, repeat?, rday?, ts}
 let people = [];     // дни рождения: {id, name, day, month, year?, note?, budget?, remind, gifts:[{id,text,price?,bought}], planId?, ts}
 let owed = [];       // «мне должны»: {id, name, base, start, due?, note?, color, closed}; остаток = base + выдано (lend) − возвращено (recv)
 /* tx.kind: 'lend' дал в долг (owed; уменьшает деньги, не расход) | 'recv' возврат долга мне (owed; увеличивает деньги, не доход) |
@@ -772,7 +771,6 @@ function undoTask(t) {
   else { t.done = false; delete t.doneAt; }
 }
 /* — события, дни рождения, календарь — */
-const eventById = id => events.find(e => e.id === id);
 const personById = id => people.find(q => q.id === id);
 const MONTH_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 const fmtBirth = q => `${q.day} ${MONTH_GEN[q.month - 1]}`;
@@ -780,42 +778,19 @@ function birthdayIn(q, year) { const dim = new Date(year, q.month, 0).getDate();
 function bdayInfo(q, ds, from = today()) { return { date: ds, days: daysBetween(from, ds), age: q.year ? +ds.slice(0, 4) - q.year : null }; }
 function nextBirthday(q, from = today()) { const y = +from.slice(0, 4); let ds = birthdayIn(q, y); if (ds < from) ds = birthdayIn(q, y + 1); return bdayInfo(q, ds, from); }
 /* даты события в интервале [from, to], с учётом повтора */
-function occurrences(ev, from, to) {
-  const out = [];
-  if (!ev.repeat) { if (ev.date >= from && ev.date <= to) out.push(ev.date); return out; }
-  let d = ev.date; if (d > to) return out;
-  if (ev.repeat === 'daily' || ev.repeat === 'weekly') {
-    const step = ev.repeat === 'daily' ? 1 : 7;
-    if (d < from) d = shiftDate(d, Math.ceil(daysBetween(d, from) / step) * step);
-    while (d <= to) { out.push(d); d = shiftDate(d, step); }
-    return out;
-  }
-  for (let g = 0; d <= to && g < 3000; g++) { if (d >= from) out.push(d); d = nextByRule(d, ev.repeat, ev.rday); }
-  return out;
-}
-const byTime = (a, b) => (a.ev.time || '').localeCompare(b.ev.time || '') || a.ev.title.localeCompare(b.ev.title, 'ru');
-/* всё, что происходит в датах [from, to]: события, дни рождения, дела, сроки проектов, деньги */
+/* всё, что происходит в датах [from, to]: дни рождения, дела (в т.ч. со временем — бывшие «события»), сроки проектов, деньги */
+const byTaskTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99') || a.pos - b.pos;
 function calendarIndex(from, to) {
-  const idx = new Map(), get = ds => { let x = idx.get(ds); if (!x) { x = { events: [], bdays: [], tasks: [], projects: [], money: [] }; idx.set(ds, x); } return x; };
-  for (const ev of events) for (const ds of occurrences(ev, from, to)) get(ds).events.push({ ev, ds });
+  const idx = new Map(), get = ds => { let x = idx.get(ds); if (!x) { x = { bdays: [], tasks: [], projects: [], money: [] }; idx.set(ds, x); } return x; };
   for (const q of people) for (let y = +from.slice(0, 4); y <= +to.slice(0, 4); y++) { const ds = birthdayIn(q, y); if (ds >= from && ds <= to) get(ds).bdays.push(q); }
   for (const t of tasks) if (!t.done && t.due && t.due >= from && t.due <= to) get(t.due).tasks.push(t);
   for (const pr of projects) if (pr.status !== 'done' && pr.due && pr.due >= from && pr.due <= to) get(pr.due).projects.push(pr);
   for (const m of moneyItems().dated) if (m.date >= from && m.date <= to) get(m.date).money.push(m);
-  idx.forEach(x => x.events.sort(byTime));
   return idx;
 }
 function monthGrid(key) {
   const [y, m] = key.split('-').map(Number), first = new Date(y, m - 1, 1), off = (first.getDay() + 6) % 7, dim = new Date(y, m, 0).getDate(), start = shiftDate(ymd(first), -off), n = Math.ceil((off + dim) / 7) * 7;
   return Array.from({ length: n }, (_, i) => shiftDate(start, i));
-}
-function eventRowHtml(ev, ds, o = {}) {
-  const t0 = today(), now = new Date(), hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const past = ds < t0 || (ds === t0 && ev.time && ev.time < hhmm);
-  const rel = o.rel ? dueLabel(ds) : '';
-  return `<li><button type="button" class="tlrow ${past ? 'past' : ''}" data-act="editEvent" data-id="${ev.id}">
-    <span class="tl-date"><b>${ev.time ? esc(ev.time) : 'весь день'}</b>${rel ? `<small>${esc(rel)}</small>` : ''}</span>
-    <span class="row-main"><span class="row-title">${esc(ev.title)}</span><span class="row-sub">${ev.place ? `<span>${esc(ev.place)}</span>` : ''}${ev.repeat ? `<span class="badge">${esc(REPEATS[ev.repeat].toLowerCase())}</span>` : ''}</span></span></button></li>`;
 }
 function bdayRowHtml(q, nb) {
   const when = nb.days === 0 ? 'сегодня' : nb.days === 1 ? 'завтра' : nb.days > 1 ? `через ${nb.days} ${plural(nb.days, DAYW)}` : '';
@@ -857,8 +832,8 @@ function habitCell(h, ds) {
 const HABIT_TPL = { water: { hname: 'Пить воду', htype: 'count', hgoal: '8', hunit: 'стаканов', hstep: '1' }, exercise: { hname: 'Зарядка', htype: 'check' }, read: { hname: 'Чтение', htype: 'count', hgoal: '20', hunit: 'мин', hstep: '5' } };
 /* — календарь телефона: файл .ics и ссылки для Google Календаря —
    Приложение не может напоминать, пока закрыто, поэтому напоминания делает календарь телефона. */
-function defaultIcs() { return { birthdays: true, events: true, debts: true, plans: true, owed: true, tasks: false, projects: false, habits: false, habitTime: '20:00', timedAlarm: '15', dayAlarm: 'eve', amounts: true, notes: false }; }
-const ICS_TYPES = [['birthdays', 'Дни рождения'], ['events', 'События и встречи'], ['debts', 'Платежи по долгам по графику'], ['plans', 'Планы со сроком'], ['owed', 'Ожидаемые возвраты долгов'], ['tasks', 'Дела со сроком'], ['projects', 'Сроки проектов'], ['habits', 'Привычки, напоминание в']];
+function defaultIcs() { return { birthdays: true, debts: true, plans: true, owed: true, tasks: true, projects: false, habits: false, habitTime: '20:00', timedAlarm: '15', dayAlarm: 'eve', amounts: true, notes: false }; }
+const ICS_TYPES = [['birthdays', 'Дни рождения'], ['debts', 'Платежи по долгам по графику'], ['plans', 'Планы со сроком'], ['owed', 'Ожидаемые возвраты долгов'], ['tasks', 'Дела'], ['projects', 'Сроки проектов'], ['habits', 'Привычки, напоминание в']];
 const ICS_DAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 /* правило повтора; для 29–31 числа месяца берём «последний из существующих дней», как делает само приложение */
 function icsRrule(rule, date, rday) {
@@ -887,10 +862,6 @@ function icsEntries(p, only) {
     }
     out.push({ type: 'birthdays', id: q.id, title: `День рождения: ${q.name}`, desc: desc.join('\n'), date: nb.date, rrule: icsRrule('yearly', `2024-${pad(q.month)}-${pad(q.day)}`) });   // правило считаем по настоящему дню рождения, а не по ближайшей дате (29 февраля)
   }
-  for (const ev of events) if (want('events', ev.id)) {
-    const date = ev.repeat ? occurrences(ev, t0, shiftDate(t0, 800))[0] : (ev.date >= t0 ? ev.date : null);
-    if (date) out.push({ type: 'events', id: ev.id, title: ev.title, desc: note(ev.note), date, time: ev.time || '', dur: 60, place: ev.place || '', rrule: ev.repeat ? icsRrule(ev.repeat, date, ev.rday) : '' });
-  }
   for (const d of debts) if (want('debts', d.id) && !d.closed && d.monthly > 0 && d.payDay >= 1) {
     const bal = debtBalance(d); if (bal <= 0.005) continue;
     const sp = scheduledPayments().find(x => x.debt.id === d.id), first = sp && sp.date >= t0 ? sp.date : nextMonthlyDate(d.payDay, t0), am = amortize(bal, d.rate || 0, d.monthly);
@@ -903,9 +874,12 @@ function icsEntries(p, only) {
     const rem = owedStats(o).remaining; if (rem <= 0.005) continue;
     out.push({ type: 'owed', id: o.id, title: `Вернёт ${o.name}${amt(': ' + mny(rem))}`, desc: note(o.note), date: o.due });
   }
-  for (const t of tasks) if (want('tasks', t.id) && !t.done && t.due && t.due >= t0) {
+  for (const t of tasks) if (want('tasks', t.id) && !t.done && t.due) {
+    let date = t.due;
+    if (t.repeat) { for (let g = 0; date < t0 && g < 1200; g++) date = nextByRule(date, t.repeat, t.rday); }   // дело могло залежаться (например, перенесено из старого «события») — берём ближайшее будущее вхождение, саму запись не трогаем
+    else if (date < t0) continue;
     const pr = t.project ? projectById(t.project) : null;
-    out.push({ type: 'tasks', id: t.id, title: `Дело: ${t.title}`, desc: p.notes ? [pr ? 'Проект: ' + pr.name : '', t.note || ''].filter(Boolean).join('\n') : '', date: t.due, rrule: t.repeat ? icsRrule(t.repeat, t.due, t.rday) : '' });
+    out.push({ type: 'tasks', id: t.id, title: `Дело: ${t.title}`, desc: p.notes ? [pr ? 'Проект: ' + pr.name : '', t.note || ''].filter(Boolean).join('\n') : '', date, time: t.time || '', dur: 60, place: t.place || '', rrule: t.repeat ? icsRrule(t.repeat, date, t.rday) : '' });
   }
   for (const pr of projects) if (want('projects', pr.id) && pr.status === 'active' && pr.due && pr.due >= t0)
     out.push({ type: 'projects', id: pr.id, title: `Срок проекта: ${pr.name}`, desc: note(pr.goal), date: pr.due });
@@ -961,7 +935,7 @@ function icsCounts() { const all = { ...meta.ics, ...Object.fromEntries(ICS_TYPE
 function icsSettingsHtml() {
   const c = icsCounts(), o = meta.ics, n = ICS_TYPES.filter(([k]) => o[k]).reduce((a, [k]) => a + (c[k] || 0), 0);
   return `<section><h2>Календарь телефона</h2>
-    <p class="hint" style="margin:0 0 12px">Приложение не может напоминать, пока закрыто. Создайте файл календаря (.ics) и добавьте его в календарь телефона: напоминания сделает сам телефон. Повторный импорт того же файла обычно обновляет события, а не дублирует их.</p>
+    <p class="hint" style="margin:0 0 12px">Приложение не может напоминать, пока закрыто. Создайте файл календаря (.ics) и добавьте его в календарь телефона: напоминания сделает сам телефон. «Дела» — это и обычные дела, и дела со временем (бывшие «события»). Повторный импорт того же файла обычно обновляет записи, а не дублирует их.</p>
     <div>${ICS_TYPES.map(([k, l]) => `<label class="optrow"><input type="checkbox" data-change="icsopt" data-k="${k}" ${o[k] ? 'checked' : ''}><span>${esc(l)} <span class="badge">${c[k] || 0}</span></span>${k === 'habits' ? `<input type="time" data-change="icsopt" data-k="habitTime" value="${esc(o.habitTime)}" aria-label="Время напоминания о привычках" class="timein">` : ''}</label>`).join('')}</div>
     <div class="field" style="margin-top:14px"><span>Напоминание о событиях со временем</span><select data-change="icsopt" data-k="timedAlarm">${[['-1', 'Не напоминать'], ['0', 'В момент начала'], ['15', 'За 15 минут'], ['60', 'За час'], ['1440', 'За день']].map(([v, l]) => `<option value="${v}" ${o.timedAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
     <div class="field"><span>Напоминание о датах без времени (дни рождения, платежи, дела)</span><select data-change="icsopt" data-k="dayAlarm">${[['none', 'Не напоминать'], ['day', 'В день, в 9:00'], ['eve', 'Накануне и в день, в 9:00'], ['week', 'За неделю, накануне и в день, в 9:00']].map(([v, l]) => `<option value="${v}" ${o.dayAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
@@ -1116,26 +1090,27 @@ function parseWhen(text, base, withTime) {
   title = title ? title[0].toUpperCase() + title.slice(1) : '';
   return { ...out, title };
 }
-function parseTaskText(text) {
+function parseTaskText(text, baseDate) {
   let raw = String(text || ''), project = '', tcat = '';
   const pm = /(^|\s)#([^\s#]+)/u.exec(raw);
   if (pm) { const key = pm[2].toLowerCase(), pr = projects.find(x => x.status !== 'done' && x.name.toLowerCase().replace(/\s+/g, '').startsWith(key)) || projects.find(x => x.status !== 'done' && x.name.toLowerCase().includes(key)); if (pr) { project = pr.id; raw = raw.slice(0, pm.index) + ' ' + raw.slice(pm.index + pm[0].length); } }
   const cm = /(^|\s)@([^\s@]+)/u.exec(raw);
   if (cm) { const key = cm[2].toLowerCase(), c = meta.taskCats.find(x => x.name.toLowerCase().replace(/\s+/g, '').startsWith(key)) || meta.taskCats.find(x => x.name.toLowerCase().includes(key)); if (c) { tcat = c.id; raw = raw.slice(0, cm.index) + ' ' + raw.slice(cm.index + cm[0].length); } }
-  const w = parseWhen(raw, today(), false);
-  return { title: w.title, due: w.date, repeat: w.repeat, project, tcat, matched: !!(w.date || w.repeat || project || tcat) };
+  const w = parseWhen(raw, baseDate || today(), true);
+  return { title: w.title, due: w.date, time: w.time, repeat: w.repeat, project, tcat, matched: !!(w.date || w.time || w.repeat || project || tcat) };
 }
-function parseEventText(text, baseDate) { const w = parseWhen(text, baseDate, true); return { title: w.title, date: w.date || baseDate, time: w.time, repeat: w.repeat, matched: !!(w.date || w.time || w.repeat) }; }
 function refreshTaskPreview() {
   const box = $('#q-prev'), inp = $('#q-title'); if (!box || !inp) return;
   const q = parseTaskText(inp.value), bits = [];
-  if (q.due) bits.push('срок: ' + dueLabel(q.due)); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (q.tcat) bits.push('категория: ' + taskCatById(q.tcat).name);
+  if (q.due) bits.push('срок: ' + dueLabel(q.due)); if (q.time) bits.push(q.time); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (q.tcat) bits.push('категория: ' + taskCatById(q.tcat).name);
   box.innerHTML = bits.length ? `<span class="qpl2">${esc(q.title || '…')} · ${esc(bits.join(' · '))}</span>` : '';
 }
-function refreshEventPreview() {
-  const box = $('#qe-prev'), inp = $('#qe-text'); if (!box || !inp) return;
-  const q = parseEventText(inp.value, ui.calDay);
-  box.innerHTML = inp.value.trim() ? `<span class="qpl2">${esc(q.title || '…')} · ${esc(dueLabel(q.date))}${q.time ? ', ' + esc(q.time) : ', весь день'}${q.repeat ? ' · ' + esc(REPEAT_SHORT[q.repeat]) : ''}</span>` : '';
+function refreshDqPreview() {
+  const box = $('#dq-prev'), inp = $('#dq-text'); if (!box || !inp) return;
+  if (!inp.value.trim()) { box.innerHTML = ''; return; }
+  const q = parseTaskText(inp.value, ui.calDay), bits = ['срок: ' + dueLabel(q.due || ui.calDay)];
+  if (q.time) bits.push(q.time); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (q.tcat) bits.push('категория: ' + taskCatById(q.tcat).name);
+  box.innerHTML = `<span class="qpl2">${esc(q.title || '…')} · ${esc(bits.join(' · '))}</span>`;
 }
 /* оценка процентов за период с прошлого платежа (по факту дней, год = 365) — подсказка, точные цифры берутся из графика банка */
 function estimateInterest(d, date, exclId) {
@@ -1178,7 +1153,7 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { volatile
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { volatile = true; if (k === LS_KEY) memRaw = v; return false; } }
 
 function exportObj() {
-  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, limMonths: meta.limMonths || {}, ics: meta.ics, lastBackup: meta.lastBackup || null, cats: meta.cats, taskCats: meta.taskCats, tags: meta.tags }, plans, debts, goals, owed, tasks, projects, events, people, habits, months };
+  return { app: 'fin-ledger', v: 1, exported: new Date().toISOString(), meta: { currency: meta.currency, opening: meta.opening || 0, totalLimit: meta.totalLimit || 0, limMonths: meta.limMonths || {}, ics: meta.ics, lastBackup: meta.lastBackup || null, cats: meta.cats, taskCats: meta.taskCats, tags: meta.tags }, plans, debts, goals, owed, tasks, projects, people, habits, months };
 }
 function setSave(state) {
   const el = $('#savestate'); if (!el) return;
@@ -1212,7 +1187,16 @@ function hydrate(obj) {
   goals = Array.isArray(obj.goals) ? obj.goals.filter(g => g && g.id && g.name && g.target > 0) : [];
   owed = Array.isArray(obj.owed) ? obj.owed.filter(o => o && o.id && o.name).map(o => ({ ...o, base: Number.isFinite(o.base) ? o.base : 0 })) : [];
   tasks = Array.isArray(obj.tasks) ? obj.tasks.filter(t => t && t.id && t.title).map(t => ({ ...t, pos: Number.isFinite(t.pos) ? t.pos : (t.ts || 0) })) : [];
-  events = Array.isArray(obj.events) ? obj.events.filter(e => e && e.id && e.title && isDate(e.date)) : [];
+  migratedEvents = false;
+  if (Array.isArray(obj.events)) for (const e of obj.events) {   // старые «события» — переносим в «дела» с необязательными временем и местом
+    if (!e || !e.id || !e.title || !isDate(e.date)) continue;
+    const t = { id: e.id, title: e.title, done: false, pos: e.ts || Date.now(), ts: e.ts || Date.now(), due: e.date };
+    if (/^\d{2}:\d{2}$/.test(e.time || '')) t.time = e.time;
+    if ((e.place || '').trim()) t.place = e.place.trim();
+    if ((e.note || '').trim()) t.note = e.note.trim();
+    if (e.repeat) t.repeat = e.repeat; if (e.rday) t.rday = e.rday;
+    if (!tasks.some(x => x.id === t.id)) { tasks.push(t); migratedEvents = true; }
+  }
   people = Array.isArray(obj.people) ? obj.people.filter(q => q && q.id && q.name && q.day >= 1 && q.day <= 31 && q.month >= 1 && q.month <= 12).map(q => ({ remind: 14, ...q, gifts: Array.isArray(q.gifts) ? q.gifts : [] })) : [];
   habits = Array.isArray(obj.habits) ? obj.habits.filter(h => h && h.id && h.name).map(h => ({ type: 'check', days: null, start: today(), ...h, days: Array.isArray(h.days) && h.days.length && h.days.length < 7 ? h.days : null, log: h.log && typeof h.log === 'object' ? h.log : {} })) : [];
   projects = Array.isArray(obj.projects) ? obj.projects.filter(p => p && p.id && p.name).map(p => ({ status: 'active', ...p })) : [];
@@ -1232,7 +1216,7 @@ window.addEventListener('storage', e => { if (e.key === LS_KEY && !draft && !sav
 /* ───────── ui state ───────── */
 const ui = { tab: 'today', msub: 'overview', tsub: 'list', project: null, habit: null, person: null, cal: mkey(today()), calDay: today(), trendMonth: mkey(today()), csub: 'month', limScope: '', tproj: '', qd: { today: 'today', tasks: '' }, ttcat: '', month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
 ui.qmode = (() => { try { return localStorage.getItem('fin-qmode') === 'money' ? 'money' : 'task'; } catch (e) { return 'task'; } })(); ui.qmCat = null;
-let draft = null, lastFocus = null, pendingImport = null;
+let draft = null, lastFocus = null, pendingImport = null, migratedEvents = false;
 
 let toastT;
 function toast(msg, kind, ms, act) {
@@ -1313,7 +1297,7 @@ const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['p
 function fabLabel() {
   if (ui.tab === 'more') return '';
   if (ui.tab === 'today') return '';
-  if (ui.tab === 'cal') return ui.person ? 'Подарок' : ui.csub === 'bdays' ? 'День рождения' : 'Событие';
+  if (ui.tab === 'cal') return ui.person ? 'Подарок' : ui.csub === 'bdays' ? 'День рождения' : 'Дело';
   if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? 'Проект' : ui.tsub === 'habits' ? 'Привычка' : 'Дело';
   if (ui.msub === 'debts') return '';
   return ui.msub === 'plans' ? 'Новый план' : 'Добавить';
@@ -1751,23 +1735,22 @@ function viewCalendar(root) {
   root.innerHTML = sub + `<div id="calBody"></div>`;
   renderCalBody();
 }
-function dayInfo(ds) { const x = calendarIndex(ds, ds).get(ds); return x || { events: [], bdays: [], tasks: [], projects: [], money: [] }; }
+function dayInfo(ds) { const x = calendarIndex(ds, ds).get(ds); return x || { bdays: [], tasks: [], projects: [], money: [] }; }
 function renderCalBody() {
   const box = $('#calBody'); if (!box) return;
   const key = ui.cal, cells = monthGrid(key), idx = calendarIndex(cells[0], cells[cells.length - 1]), t0 = today();
-  const dots = x => x ? [x.events.length ? 'ev' : '', x.bdays.length ? 'bd' : '', x.tasks.length ? 'tk' : '', x.projects.length ? 'pj' : '', x.money.length ? 'mn' : ''].filter(Boolean).map(c => `<i class="cd ${c}"></i>`).join('') : '';
+  const dots = x => x ? [x.bdays.length ? 'bd' : '', x.tasks.length ? 'tk' : '', x.projects.length ? 'pj' : '', x.money.length ? 'mn' : ''].filter(Boolean).map(c => `<i class="cd ${c}"></i>`).join('') : '';
   let html = `<div class="calnav"><button type="button" class="icon" data-act="calNav" data-d="-1" aria-label="Предыдущий месяц">‹</button><button type="button" class="label" data-act="calToday" title="К сегодняшнему дню">${esc(monthTitle(key))}</button><button type="button" class="icon" data-act="calNav" data-d="1" aria-label="Следующий месяц">›</button></div>
   <div class="cal">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(w => `<div class="cwd">${w}</div>`).join('')}${cells.map(ds => `<button type="button" class="cday ${mkey(ds) !== key ? 'other' : ''} ${ds === t0 ? 'today' : ''} ${ds === ui.calDay ? 'sel' : ''}" data-act="calDay" data-d="${ds}" aria-label="${esc(dayTitle(ds))}" aria-pressed="${ds === ui.calDay}"><span>${+ds.slice(8)}</span><span class="dots">${dots(idx.get(ds))}</span></button>`).join('')}</div>
-  <div class="callegend"><span><i class="cd ev"></i>событие</span><span><i class="cd bd"></i>день рождения</span><span><i class="cd tk"></i>дело</span><span><i class="cd pj"></i>срок проекта</span><span><i class="cd mn"></i>деньги</span></div>`;
+  <div class="callegend"><span><i class="cd bd"></i>день рождения</span><span><i class="cd tk"></i>дело</span><span><i class="cd pj"></i>срок проекта</span><span><i class="cd mn"></i>деньги</span></div>`;
   const x = idx.get(ui.calDay) || dayInfo(ui.calDay);
-  html += `<section class="dayp"><div class="sechead"><h2>${esc(dayTitle(ui.calDay))}</h2><div class="btnrow"><button type="button" class="btn sm ghost" data-act="dayEvent">＋ Событие</button><button type="button" class="btn sm ghost" data-act="dayTask">＋ Дело</button></div></div>
-  <div class="qadd"><input id="qe-text" placeholder="Событие: врач 15:30" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="Быстрое событие"><button type="button" data-act="qeAdd" aria-label="Добавить событие">＋</button></div><div class="qprev" id="qe-prev" aria-live="polite"></div>`;
-  if (x.events.length) html += tsec('События', `<ul class="tl">${x.events.map(e => eventRowHtml(e.ev, e.ds)).join('')}</ul>`);
+  html += `<section class="dayp"><div class="sechead"><h2>${esc(dayTitle(ui.calDay))}</h2><div class="btnrow"><button type="button" class="btn sm ghost" data-act="dayTask">＋ Дело</button></div></div>
+  <div class="qadd"><input id="dq-text" placeholder="Дело: врач 15:30" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="Быстрое дело"><button type="button" data-act="dqAdd" aria-label="Добавить дело">＋</button></div><div class="qprev" id="dq-prev" aria-live="polite"></div>`;
   if (x.bdays.length) html += tsec('Дни рождения', `<ul class="tl">${x.bdays.map(q => bdayRowHtml(q, bdayInfo(q, ui.calDay))).join('')}</ul>`);
-  if (x.tasks.length) html += tsec('Дела', x.tasks.sort((a, b) => a.pos - b.pos).map(t => taskRowHtml(t, { noDue: true })).join(''));
+  if (x.tasks.length) html += tsec('Дела', x.tasks.slice().sort(byTaskTime).map(t => taskRowHtml(t, { noDue: true })).join(''));
   if (x.projects.length) html += tsec('Сроки проектов', `<ul class="tl">${x.projects.map(pr => `<li><button type="button" class="tlrow" data-act="openProjectFrom" data-id="${pr.id}"><span class="tl-date"><b>срок</b></span><span class="row-main"><span class="row-title">${esc(pr.name)}</span><span class="row-sub"><span class="pchip" style="--c:${col(pr.color)}">проект</span></span></span></button></li>`).join('')}</ul>`);
   if (x.money.length) html += tsec('Деньги', `<ul class="tl">${x.money.map(m => tlRowHtml(m)).join('')}</ul>`);
-  if (!x.events.length && !x.bdays.length && !x.tasks.length && !x.projects.length && !x.money.length) html += `<p class="hint">На этот день ничего не запланировано.</p>`;
+  if (!x.bdays.length && !x.tasks.length && !x.projects.length && !x.money.length) html += `<p class="hint">На этот день ничего не запланировано.</p>`;
   box.innerHTML = html + '</section>';
 }
 function renderBdaysList() {
@@ -1867,7 +1850,9 @@ function taskRowHtml(t, o = {}) {
   const tc = t.cat ? taskCatById(t.cat) : null;
   if (p && !o.noProject) bits.push(`<span class="pchip" style="--c:${col(p.color)}">${esc(p.name)}</span>`);
   if (tc) bits.push(`<span class="pchip" style="--c:${col(tc.color)}">${esc(tc.name)}</span>`);
-  if (t.due && !o.noDue) bits.push(`<span class="${late ? 'late' : ''}">${esc(dueLabel(t.due))}</span>`);
+  if (t.due && !o.noDue) bits.push(`<span class="${late ? 'late' : ''}">${esc(dueLabel(t.due))}${t.time ? ', ' + esc(t.time) : ''}</span>`);
+  else if (t.time && o.noDue) bits.push(`<span>${esc(t.time)}</span>`);
+  if (t.place) bits.push(`<span>${esc(t.place)}</span>`);
   if (t.repeat) bits.push(`<span class="badge">${esc(REPEATS[t.repeat].toLowerCase())}</span>`);
   if (t.note) bits.push('<span class="badge">заметка</span>');
   if (o.next) bits.push('<span class="nextlbl">следующий шаг</span>');
@@ -1890,17 +1875,19 @@ function bentoHtml() {
   const open = tasks.filter(t => !t.done && t.due && t.due <= t0).length, done = tasks.filter(t => (t.done && t.doneAt === t0) || (t.repeat && t.lastDone === t0)).length, total = open + done;
   const hab = habits.filter(h => !h.archived && habitScheduled(h, t0)), hDone = hab.filter(h => habitDone(h, t0)).length;
   const pay = moneyItems().dated.find(p => p.date >= t0 && p.date <= shiftDate(t0, 14));
-  const cal = calendarIndex(t0, shiftDate(t0, 7)), todayRows = [], laterRows = [];
-  (cal.get(t0) || { events: [] }).events.slice(0, 3).forEach(e => todayRows.push({ act: 'editEvent', id: e.ev.id, ico: '🕒', c: 7, title: e.ev.title, cap: `сегодня, ${e.ev.time || 'весь день'}${e.ev.place ? ' · ' + e.ev.place : ''}`, past: !!e.ev.time && e.ev.time < hhmm }));
-  for (let i = 1; i <= 7; i++) { const e = ((cal.get(shiftDate(t0, i)) || { events: [] }).events)[0]; if (e) { laterRows.push({ act: 'editEvent', id: e.ev.id, ico: '📅', c: 2, title: e.ev.title, cap: `${dueLabel(e.ds)}${e.ev.time ? ', ' + e.ev.time : ''}` }); break; } }
+  const todayRows = [], laterRows = [];
+  tasks.filter(t => !t.done && t.due === t0 && t.time).sort((a, b) => a.time.localeCompare(b.time)).slice(0, 3)
+    .forEach(t => todayRows.push({ act: 'editTask', id: t.id, ico: '🕒', c: 7, title: t.title, cap: `сегодня, ${t.time}${t.place ? ' · ' + t.place : ''}`, past: t.time < hhmm }));
+  for (let i = 1; i <= 7; i++) { const list = tasks.filter(t => !t.done && t.due === shiftDate(t0, i) && t.time).sort((a, b) => a.time.localeCompare(b.time)); if (list.length) { const t = list[0]; laterRows.push({ act: 'editTask', id: t.id, ico: '📅', c: 2, title: t.title, cap: `${dueLabel(t.due)}, ${t.time}`, days: i }); break; } }
   people.map(q => ({ q, nb: nextBirthday(q) })).filter(x => x.nb.days <= (x.q.remind || 14)).sort((a, b) => a.nb.days - b.nb.days).slice(0, 2)
-    .forEach(({ q, nb }) => (nb.days === 0 ? todayRows : laterRows).push({ act: 'openPerson', id: q.id, ico: '🎂', c: 3, title: `${q.name}: день рождения`, cap: `${nb.days === 0 ? 'сегодня' : nb.days === 1 ? 'завтра' : `через ${nb.days} ${plural(nb.days, DAYW)}`}${nb.age ? `, исполнится ${nb.age}` : ''}` }));
+    .forEach(({ q, nb }) => (nb.days === 0 ? todayRows : laterRows).push({ act: 'openPerson', id: q.id, ico: '🎂', c: 3, title: `${q.name}: день рождения`, cap: `${nb.days === 0 ? 'сегодня' : nb.days === 1 ? 'завтра' : `через ${nb.days} ${plural(nb.days, DAYW)}`}${nb.age ? `, исполнится ${nb.age}` : ''}`, days: nb.days }));
+  laterRows.sort((a, b) => a.days - b.days);   // от ближайшего к дальнему
   const nxRow = r => `<button type="button" class="nx ${r.past ? 'past' : ''}" data-act="${r.act}" data-id="${r.id}"><span class="cico" style="--c:${col(r.c)}">${r.ico}</span><div><b>${esc(r.title)}</b><span class="cap">${esc(r.cap)}</span></div></button>`;
   return `<div class="bento">
     <div class="bt hero"><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b>${pay ? `<span class="sub">${esc(shortDate(pay.date))} · ${esc(pay.title || catName(pay.cat))} ${pay.kind === 'in' ? '+' : '−'}${money(pay.amount)}</span>` : ''}<button type="button" class="btn sm" data-act="todayQuickMoney">＋ Трата</button></div>
     <button type="button" class="bt tile" data-act="tsub" data-v="list">${ringSvg(total ? done / total : 0, 'var(--primary)')}<div><b>${total ? `${done} из ${total}` : '—'}</b><span class="cap">${total ? 'дел на сегодня' : 'дел на сегодня нет'}</span></div></button>
     <button type="button" class="bt tile" data-act="habitsGo">${ringSvg(hab.length ? hDone / hab.length : 0, 'var(--income)')}<div><b>${hab.length ? `${hDone} из ${hab.length}` : '—'}</b><span class="cap">${hab.length ? 'привычек' : 'привычек пока нет'}</span></div></button>
-    ${todayRows.length || laterRows.length ? `<div class="bt next"><h3>Скоро</h3>${todayRows.length ? `<div class="nxgrp">${laterRows.length ? '<span class="nxlbl">Сегодня</span>' : ''}${todayRows.map(nxRow).join('')}</div>` : ''}${laterRows.length ? `<div class="nxgrp">${todayRows.length ? '<span class="nxlbl">Дальше</span>' : ''}${laterRows.map(nxRow).join('')}</div>` : ''}</div>` : ''}
+    ${todayRows.length || laterRows.length ? `<div class="bt next">${todayRows.length ? `<div class="nxgrp">${laterRows.length ? '<span class="nxlbl">Сегодня</span>' : ''}${todayRows.map(nxRow).join('')}</div>` : ''}${laterRows.length ? `<div class="nxgrp">${todayRows.length ? '<span class="nxlbl">Дальше</span>' : ''}${laterRows.map(nxRow).join('')}</div>` : ''}</div>` : ''}
   </div>`;
 }
 function viewToday(root) {
@@ -2137,7 +2124,7 @@ function kindSeg(list) {
   return `<div class="seg2 kind" role="group" aria-label="Тип записи" style="margin-bottom:16px">${list.map(k => `<button type="button" class="${all[k][1]}" data-act="setKind" data-v="${k}" aria-pressed="${draft.kind === k}">${all[k][0]}</button>`).join('')}</div>`;
 }
 const FIELDS = { 'f-amount': 'amount', 'f-date': 'date', 'f-title': 'title', 'f-note': 'note', 'f-store': 'store', 'f-int': 'interest', 'f-after': 'after', 'f-debt': 'debt', 'f-goal': 'goal', 'f-src': 'src', 'f-actual': 'actual', 'h-name': 'hname', 'h-goal': 'hgoal', 'h-unit': 'hunit', 'h-step': 'hstep', 'hl-val': 'hlval', 'e-title': 'etitle', 'e-date': 'edate', 'e-time': 'etime', 'e-place': 'eplace', 'e-note': 'enote', 'e-repeat': 'erepeat', 'b-name': 'bname', 'b-day': 'bday', 'b-month': 'bmonth', 'b-year': 'byear', 'b-remind': 'bremind', 'b-note': 'bnote', 'b-budget': 'bbudget', 'gm-text': 'gtext', 'gm-price': 'gprice', 't-title': 'ttitle', 't-note': 'tnote', 't-due': 'tdue', 't-project': 'tproject', 't-repeat': 'trepeat', 'p-name': 'pname', 'p-goal': 'pgoal', 'p-due': 'pdue', 'p-status': 'pstatus', 'f-owed': 'owed', 'o-name': 'oname', 'o-amount': 'oamount', 'o-date': 'odate', 'o-due': 'odue', 'o-note': 'onote', 'o-base': 'obase',
-  'd-name': 'name', 'd-kind': 'dkind', 'd-bal0': 'bal0', 'd-start': 'start', 'd-rate': 'rate', 'd-monthly': 'monthly', 'd-payday': 'payday', 'd-limit': 'limit', 'gx-name': 'gname', 'gx-target': 'target', 'gx-saved0': 'saved0', 'gx-deadline': 'deadline', 't-newcat': 'newTCatName' };
+  'd-name': 'name', 'd-kind': 'dkind', 'd-bal0': 'bal0', 'd-start': 'start', 'd-rate': 'rate', 'd-monthly': 'monthly', 'd-payday': 'payday', 'd-limit': 'limit', 'gx-name': 'gname', 'gx-target': 'target', 'gx-saved0': 'saved0', 'gx-deadline': 'deadline', 't-newcat': 'newTCatName', 't-time': 'ttime', 't-place': 'tplace' };
 function syncDraft() {
   if (!draft) return;
   for (const [id, key] of Object.entries(FIELDS)) { const el = $('#' + id); if (el) draft[key] = el.value; }
@@ -2250,7 +2237,7 @@ function openTx(opts = {}) {
 }
 function renderModal() {
   const box = $('#mcontent'); if (!box || !draft) return;
-  box.innerHTML = ({ tx: txHtml, plan: planHtml, debt: debtHtml, goalx: goalxHtml, recon: reconHtml, owed: owedHtml, task: taskHtml, project: projectHtml, event: eventHtml, person: personHtml, gift: giftHtml, habit: habitHtml, hlog: hlogHtml })[draft.type]();
+  box.innerHTML = ({ tx: txHtml, plan: planHtml, debt: debtHtml, goalx: goalxHtml, recon: reconHtml, owed: owedHtml, task: taskHtml, project: projectHtml, person: personHtml, gift: giftHtml, habit: habitHtml, hlog: hlogHtml })[draft.type]();
   if (draft.type === 'tx') { refreshLimitHint(); if (draft.kind === 'pay') refreshPayCalc(); if (draft.kind === 'goal') refreshGoalCalc(); if (draft.kind === 'recv' || draft.kind === 'lend') refreshOwedCalc(); }
 }
 const TX_TITLES = { out: 'Расход', in: 'Доход', pay: 'Платёж по долгу', goal: 'Взнос в цель', lend: 'Дал в долг', recv: 'Возврат долга' };
@@ -2508,21 +2495,27 @@ function saveOwed() {
 function openTask(opts = {}) {
   lastFocus = document.activeElement;
   const ex = opts.id ? taskById(opts.id) : null;
-  draft = { type: 'task', id: ex ? ex.id : null, ttitle: ex ? ex.title : '', tnote: ex ? (ex.note || '') : '', tdue: ex ? (ex.due || '') : (opts.due || ''), tproject: ex ? (ex.project || '') : (opts.project || ''), trepeat: ex ? (ex.repeat || '') : '', tcat: ex ? (ex.cat || '') : (opts.cat || ''), tcatNew: false, newTCatName: '' };
+  draft = { type: 'task', id: ex ? ex.id : null, ttitle: ex ? ex.title : '', tnote: ex ? (ex.note || '') : '', tdue: ex ? (ex.due || '') : (opts.due || ''), ttime: ex ? (ex.time || '') : (opts.time || ''), tplace: ex ? (ex.place || '') : '', tproject: ex ? (ex.project || '') : (opts.project || ''), trepeat: ex ? (ex.repeat || '') : '', tcat: ex ? (ex.cat || '') : (opts.cat || ''), tcatNew: false, newTCatName: '' };
   openSheet(); renderModal(); if (!ex && !IS_MOBILE) $('#t-title')?.focus(); else $('.sheet').focus();
 }
 function taskHtml() {
-  const d = draft, t0 = today(), plist = projects.filter(p => p.status !== 'done' || p.id === d.tproject), more = moreState(d, d.tproject || d.trepeat || (d.tnote || '').trim());
+  const d = draft, t0 = today(), plist = projects.filter(p => p.status !== 'done' || p.id === d.tproject), more = moreState(d, d.tproject || d.trepeat || d.tplace || (d.tnote || '').trim());
+  const saved = d.id ? taskById(d.id) : null;
   return `<div class="mhead"><h2 id="mtitle">${d.id ? 'Дело' : 'Новое дело'}</h2><button type="button" class="icon" data-act="closeModal" aria-label="Закрыть">×</button></div>
-  <div class="field"><span>Что нужно сделать</span><input id="t-title" class="entersave" value="${esc(d.ttitle)}" maxlength="120" placeholder="Например, позвонить в банк"></div>
-  <div class="field"><span>Срок</span><input id="t-due" type="date" value="${esc(d.tdue)}">
-    <div class="chips" style="margin-top:8px">${[['Сегодня', t0], ['Завтра', shiftDate(t0, 1)], ['Через неделю', shiftDate(t0, 7)], ['Без срока', '']].map(([l, v]) => `<button type="button" class="chip ${d.tdue === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="setTdue" data-v="${v}">${l}</button>`).join('')}</div></div>
+  <div class="field"><span>Что нужно сделать</span><input id="t-title" class="entersave" value="${esc(d.ttitle)}" maxlength="120" placeholder="Например, позвонить в банк или встреча с врачом"></div>
+  <div class="grid2">
+    <div class="field"><span>Срок</span><input id="t-due" type="date" value="${esc(d.tdue)}">
+      <div class="chips" style="margin-top:8px">${[['Сегодня', t0], ['Завтра', shiftDate(t0, 1)], ['Через неделю', shiftDate(t0, 7)], ['Без срока', '']].map(([l, v]) => `<button type="button" class="chip ${d.tdue === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="setTdue" data-v="${v}">${l}</button>`).join('')}</div></div>
+    <div class="field"><span>Время (необязательно)</span><input id="t-time" type="time" value="${esc(d.ttime)}"></div>
+  </div>
   ${taskCatChipsHtml(d)}
-  <details class="more" ${more ? 'open' : ''}><summary>Подробнее: проект, повтор, заметка</summary>
+  <details class="more" ${more ? 'open' : ''}><summary>Подробнее: место, проект, повтор, заметка</summary>
+    <div class="field"><span>Место</span><input id="t-place" class="entersave" value="${esc(d.tplace)}" maxlength="80"></div>
     ${plist.length ? `<div class="field"><span>Проект</span><select id="t-project" data-change="tproject"><option value="">Без проекта</option>${plist.map(p => `<option value="${p.id}" ${p.id === d.tproject ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>` : ''}
     ${d.tproject ? '' : `<div class="field"><span>Повторять</span><select id="t-repeat"><option value="">Не повторять</option>${Object.entries(REPEATS).map(([k, l]) => `<option value="${k}" ${k === d.trepeat ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`}
     <div class="field"><span>Заметка</span><textarea id="t-note" maxlength="500">${esc(d.tnote)}</textarea></div>
   </details>
+  ${saved && saved.due ? (() => { const oe = icsEntries(meta.ics, { type: 'tasks', id: d.id })[0]; return oe ? `<div class="btnrow" style="margin:-4px 0 12px"><button type="button" class="btn ghost sm" data-act="icsOne" data-t="tasks" data-id="${d.id}">Файл для календаря</button><a class="btn ghost sm" href="${esc(gcalUrl(oe))}" target="_blank" rel="noopener">В Google Календарь</a></div>` : ''; })() : ''}
   <div class="ferr" id="ferr" role="alert"></div>
   <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
     <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
@@ -2538,6 +2531,8 @@ function saveTask() {
   if (repeat) t.repeat = repeat; else { delete t.repeat; delete t.lastDone; delete t.prevDue; }
   if (due) t.due = due; else delete t.due;
   if (repeat === 'monthly') t.rday = +due.slice(8); else delete t.rday;
+  if (due && /^\d{2}:\d{2}$/.test(d.ttime || '')) t.time = d.ttime; else delete t.time;
+  if ((d.tplace || '').trim()) t.place = d.tplace.trim(); else delete t.place;
   const tcat = resolveTaskCat(d); if (tcat) t.cat = tcat; else delete t.cat;
   if (!ex) tasks.push(t);
   finish(ex ? 'Сохранено' : 'Дело добавлено');
@@ -2575,47 +2570,6 @@ function saveProject() {
 }
 
 /* — событие, день рождения, подарок — */
-function openEvent(opts = {}) {
-  lastFocus = document.activeElement;
-  const ex = opts.id ? eventById(opts.id) : null;
-  draft = { type: 'event', id: ex ? ex.id : null, etitle: ex ? ex.title : '', edate: ex ? ex.date : (opts.date || today()), etime: ex ? (ex.time || '') : '', eplace: ex ? (ex.place || '') : '', enote: ex ? (ex.note || '') : '', erepeat: ex ? (ex.repeat || '') : '' };
-  openSheet(); renderModal(); if (!ex && !IS_MOBILE) $('#e-title')?.focus(); else $('.sheet').focus();
-}
-function eventHtml() {
-  const d = draft, t0 = today(), more = moreState(d, d.eplace || d.erepeat || (d.enote || '').trim());
-  return `<div class="mhead"><h2 id="mtitle">${d.id ? 'Событие' : 'Новое событие'}</h2><button type="button" class="icon" data-act="closeModal" aria-label="Закрыть">×</button></div>
-  <div class="field"><span>Название</span><input id="e-title" class="entersave" value="${esc(d.etitle)}" maxlength="120" placeholder="Например, встреча с врачом"></div>
-  <div class="grid2">
-    <div class="field"><span>Дата</span><input id="e-date" type="date" value="${esc(d.edate)}">
-      <div class="chips" style="margin-top:8px">${[['Сегодня', t0], ['Завтра', shiftDate(t0, 1)], ['Через неделю', shiftDate(t0, 7)]].map(([l, v]) => `<button type="button" class="chip ${d.edate === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="setEdate" data-v="${v}">${l}</button>`).join('')}</div></div>
-    <div class="field"><span>Время</span><input id="e-time" type="time" value="${esc(d.etime)}"></div>
-  </div>
-  <details class="more" ${more ? 'open' : ''}><summary>Подробнее: место, повтор, заметка</summary>
-    <div class="field"><span>Место</span><input id="e-place" class="entersave" value="${esc(d.eplace)}" maxlength="80"></div>
-    <div class="field"><span>Повторять</span><select id="e-repeat"><option value="">Не повторять</option>${Object.entries(REPEATS).map(([k, l]) => `<option value="${k}" ${k === d.erepeat ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
-    <div class="field"><span>Заметка</span><textarea id="e-note" maxlength="500">${esc(d.enote)}</textarea></div>
-  </details>
-  ${d.id && eventById(d.id) ? (() => { const oe = icsEntries(meta.ics, { type: 'events', id: d.id })[0]; return oe ? `<div class="btnrow" style="margin:-4px 0 12px"><button type="button" class="btn ghost sm" data-act="icsOne" data-t="events" data-id="${d.id}">Файл для календаря</button><a class="btn ghost sm" href="${esc(gcalUrl(oe))}" target="_blank" rel="noopener">В Google Календарь</a></div>` : ''; })() : ''}
-  <div class="ferr" id="ferr" role="alert"></div>
-  <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
-    <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
-}
-function saveEvent() {
-  const d = draft, title = (d.etitle || '').trim();
-  if (!title) return formErr('Введите название события', 'e-title');
-  if (!isDate(d.edate)) return formErr('Укажите дату', 'e-date');
-  const time = /^\d{2}:\d{2}$/.test(d.etime || '') ? d.etime : '';
-  const ex = d.id ? eventById(d.id) : null, e = ex || { id: 'v' + uid(), ts: Date.now() };
-  e.title = title; e.date = d.edate;
-  if (time) e.time = time; else delete e.time;
-  if ((d.eplace || '').trim()) e.place = d.eplace.trim(); else delete e.place;
-  if ((d.enote || '').trim()) e.note = d.enote.trim(); else delete e.note;
-  if (d.erepeat) e.repeat = d.erepeat; else delete e.repeat;
-  if (d.erepeat === 'monthly') e.rday = +d.edate.slice(8); else delete e.rday;
-  if (!ex) events.push(e);
-  ui.calDay = e.date; ui.cal = mkey(e.date);
-  finish(ex ? 'Событие сохранено' : 'Событие добавлено');
-}
 function openPerson(id) {
   lastFocus = document.activeElement;
   const ex = id ? personById(id) : null;
@@ -2795,7 +2749,6 @@ function saveDraft() {
   if (d.type === 'owed') return saveOwed();
   if (d.type === 'task') return saveTask();
   if (d.type === 'project') return saveProject();
-  if (d.type === 'event') return saveEvent();
   if (d.type === 'person') return savePerson();
   if (d.type === 'gift') return saveGift();
   if (d.type === 'habit') return saveHabit();
@@ -2914,7 +2867,6 @@ function deleteDraft() {
     goals = goals.filter(y => y.id !== d.id); return finish('Цель удалена');
   }
   if (d.type === 'habit') { habits = habits.filter(h => h.id !== d.id); if (ui.habit === d.id) ui.habit = null; return finish('Привычка удалена'); }
-  if (d.type === 'event') { events = events.filter(e => e.id !== d.id); return finish('Событие удалено'); }
   if (d.type === 'person') { people = people.filter(q => q.id !== d.id); if (ui.person === d.id) ui.person = null; return finish('День рождения удалён'); }
   if (d.type === 'gift') { const q = personById(d.pid); if (q) q.gifts = (q.gifts || []).filter(g => g.id !== d.id); return finish('Идея удалена'); }
   if (d.type === 'task') { tasks = tasks.filter(t => t.id !== d.id); return finish('Дело удалено'); }
@@ -2989,7 +2941,7 @@ const actions = {
   trendToday() { ui.trendMonth = mkey(today()); render(); },
   add() {
     if (ui.tab === 'today') return ui.qmode === 'money' ? openTx() : openTask({ due: today() });
-    if (ui.tab === 'cal') { if (ui.person) return openGift(); if (ui.csub === 'bdays') return openPerson(); return openEvent({ date: ui.calDay }); }
+    if (ui.tab === 'cal') { if (ui.person) return openGift(); if (ui.csub === 'bdays') return openPerson(); return openTask({ due: ui.calDay }); }
     if (ui.tab === 'tasks' && ui.habit) return;
     if (ui.tab === 'tasks' && ui.tsub === 'habits') return openHabit();
     if (ui.tab === 'tasks') return ui.project ? openTask({ project: ui.project }) : ui.tsub === 'projects' ? openProject() : openTask({});
@@ -3059,17 +3011,20 @@ const actions = {
     const q = parseTaskText(raw), v = ui.qd[sc], chipDue = v === 'today' ? today() : v === 'tomorrow' ? shiftDate(today(), 1) : '';
     const due = q.due || chipDue, snap = snapshot();
     const t = { id: 'k' + uid(), title: q.title || raw, done: false, pos: Date.now(), ts: Date.now() }; if (due) t.due = due;
+    if (due && q.time) t.time = q.time;
     if (q.project) t.project = q.project; else if (q.repeat) { t.repeat = q.repeat; if (q.repeat === 'monthly') t.rday = +due.slice(8); }
     if (q.tcat) t.cat = q.tcat;
     tasks.push(t); inp.value = ''; persist(); renderLists(); inp.focus(); refreshTaskPreview();
-    if (q.matched) toastUndo(`Дело добавлено${t.due ? ' · ' + dueLabel(t.due) : ''}${t.repeat ? ' · ' + REPEAT_SHORT[t.repeat] : ''}${q.tcat ? ' · ' + taskCatById(q.tcat).name : ''}`, snap);
+    if (q.matched) toastUndo(`Дело добавлено${t.due ? ' · ' + dueLabel(t.due) : ''}${t.time ? ', ' + t.time : ''}${t.repeat ? ' · ' + REPEAT_SHORT[t.repeat] : ''}${q.tcat ? ' · ' + taskCatById(q.tcat).name : ''}`, snap);
   },
-  qeAdd() {
-    const inp = $('#qe-text'), raw = (inp?.value || '').trim(); if (!raw) return inp && inp.focus();
-    const q = parseEventText(raw, ui.calDay), snap = snapshot();
-    const e = { id: 'v' + uid(), title: q.title || raw, date: q.date, ts: Date.now() }; if (q.time) e.time = q.time; if (q.repeat) { e.repeat = q.repeat; if (q.repeat === 'monthly') e.rday = +q.date.slice(8); }
-    events.push(e); ui.calDay = e.date; ui.cal = mkey(e.date); persist(); renderCalBody(); $('#qe-text')?.focus();
-    toastUndo(`Событие добавлено · ${dueLabel(e.date)}${e.time ? ', ' + e.time : ''}`, snap);
+  dqAdd() {
+    const inp = $('#dq-text'), raw = (inp?.value || '').trim(); if (!raw) return inp && inp.focus();
+    const q = parseTaskText(raw, ui.calDay), due = q.due || ui.calDay, snap = snapshot();
+    const t = { id: 'k' + uid(), title: q.title || raw, done: false, pos: Date.now(), ts: Date.now(), due }; if (q.time) t.time = q.time;
+    if (q.project) t.project = q.project; else if (q.repeat) { t.repeat = q.repeat; if (q.repeat === 'monthly') t.rday = +due.slice(8); }
+    if (q.tcat) t.cat = q.tcat;
+    tasks.push(t); inp.value = ''; ui.calDay = due; ui.cal = mkey(due); persist(); renderCalBody(); $('#dq-text')?.focus();
+    toastUndo(`Дело добавлено · ${dueLabel(due)}${t.time ? ', ' + t.time : ''}`, snap);
   },
   stepAdd() {
     const inp = $('#s-title'), title = (inp?.value || '').trim(); if (!title) return inp && inp.focus();
@@ -3093,10 +3048,7 @@ const actions = {
   calNav(el) { const [y, m] = ui.cal.split('-').map(Number), d = new Date(y, m - 1 + (+el.dataset.d), 1); ui.cal = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; ui.calDay = ui.cal === mkey(today()) ? today() : ui.cal + '-01'; renderCalBody(); },
   calToday() { ui.cal = mkey(today()); ui.calDay = today(); renderCalBody(); },
   calDay(el) { ui.calDay = el.dataset.d; ui.cal = mkey(ui.calDay); renderCalBody(); },
-  dayEvent() { openEvent({ date: ui.calDay }); },
   dayTask() { openTask({ due: ui.calDay }); },
-  editEvent(el) { openEvent({ id: el.dataset.id }); },
-  setEdate(el) { syncDraft(); draft.edate = el.dataset.v; renderModal(); },
   openProjectFrom(el) { ui.tab = 'tasks'; ui.tsub = 'projects'; ui.project = el.dataset.id; ui.person = null; render(); window.scrollTo(0, 0); },
   newPerson() { openPerson(); },
   editPerson(el) { openPerson(el.dataset.id); },
@@ -3303,7 +3255,7 @@ document.addEventListener('input', e => {
   if (t.id === 'f-search') { ui.f.q = t.value; renderOpsList(); return; }
   if (t.id === 'qm-text') { ui.qmCat = null; refreshQmPreview(); return; }
   if (t.id === 'q-title') { refreshTaskPreview(); return; }
-  if (t.id === 'qe-text') { refreshEventPreview(); return; }
+  if (t.id === 'dq-text') { refreshDqPreview(); return; }
   if (!draft) return;
   if (t.id === 'f-amount') {
     draft.amount = t.value;
@@ -3322,7 +3274,7 @@ document.addEventListener('keydown', e => {
     else if (t.classList && t.classList.contains('entersave')) { e.preventDefault(); saveDraft(); }
   } else if (t.id === 'q-title') { e.preventDefault(); actions.qadd({ dataset: { scope: t.dataset.scope } }); }
   else if (t.id === 'qm-text') { e.preventDefault(); actions.qmAdd(); }
-  else if (t.id === 'qe-text') { e.preventDefault(); actions.qeAdd(); }
+  else if (t.id === 'dq-text') { e.preventDefault(); actions.dqAdd(); }
   else if (t.id === 's-title') { e.preventDefault(); actions.stepAdd(); }
   else if (t.id === 'g-text' || t.id === 'g-price') { e.preventDefault(); actions.giftAdd(); }
   else if (t.id === 'new-tag') actions.tagAdd();
@@ -3351,6 +3303,7 @@ document.addEventListener('toggle', e => { const c = e.target.classList; if (!c)
 /* ───────── boot ───────── */
 try { localStorage.removeItem('fin-ledger-ai'); } catch (e) { /* остатки прошлой версии: ключ API больше не нужен */ }
 loadState();
+if (migratedEvents) persist();   // однократно сохраняем в новом формате, чтобы не мигрировать при каждой загрузке
 const autoPosted = applyRecurring();
 setSave('saved');
 render();

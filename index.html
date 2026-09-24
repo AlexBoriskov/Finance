@@ -528,8 +528,12 @@ section .dcard,section .pcard{background:var(--soft);box-shadow:none;border-radi
 }
 section .dcard .btn.ghost,section .pcard .btn.ghost{background:var(--surface)}
 /* «Сегодня»: план месяца и планы без срока */
-.tsec details.coll>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 0 10px}
-.tsec details.coll>summary::-webkit-details-marker{display:none}
+details.coll>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 0 10px}
+details.coll>summary::-webkit-details-marker{display:none}
+section>details.coll{margin:0}
+section>details.coll>summary{padding:0 0 4px}
+section>details.coll[open]>summary{padding-bottom:14px}
+section>details.coll h2{margin:0 0 2px}
 .mmh{min-width:0}
 .mmh h3{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 3px}
 .mmh .cap{display:block;font-size:.9rem;color:var(--muted);overflow-wrap:anywhere}
@@ -550,6 +554,7 @@ details.coll[open] .mm-chev::after{content:"▴"}
 .tl li.tlitem:last-child{border-bottom:0}
 .paybtn{display:block;margin:0 0 0 auto;height:34px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--income);font-size:.85rem;font-weight:700;line-height:1}
 .qpl2{display:block;font-size:.86rem;color:var(--muted);overflow-wrap:anywhere}
+.qdate{color:var(--muted);font-weight:600}
 .lefts{display:flex;flex-wrap:wrap;gap:8px}
 </style>
 </head>
@@ -748,6 +753,15 @@ const projectSteps = p => tasks.filter(t => t.project === p.id).sort((a, b) => a
 const nextStep = p => projectSteps(p).find(t => !t.done);
 const isDoneNow = t => t.done || (t.repeat && t.lastDone === today());
 const byTaskDue = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.pos - b.pos;
+function txDateLabel(ds) {   // как dueLabel, но без «просрочено»: прошлая дата у траты — это просто «вчера», а не алярм
+  const n = daysBetween(today(), ds);
+  if (n === 0) return 'сегодня';
+  if (n === -1) return 'вчера';
+  if (n === -2) return 'позавчера';
+  if (n === 1) return 'завтра';
+  if (n >= -6 && n <= 6) { const [y, m, d] = ds.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' }); }
+  return shortDate(ds);
+}
 function dueLabel(ds) {
   const n = daysBetween(today(), ds);
   if (n < 0) return `просрочено ${-n} ${plural(-n, DAYW)}`;
@@ -934,8 +948,8 @@ function gcalUrl(e) {
 function icsCounts() { const all = { ...meta.ics, ...Object.fromEntries(ICS_TYPES.map(([k]) => [k, true])) }, c = {}; for (const e of icsEntries(all)) c[e.type] = (c[e.type] || 0) + 1; return c; }
 function icsSettingsHtml() {
   const c = icsCounts(), o = meta.ics, n = ICS_TYPES.filter(([k]) => o[k]).reduce((a, [k]) => a + (c[k] || 0), 0);
-  return `<section><h2>Календарь телефона</h2>
-    <p class="hint" style="margin:0 0 12px">Приложение не может напоминать, пока закрыто. Создайте файл календаря (.ics) и добавьте его в календарь телефона: напоминания сделает сам телефон. «Дела» — это и обычные дела, и дела со временем (бывшие «события»). Повторный импорт того же файла обычно обновляет записи, а не дублирует их.</p>
+  return `<section><details class="coll" data-key="ics" ${ui.icsOpen ? 'open' : ''}><summary><div><h2>Календарь телефона</h2><span class="hint" style="margin:2px 0 0">${n} ${plural(n, ['запись', 'записи', 'записей'])} выбрано для экспорта</span></div><span class="mm-chev" aria-hidden="true"></span></summary>
+    <div class="mmbody"><p class="hint" style="margin:0 0 12px">Приложение не может напоминать, пока закрыто. Создайте файл календаря (.ics) и добавьте его в календарь телефона: напоминания сделает сам телефон. «Дела» — это и обычные дела, и дела со временем (бывшие «события»). Повторный импорт того же файла обычно обновляет записи, а не дублирует их.</p>
     <div>${ICS_TYPES.map(([k, l]) => `<label class="optrow"><input type="checkbox" data-change="icsopt" data-k="${k}" ${o[k] ? 'checked' : ''}><span>${esc(l)} <span class="badge">${c[k] || 0}</span></span>${k === 'habits' ? `<input type="time" data-change="icsopt" data-k="habitTime" value="${esc(o.habitTime)}" aria-label="Время напоминания о привычках" class="timein">` : ''}</label>`).join('')}</div>
     <div class="field" style="margin-top:14px"><span>Напоминание о событиях со временем</span><select data-change="icsopt" data-k="timedAlarm">${[['-1', 'Не напоминать'], ['0', 'В момент начала'], ['15', 'За 15 минут'], ['60', 'За час'], ['1440', 'За день']].map(([v, l]) => `<option value="${v}" ${o.timedAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
     <div class="field"><span>Напоминание о датах без времени (дни рождения, платежи, дела)</span><select data-change="icsopt" data-k="dayAlarm">${[['none', 'Не напоминать'], ['day', 'В день, в 9:00'], ['eve', 'Накануне и в день, в 9:00'], ['week', 'За неделю, накануне и в день, в 9:00']].map(([v, l]) => `<option value="${v}" ${o.dayAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
@@ -946,7 +960,7 @@ function icsSettingsHtml() {
       <ol><li><b>iPhone:</b> сохраните файл в «Файлы», нажмите на него и выберите «Добавить все».</li>
       <li><b>Android:</b> попробуйте открыть файл в календарном приложении телефона: если оно принимает такие файлы, предложит добавить события. В справке Google импорт файлов описан для компьютера (calendar.google.com → Настройки → Импорт и экспорт), в приложении на телефоне он может быть недоступен. Надёжный способ на телефоне — добавлять по одному кнопкой «В Google Календарь» на странице дня рождения и в карточке события.</li>
       <li><b>Напоминания:</b> одни календари берут их из файла, другие игнорируют. Тогда откройте настройки календаря, в который импортировали события, и задайте уведомления по умолчанию (для событий на весь день удобно «накануне в 9:00»). Лучше импортировать в отдельный календарь.</li></ol></details>
-  </section>`;
+  </div></details></section>`;
 }
 /* — категории по частоте, регулярные платежи, быстрый ввод трат — */
 const REPEAT_SHORT = { daily: 'каждый день', weekly: 'каждую неделю', monthly: 'каждый месяц', yearly: 'каждый год' };
@@ -989,6 +1003,8 @@ function guessCat(title, kind) {
 function parseQuick(text) {
   let s = String(text || '').trim(), kind = 'out';
   if (/^\+/.test(s)) { kind = 'in'; s = s.replace(/^\++\s*/, ''); }
+  const w = parseWhen(s, today(), false);   // «вчера», «20.10», «в пятницу» — как и в делах; сумма ищется в уже очищенном от даты остатке
+  const date = w.date || ''; s = w.title || '';
   const re = /(\d{1,3}(?:[\s\u00a0]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(тыс\.?|к|k)?\s*(?:₽|р\.?|руб\.?|рублей)?(?![\p{L}\d])/giu;
   let m, last = null; while ((m = re.exec(s))) last = m;
   let amount = 0, title = s;
@@ -998,7 +1014,7 @@ function parseQuick(text) {
   }
   if (kind === 'out' && /^(зарплат|аванс|премия|кэшбэк|кешбэк)/i.test(title)) kind = 'in';
   title = title ? title[0].toUpperCase() + title.slice(1) : '';
-  return { kind, amount: round2(amount), title, cat: guessCat(title, kind) };
+  return { kind, amount: round2(amount), title, cat: guessCat(title, kind), date };
 }
 /* частые траты: одинаковые название, сумма и категория, встречавшиеся не меньше двух раз за последние 4 месяца */
 function frequentSpends(n = 5) {
@@ -1012,7 +1028,7 @@ function frequentSpends(n = 5) {
 function addQuickTx(tx) {
   placeTx(tx); persist();
   const lm = tx.kind === 'out' ? limitMessages(tx) : [];
-  const label = `${tx.kind === 'in' ? 'Доход' : 'Расход'} ${money(tx.amount)}${tx.cat ? ' · ' + catName(tx.cat) : ''}`;
+  const label = `${tx.kind === 'in' ? 'Доход' : 'Расход'} ${money(tx.amount)}${tx.cat ? ' · ' + catName(tx.cat) : ''}${tx.date !== today() ? ' · ' + txDateLabel(tx.date) : ''}`;
   toast(label + (lm.length ? '. ' + lm[0] : ''), lm.length ? 'warn' : '', 6500, { label: 'Отменить', fn: () => { const f = findTx(tx.id); if (f) { months[f.key] = months[f.key].filter(t => t.id !== tx.id); persist(); render(); } } });
   ui.qmCat = null;
 }
@@ -1026,9 +1042,10 @@ function refreshQmPreview() {
   const box = $('#qm-prev'), inp = $('#qm-text'); if (!box || !inp) return;
   if (!inp.value.trim()) { box.innerHTML = ''; return; }
   const q = parseQuick(inp.value);
-  if (!(q.amount > 0)) { box.innerHTML = '<span class="hint" style="margin:0">Добавьте сумму, например «кофе 250»</span>'; return; }
+  if (!(q.amount > 0)) { box.innerHTML = q.date ? `<span class="hint" style="margin:0">${esc(txDateLabel(q.date))} · добавьте сумму, например «кофе 250»</span>` : '<span class="hint" style="margin:0">Добавьте сумму, например «кофе 250»</span>'; return; }
   const cat = ui.qmCat != null ? ui.qmCat : q.cat;
-  box.innerHTML = `<div class="qpl"><b class="num ${q.kind === 'in' ? 'in' : 'out'}">${q.kind === 'in' ? '+' : '−'}${money(q.amount)}</b>${q.title ? ' · ' + esc(q.title) : ''}</div><div class="chips">${orderedCats(q.kind).slice(0, 6).map(c => `<button type="button" class="chip cat ${cat === c.id ? 'on' : ''}" style="--c:${col(c.color)}" data-act="qmCat" data-v="${c.id}" aria-pressed="${cat === c.id}"><span class="ci">${esc(catIcoText(c))}</span>${esc(c.name)}</button>`).join('')}</div>`;
+  const dateBit = q.date && q.date !== today() ? `<span class="qdate">${esc(txDateLabel(q.date))} · </span>` : '';
+  box.innerHTML = `<div class="qpl">${dateBit}<b class="num ${q.kind === 'in' ? 'in' : 'out'}">${q.kind === 'in' ? '+' : '−'}${money(q.amount)}</b>${q.title ? ' · ' + esc(q.title) : ''}</div><div class="chips">${orderedCats(q.kind).slice(0, 6).map(c => `<button type="button" class="chip cat ${cat === c.id ? 'on' : ''}" style="--c:${col(c.color)}" data-act="qmCat" data-v="${c.id}" aria-pressed="${cat === c.id}"><span class="ci">${esc(catIcoText(c))}</span>${esc(c.name)}</button>`).join('')}</div>`;
 }
 function qbarHtml() {
   const m = ui.qmode;
@@ -1053,7 +1070,9 @@ function parseWhen(text, base, withTime) {
     || cut(new RegExp('\\s(?:каждый месяц|ежемесячно)' + END, 'iu'), () => { out.repeat = 'monthly'; })
     || cut(new RegExp('\\s(?:каждый год|ежегодно)' + END, 'iu'), () => { out.repeat = 'yearly'; });
   // дата
-  cut(new RegExp('\\sпослезавтра' + END, 'iu'), () => { out.date = shiftDate(base, 2); })
+  cut(new RegExp('\\sпозавчера' + END, 'iu'), () => { out.date = shiftDate(base, -2); })
+    || cut(new RegExp('\\sпослезавтра' + END, 'iu'), () => { out.date = shiftDate(base, 2); })
+    || cut(new RegExp('\\s(?:вчера)' + END, 'iu'), () => { out.date = shiftDate(base, -1); })
     || cut(new RegExp('\\sзавтра' + END, 'iu'), () => { out.date = shiftDate(base, 1); })
     || cut(new RegExp('\\sсегодня' + END, 'iu'), () => { out.date = base; })
     || cut(new RegExp('\\sчерез (\\d+|' + Object.keys(NUMW).join('|') + ')? ?(день|дня|дней|неделю|недели|недель|месяц|месяца|месяцев)' + END, 'iu'), m => {
@@ -1297,8 +1316,8 @@ const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['p
 function fabLabel() {
   if (ui.tab === 'more') return '';
   if (ui.tab === 'today') return '';
-  if (ui.tab === 'cal') return ui.person ? 'Подарок' : ui.csub === 'bdays' ? 'День рождения' : 'Дело';
-  if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? 'Проект' : ui.tsub === 'habits' ? 'Привычка' : 'Дело';
+  if (ui.tab === 'cal') return ui.person ? 'Подарок' : '';   // у дня в календаре и у списка дней рождения уже есть своя кнопка «＋»
+  if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? '' : ui.tsub === 'habits' ? '' : 'Дело';   // у списков проектов и привычек уже есть своя кнопка «＋»
   if (ui.msub === 'debts') return '';
   return ui.msub === 'plans' ? 'Новый план' : 'Добавить';
 }
@@ -1884,7 +1903,7 @@ function bentoHtml() {
   laterRows.sort((a, b) => a.days - b.days);   // от ближайшего к дальнему
   const nxRow = r => `<button type="button" class="nx ${r.past ? 'past' : ''}" data-act="${r.act}" data-id="${r.id}"><span class="cico" style="--c:${col(r.c)}">${r.ico}</span><div><b>${esc(r.title)}</b><span class="cap">${esc(r.cap)}</span></div></button>`;
   return `<div class="bento">
-    <div class="bt hero"><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b>${pay ? `<span class="sub">${esc(shortDate(pay.date))} · ${esc(pay.title || catName(pay.cat))} ${pay.kind === 'in' ? '+' : '−'}${money(pay.amount)}</span>` : ''}<button type="button" class="btn sm" data-act="todayQuickMoney">＋ Трата</button></div>
+    <div class="bt hero"><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b>${pay ? `<span class="sub">${esc(shortDate(pay.date))} · ${esc(pay.title || catName(pay.cat))} ${pay.kind === 'in' ? '+' : '−'}${money(pay.amount)}</span>` : ''}</div>
     <button type="button" class="bt tile" data-act="tsub" data-v="list">${ringSvg(total ? done / total : 0, 'var(--primary)')}<div><b>${total ? `${done} из ${total}` : '—'}</b><span class="cap">${total ? 'дел на сегодня' : 'дел на сегодня нет'}</span></div></button>
     <button type="button" class="bt tile" data-act="habitsGo">${ringSvg(hab.length ? hDone / hab.length : 0, 'var(--income)')}<div><b>${hab.length ? `${hDone} из ${hab.length}` : '—'}</b><span class="cap">${hab.length ? 'привычек' : 'привычек пока нет'}</span></div></button>
     ${todayRows.length || laterRows.length ? `<div class="bt next">${todayRows.length ? `<div class="nxgrp">${laterRows.length ? '<span class="nxlbl">Сегодня</span>' : ''}${todayRows.map(nxRow).join('')}</div>` : ''}${laterRows.length ? `<div class="nxgrp">${todayRows.length ? '<span class="nxlbl">Дальше</span>' : ''}${laterRows.map(nxRow).join('')}</div>` : ''}</div>` : ''}
@@ -1908,24 +1927,29 @@ function monthPlan() {
   const reserve = tot ? Math.max(0, round2(tot.limit - tot.spent - tot.planned)) : round2(sum(lims, l => Math.max(0, l.limit - l.spent - l.planned)));
   return { key, end, items, inc, out, lims, reserve, after: round2(bal + inc - out - reserve) };
 }
+/* планы без срока, на которые к концу месяца хватает денег (по порядку добавления, пока остаток позволяет) */
+function fitUndatedPlans(mp) {
+  let room = mp.after; const fit = [];
+  if (room > 0) for (const p of plans.filter(x => x.status === 'open' && !x.date && x.kind === 'out').sort((a, b) => (a.ts || 0) - (b.ts || 0))) if (p.amount <= room + 0.005) { fit.push(p); room = round2(room - p.amount); }
+  return { fit, room };
+}
+function undatedFitBodyHtml(mp, fit, room) {
+  if (!fit.length) return '';
+  return `<h4 class="mmsub">Планы без срока</h4>` + fit.map(p => `<div class="urow"><button type="button" class="row" data-act="editPlan" data-id="${p.id}">${catIco(p.cat)}<span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub"><span>${esc(catName(p.cat))}</span></span></span><span class="amt num out">−${money(p.amount)}</span></button><button type="button" class="mini-act" data-act="planToMonth" data-id="${p.id}">в этом месяце</button></div>`).join('') + `<p class="hint" style="margin:8px 0 4px">К концу месяца хватает средств, останется ≈ ${money(room)}</p>`;
+}
 function monthMoneyHtml(mp) {
-  if (!mp.items.length && !mp.lims.length) return '';
+  const { fit, room } = fitUndatedPlans(mp);
+  if (!mp.items.length && !mp.lims.length && !fit.length) return '';
   const n = mp.items.length;
   const limRows = mp.lims.map(l => `<li><div class="tlrow lim"><span class="tl-date"><b>лимит</b></span><span class="row-main"><span class="row-title">${l.total ? esc(l.name) : `${catIco(l.id, 'sm')} ${esc(l.name)}`}</span><span class="row-sub"><span>${l.spent > l.limit ? 'превышен на ' + money(l.spent - l.limit) : 'осталось ' + money(l.limit - l.spent)} из ${money(l.limit)}</span></span></span></div></li>`).join('');
   return `<section class="tsec"><details class="coll" data-key="month" ${ui.monthOpen ? 'open' : ''}>
-    <summary><div class="mmh"><h3>Деньги на нынешний месяц</h3><span class="cap">${n ? `${n} ${plural(n, ['пункт', 'пункта', 'пунктов'])}` : 'только лимиты'} · к концу месяца ≈ <b class="num ${mp.after < 0 ? 'out' : ''}">${money(mp.after)}</b></span></div><span class="mm-chev" aria-hidden="true"></span></summary>
+    <summary><div class="mmh"><h3>Деньги на нынешний месяц</h3><span class="cap">${n ? `${n} ${plural(n, ['пункт', 'пункта', 'пунктов'])}` : limRows ? 'только лимиты' : `подходящих планов: ${fit.length}`} · к концу месяца ≈ <b class="num ${mp.after < 0 ? 'out' : ''}">${money(mp.after)}</b></span></div><span class="mm-chev" aria-hidden="true"></span></summary>
     <div class="mmbody">
       ${n ? `<ul class="tl">${mp.items.map(p => tlRowHtml(p)).join('')}</ul>` : ''}
       ${limRows ? `<h4 class="mmsub">Лимиты месяца</h4><ul class="tl">${limRows}</ul>` : ''}
       <dl class="kv" style="margin:12px 0 4px">${mp.inc ? `<dt>Приходы по плану</dt><dd class="num in">+${money(mp.inc)}</dd>` : ''}${mp.out ? `<dt>Расходы по плану</dt><dd class="num out">−${money(mp.out)}</dd>` : ''}${mp.reserve ? `<dt>Заложено по лимитам</dt><dd class="num out">−${money(mp.reserve)}</dd>` : ''}<div class="sep"></div><dt>К концу месяца</dt><dd class="num ${mp.after < 0 ? 'out' : ''}">${money(mp.after)}</dd></dl>
+      ${undatedFitBodyHtml(mp, fit, room)}
     </div></details></section>`;
-}
-/* планы без срока, на которые к концу месяца хватает денег (по порядку добавления, пока остаток позволяет) */
-function undatedFitHtml(mp) {
-  let room = mp.after; const fit = [];
-  if (room > 0) for (const p of plans.filter(x => x.status === 'open' && !x.date && x.kind === 'out').sort((a, b) => (a.ts || 0) - (b.ts || 0))) if (p.amount <= room + 0.005) { fit.push(p); room = round2(room - p.amount); }
-  if (!fit.length) return '';
-  return tsec('Планы без срока', fit.map(p => `<div class="urow"><button type="button" class="row" data-act="editPlan" data-id="${p.id}">${catIco(p.cat)}<span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span><span class="row-sub"><span>${esc(catName(p.cat))}</span></span></span><span class="amt num out">−${money(p.amount)}</span></button><button type="button" class="mini-act" data-act="planToMonth" data-id="${p.id}">в этом месяце</button></div>`).join('') + `<p class="hint" style="margin:8px 0 4px">К концу месяца хватает средств, останется ≈ ${money(room)}</p>`);
 }
 function renderTodayList() {
   const box = $('#todayList'); if (!box) return;
@@ -1947,7 +1971,7 @@ function renderTodayList() {
       <div class="btnrow" style="margin:4px 0 6px"><button type="button" class="btn ghost sm" data-act="rollover">Перенести несделанное на завтра (${due.length})</button></div></div></details></section>`;
   }
   if (nexts.length) html += tsec('Следующие шаги проектов', nexts.map(t => taskRowHtml(t, { today: true, noDue: !t.due })).join(''));
-  html += monthMoneyHtml(mp) + undatedFitHtml(mp);
+  html += monthMoneyHtml(mp);
   if (doneToday.length) html += `<details class="fold" style="margin-top:0"><summary>Сделано сегодня (${doneToday.length})</summary>${doneToday.map(t => taskRowHtml(t)).join('')}</details>`;
   box.innerHTML = html;
 }
@@ -2084,7 +2108,8 @@ function viewSettings(root) {
   </section>
   ${limitsSettingsHtml()}
   <div class="two"><section><h2>Категории расходов</h2>${catList('out')}</section><section><h2>Категории доходов</h2>${catList('in')}</section></div>
-  <section><h2>Категории дел</h2><p class="hint" style="margin:0 0 10px">Например, «Работа» или «Дом». В строке быстрого ввода дела можно указать категорию через @, например «сходить в химчистку @дом».</p>${taskCatList}</section>
+  <section><details class="coll" data-key="taskcats" ${ui.taskcatsOpen ? 'open' : ''}><summary><div><h2>Категории дел</h2><span class="hint" style="margin:2px 0 0">${meta.taskCats.length} ${plural(meta.taskCats.length, ['категория', 'категории', 'категорий'])}</span></div><span class="mm-chev" aria-hidden="true"></span></summary>
+    <div class="mmbody"><p class="hint" style="margin:0 0 10px">Например, «Работа» или «Дом». В строке быстрого ввода дела можно указать категорию через @, например «сходить в химчистку @дом».</p>${taskCatList}</div></details></section>
   <section><h2>Теги</h2><p class="hint" style="margin:0 0 10px">Например, для важности: обязательное, желаемое, можно отложить. Цифра справа — сколько записей и планов используют тег.</p>${tagList}</section>
   ${icsSettingsHtml()}
   <section><h2>Данные</h2>
@@ -2948,11 +2973,6 @@ const actions = {
     if (ui.msub === 'plans') openPlan(); else openTx();
   },
   addTx() { openTx(); },
-  todayQuickMoney() {
-    ui.qmode = 'money'; try { localStorage.setItem('fin-qmode', 'money'); } catch (e) { /* не критично */ }
-    render();
-    const el = $('#qm-text'); if (el) { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* не критично */ } if (!IS_MOBILE) el.focus(); }
-  },
   saveDraftMore() { syncDraft(); const d = draft; if (!d || d.type !== 'tx') return; againNext = { kind: d.kind, date: d.date }; actions.saveDraft(); againNext = null; },
   txRepeat() {
     const d = draft; if (!d || d.type !== 'tx' || !d.id) return; const f = findTx(d.id); if (!f) return;
@@ -2977,7 +2997,7 @@ const actions = {
     const inp = $('#qm-text'); if (!inp) return;
     const q = parseQuick(inp.value); if (!(q.amount > 0)) { toast('Впишите сумму, например: кофе 250', 'err'); return inp.focus(); }
     const cat = ui.qmCat != null ? ui.qmCat : q.cat;
-    addQuickTx({ id: uid(), kind: q.kind, date: today(), amount: q.amount, cat: cat || '', title: q.title, tags: [], note: '', ts: Date.now() });
+    addQuickTx({ id: uid(), kind: q.kind, date: q.date || today(), amount: q.amount, cat: cat || '', title: q.title, tags: [], note: '', ts: Date.now() });
     render(); $('#qm-text')?.focus();
   },
   qmFreq(el) {

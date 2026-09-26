@@ -411,6 +411,7 @@ details.more[open]>summary::after{content:" ▴"}
 .trend{width:100%;height:auto;display:block}
 .trend text{font-size:9px;fill:var(--muted)}
 .trend text.sel{fill:var(--ink);font-weight:700}
+.trend text.fut{opacity:.45}
 .icoin{flex:0 0 46px;width:46px!important;text-align:center;font-size:1.1rem}
 
 /* fab */
@@ -556,6 +557,36 @@ details.coll[open] .mm-chev::after{content:"▴"}
 .qpl2{display:block;font-size:.86rem;color:var(--muted);overflow-wrap:anywhere}
 .qdate{color:var(--muted);font-weight:600}
 .lefts{display:flex;flex-wrap:wrap;gap:8px}
+/* быстрый ввод: выбор даты и времени, категории под строкой */
+.qpick{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:.9rem;cursor:pointer}
+.qpick.on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--surface))}
+.qpick input{border:0;background:transparent;color:inherit;font:inherit;padding:0;min-height:0;width:auto;max-width:9.5em}
+.qpick:not(.on) input{width:1.6em;color:transparent}
+.qpick.on .ql{display:none}
+.qpick:not(.on) input::-webkit-datetime-edit{opacity:0}
+.qtcats{margin:6px 0 4px}
+.qmode button{padding:7px 14px}
+/* свайп по делу */
+.trow{touch-action:pan-y;transition:transform .18s ease,background-color .15s;position:relative;background-color:transparent}
+.trow.dragging{transition:none}
+.trow.sw-r{background-color:color-mix(in srgb,var(--income) 16%,transparent)}
+.trow.sw-l{background-color:color-mix(in srgb,var(--plan) 18%,transparent)}
+.mmh .cap .late{color:var(--expense);font-weight:600}
+.tsec,#taskList,#projBody,.dayp{overflow-x:clip}   /* строка при свайпе не вылезает за край карточки */
+/* свой выбор времени */
+input[data-timepick]{cursor:pointer;caret-color:transparent}
+.qpick input[data-timepick]{width:3.2em;text-align:center}
+.qpick:not(.on) input[data-timepick]{display:none}
+.tp-scrim{position:fixed;inset:0;background:rgba(10,12,24,.45);z-index:60}
+.tp{position:fixed;z-index:61;left:50%;bottom:calc(var(--kb,0px) + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(420px,100%);background:var(--surface);color:var(--ink);border-radius:24px 24px 0 0;padding:14px 16px 16px;box-shadow:var(--shadow)}
+.tp-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+.tp-val{font-size:2rem;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.tp-lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 6px}
+.tp-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.tp-grid button{min-height:42px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-weight:600;font-variant-numeric:tabular-nums}
+.tp-grid button.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.tp-foot{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.tp-foot .btn:disabled{opacity:.45}
 </style>
 </head>
 <body>
@@ -950,7 +981,7 @@ function icsSettingsHtml() {
   const c = icsCounts(), o = meta.ics, n = ICS_TYPES.filter(([k]) => o[k]).reduce((a, [k]) => a + (c[k] || 0), 0);
   return `<section><details class="coll" data-key="ics" ${ui.icsOpen ? 'open' : ''}><summary><div><h2>Календарь телефона</h2><span class="hint" style="margin:2px 0 0">${n} ${plural(n, ['запись', 'записи', 'записей'])} выбрано для экспорта</span></div><span class="mm-chev" aria-hidden="true"></span></summary>
     <div class="mmbody"><p class="hint" style="margin:0 0 12px">Приложение не может напоминать, пока закрыто. Создайте файл календаря (.ics) и добавьте его в календарь телефона: напоминания сделает сам телефон. «Дела» — это и обычные дела, и дела со временем (бывшие «события»). Повторный импорт того же файла обычно обновляет записи, а не дублирует их.</p>
-    <div>${ICS_TYPES.map(([k, l]) => `<label class="optrow"><input type="checkbox" data-change="icsopt" data-k="${k}" ${o[k] ? 'checked' : ''}><span>${esc(l)} <span class="badge">${c[k] || 0}</span></span>${k === 'habits' ? `<input type="time" data-change="icsopt" data-k="habitTime" value="${esc(o.habitTime)}" aria-label="Время напоминания о привычках" class="timein">` : ''}</label>`).join('')}</div>
+    <div>${ICS_TYPES.map(([k, l]) => `<label class="optrow"><input type="checkbox" data-change="icsopt" data-k="${k}" ${o[k] ? 'checked' : ''}><span>${esc(l)} <span class="badge">${c[k] || 0}</span></span>${k === 'habits' ? `<input type="text" readonly inputmode="none" data-timepick placeholder="--:--" data-change="icsopt" data-k="habitTime" value="${esc(o.habitTime)}" aria-label="Время напоминания о привычках" class="timein">` : ''}</label>`).join('')}</div>
     <div class="field" style="margin-top:14px"><span>Напоминание о событиях со временем</span><select data-change="icsopt" data-k="timedAlarm">${[['-1', 'Не напоминать'], ['0', 'В момент начала'], ['15', 'За 15 минут'], ['60', 'За час'], ['1440', 'За день']].map(([v, l]) => `<option value="${v}" ${o.timedAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
     <div class="field"><span>Напоминание о датах без времени (дни рождения, платежи, дела)</span><select data-change="icsopt" data-k="dayAlarm">${[['none', 'Не напоминать'], ['day', 'В день, в 9:00'], ['eve', 'Накануне и в день, в 9:00'], ['week', 'За неделю, накануне и в день, в 9:00']].map(([v, l]) => `<option value="${v}" ${o.dayAlarm === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
     <label class="optrow"><input type="checkbox" data-change="icsopt" data-k="amounts" ${o.amounts ? 'checked' : ''}><span>Указывать суммы в названиях</span></label>
@@ -1014,7 +1045,7 @@ function parseQuick(text) {
   }
   if (kind === 'out' && /^(зарплат|аванс|премия|кэшбэк|кешбэк)/i.test(title)) kind = 'in';
   title = title ? title[0].toUpperCase() + title.slice(1) : '';
-  return { kind, amount: round2(amount), title, cat: guessCat(title, kind), date };
+  return { kind, amount: round2(amount), title, cat: guessCat(title, kind), date, repeat: w.repeat || '' };
 }
 /* частые траты: одинаковые название, сумма и категория, встречавшиеся не меньше двух раз за последние 4 месяца */
 function frequentSpends(n = 5) {
@@ -1047,10 +1078,23 @@ function refreshQmPreview() {
   const dateBit = q.date && q.date !== today() ? `<span class="qdate">${esc(txDateLabel(q.date))} · </span>` : '';
   box.innerHTML = `<div class="qpl">${dateBit}<b class="num ${q.kind === 'in' ? 'in' : 'out'}">${q.kind === 'in' ? '+' : '−'}${money(q.amount)}</b>${q.title ? ' · ' + esc(q.title) : ''}</div><div class="chips">${orderedCats(q.kind).slice(0, 6).map(c => `<button type="button" class="chip cat ${cat === c.id ? 'on' : ''}" style="--c:${col(c.color)}" data-act="qmCat" data-v="${c.id}" aria-pressed="${cat === c.id}"><span class="ci">${esc(catIcoText(c))}</span>${esc(c.name)}</button>`).join('')}</div>`;
 }
+function qPlanBarHtml() {
+  return `<div class="qadd"><input id="qp-text" placeholder="Например: аренда 30000 25.10" maxlength="80" autocomplete="off" enterkeyhint="done" aria-label="Быстрый план"><button type="button" data-act="qpAdd" aria-label="Добавить план">＋</button></div>
+  <div class="qprev" id="qp-prev" aria-live="polite"></div>`;
+}
+function refreshQpPreview() {
+  const box = $('#qp-prev'), inp = $('#qp-text'); if (!box || !inp) return;
+  if (!inp.value.trim()) { box.innerHTML = '<span class="hint" style="margin:0">Сумма обязательна, дата — по желанию: «аренда 30000 25.10», «+зарплата 95000 5.10 каждый месяц», «отпуск 150000» (без срока)</span>'; return; }
+  const q = parseQuick(inp.value);
+  if (!(q.amount > 0)) { box.innerHTML = '<span class="hint" style="margin:0">Добавьте сумму, например «аренда 30000»</span>'; return; }
+  const cat = ui.qpCat != null ? ui.qpCat : q.cat, date = q.date || '', auto = !!q.repeat && date > today();
+  const when = date ? txDateLabel(date) : 'без срока', rep = q.repeat ? ` · ${REPEAT_SHORT[q.repeat]}${auto ? ', авто' : ''}` : '';
+  box.innerHTML = `<div class="qpl"><span class="qdate">План · ${esc(when)}${esc(rep)} · </span><b class="num ${q.kind === 'in' ? 'in' : 'out'}">${q.kind === 'in' ? '+' : '−'}${money(q.amount)}</b>${q.title ? ' · ' + esc(q.title) : ''}</div><div class="chips">${orderedCats(q.kind).slice(0, 6).map(c => `<button type="button" class="chip cat ${cat === c.id ? 'on' : ''}" style="--c:${col(c.color)}" data-act="qpCat" data-v="${c.id}" aria-pressed="${cat === c.id}"><span class="ci">${esc(catIcoText(c))}</span>${esc(c.name)}</button>`).join('')}</div>`;
+}
 function qbarHtml() {
   const m = ui.qmode;
-  return `<div class="qmode" role="group" aria-label="Что добавить"><button type="button" class="${m === 'task' ? 'on' : ''}" data-act="qmode" data-v="task" aria-pressed="${m === 'task'}">Дело</button><button type="button" class="${m === 'money' ? 'on' : ''}" data-act="qmode" data-v="money" aria-pressed="${m === 'money'}">Трата</button></div>`
-    + (m === 'money' ? qMoneyBarHtml() : qaddHtml('today', 'Новое дело на сегодня…'));
+  return `<div class="qmode" role="group" aria-label="Что добавить"><button type="button" class="${m === 'task' ? 'on' : ''}" data-act="qmode" data-v="task" aria-pressed="${m === 'task'}">Дело</button><button type="button" class="${m === 'money' ? 'on' : ''}" data-act="qmode" data-v="money" aria-pressed="${m === 'money'}">Трата</button><button type="button" class="${m === 'plan' ? 'on' : ''}" data-act="qmode" data-v="plan" aria-pressed="${m === 'plan'}">План</button></div>`
+    + (m === 'money' ? qMoneyBarHtml() : m === 'plan' ? qPlanBarHtml() : qaddHtml('today', 'Новое дело на сегодня…'));
 }
 /* — разбор слов в строке быстрого ввода: «завтра», «через 3 дня», «в пятницу», «20.10», «в 15:30», «каждый день», «#проект» — */
 const WD_ACC = { 'понедельник': 0, 'вторник': 1, 'среду': 2, 'четверг': 3, 'пятницу': 4, 'субботу': 5, 'воскресенье': 6 };
@@ -1118,18 +1162,24 @@ function parseTaskText(text, baseDate) {
   const w = parseWhen(raw, baseDate || today(), true);
   return { title: w.title, due: w.date, time: w.time, repeat: w.repeat, project, tcat, matched: !!(w.date || w.time || w.repeat || project || tcat) };
 }
+function quickTaskChoice(sc, q) {   // что получится с учётом разбора текста и кнопок под строкой
+  const v = ui.qd[sc], chipDue = v === 'today' ? today() : v === 'tomorrow' ? shiftDate(today(), 1) : isDate(v) ? v : '';
+  const time = q.time || ui.qt || '', due = q.due || chipDue || (time ? today() : ''), cat = ui.qtc != null ? ui.qtc : q.tcat;
+  return { due, time: due ? time : '', cat };
+}
 function refreshTaskPreview() {
   const box = $('#q-prev'), inp = $('#q-title'); if (!box || !inp) return;
-  const q = parseTaskText(inp.value), bits = [];
-  if (q.due) bits.push('срок: ' + dueLabel(q.due)); if (q.time) bits.push(q.time); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (q.tcat) bits.push('категория: ' + taskCatById(q.tcat).name);
-  box.innerHTML = bits.length ? `<span class="qpl2">${esc(q.title || '…')} · ${esc(bits.join(' · '))}</span>` : '';
+  if (!inp.value.trim()) { box.innerHTML = ''; return; }
+  const sc = inp.dataset.scope || 'today', q = parseTaskText(inp.value), ch = quickTaskChoice(sc, q), bits = [];
+  bits.push(ch.due ? 'срок: ' + dueLabel(ch.due) : 'без срока'); if (ch.time) bits.push(ch.time); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (ch.cat) bits.push('категория: ' + taskCatById(ch.cat).name);
+  box.innerHTML = `<span class="qpl2">${esc(q.title || '…')} · ${esc(bits.join(' · '))}</span>${meta.taskCats.length ? `<div class="chips qtcats">${meta.taskCats.map(c => `<button type="button" class="chip ${ch.cat === c.id ? 'on' : ''}" style="--c:${col(c.color)}" data-act="qtCat" data-v="${c.id}" aria-pressed="${ch.cat === c.id}">${esc(c.name)}</button>`).join('')}</div>` : ''}`;
 }
 function refreshDqPreview() {
   const box = $('#dq-prev'), inp = $('#dq-text'); if (!box || !inp) return;
   if (!inp.value.trim()) { box.innerHTML = ''; return; }
-  const q = parseTaskText(inp.value, ui.calDay), bits = ['срок: ' + dueLabel(q.due || ui.calDay)];
-  if (q.time) bits.push(q.time); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (q.tcat) bits.push('категория: ' + taskCatById(q.tcat).name);
-  box.innerHTML = `<span class="qpl2">${esc(q.title || '…')} · ${esc(bits.join(' · '))}</span>`;
+  const q = parseTaskText(inp.value, ui.calDay), time = q.time || ui.dqt || '', cat = ui.dqc != null ? ui.dqc : q.tcat, bits = ['срок: ' + dueLabel(q.due || ui.calDay)];
+  if (time) bits.push(time); if (q.repeat) bits.push(REPEAT_SHORT[q.repeat]); if (q.project) bits.push('проект: ' + projectById(q.project).name); if (cat) bits.push('категория: ' + taskCatById(cat).name);
+  box.innerHTML = `<span class="qpl2">${esc(q.title || '…')} · ${esc(bits.join(' · '))}</span>${meta.taskCats.length ? `<div class="chips qtcats">${meta.taskCats.map(c => `<button type="button" class="chip ${cat === c.id ? 'on' : ''}" style="--c:${col(c.color)}" data-act="dqCat" data-v="${c.id}" aria-pressed="${cat === c.id}">${esc(c.name)}</button>`).join('')}</div>` : ''}`;
 }
 /* оценка процентов за период с прошлого платежа (по факту дней, год = 365) — подсказка, точные цифры берутся из графика банка */
 function estimateInterest(d, date, exclId) {
@@ -1233,8 +1283,8 @@ function loadState() {
 window.addEventListener('storage', e => { if (e.key === LS_KEY && !draft && !saveT) { loadState(); render(); } });
 
 /* ───────── ui state ───────── */
-const ui = { tab: 'today', msub: 'overview', tsub: 'list', project: null, habit: null, person: null, cal: mkey(today()), calDay: today(), trendMonth: mkey(today()), csub: 'month', limScope: '', tproj: '', qd: { today: 'today', tasks: '' }, ttcat: '', month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
-ui.qmode = (() => { try { return localStorage.getItem('fin-qmode') === 'money' ? 'money' : 'task'; } catch (e) { return 'task'; } })(); ui.qmCat = null;
+const ui = { tab: 'today', msub: 'overview', tsub: 'list', project: null, habit: null, person: null, cal: mkey(today()), calDay: today(), trendStart: '', csub: 'month', limScope: '', tproj: '', qd: { today: 'today', tasks: '' }, ttcat: '', month: mkey(today()), f: { kind: 'all', cat: '', tag: '', q: '' }, planTag: '', extra: {} };
+ui.qmode = (() => { try { const v = localStorage.getItem('fin-qmode'); return v === 'money' || v === 'plan' ? v : 'task'; } catch (e) { return 'task'; } })(); ui.qmCat = null; ui.qpCat = null; ui.qt = ''; ui.qtc = null; ui.dqt = ''; ui.dqc = null;
 let draft = null, lastFocus = null, pendingImport = null, migratedEvents = false;
 
 let toastT;
@@ -1312,14 +1362,14 @@ function limitMessages(tx) {
 
 /* ───────── views ───────── */
 const TOP_TITLES = { today: 'Сегодня', cal: 'Календарь', tasks: 'Дела', money: 'Деньги', more: 'Настройки' };
-const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['plans', 'Планы'], ['debts', 'Долги/цели']];
+const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['debts', 'Долги/цели']];
 function fabLabel() {
   if (ui.tab === 'more') return '';
   if (ui.tab === 'today') return '';
   if (ui.tab === 'cal') return ui.person ? 'Подарок' : '';   // у дня в календаре и у списка дней рождения уже есть своя кнопка «＋»
   if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? '' : ui.tsub === 'habits' ? '' : 'Дело';   // у списков проектов и привычек уже есть своя кнопка «＋»
   if (ui.msub === 'debts') return '';
-  return ui.msub === 'plans' ? 'Новый план' : 'Добавить';
+  return 'Добавить';
 }
 function render() {
   $('#monthnav').hidden = !(ui.tab === 'money' && (ui.msub === 'overview' || ui.msub === 'ops'));
@@ -1332,7 +1382,7 @@ function render() {
 }
 function viewMoney(root) {
   root.innerHTML = `<nav class="subnav" aria-label="Разделы денег">${MONEY_SUBS.map(([v, l]) => `<button data-act="tab" data-v="${v}" aria-current="${ui.msub === v}">${l}</button>`).join('')}</nav><div id="msub"></div>`;
-  ({ overview: viewOverview, ops: viewOps, plans: viewPlans, debts: viewDebts })[ui.msub]($('#msub'));
+  ({ overview: viewOverview, ops: viewOps, debts: viewDebts })[ui.msub]($('#msub'));
 }
 
 function curBanner() {
@@ -1415,21 +1465,23 @@ function tlRowHtml(p, running) {
 /* ближайшие платежи: списком по датам, с нарастающим балансом */
 function plansTimelineHtml() {
   const { open, sched, recs, owedItems, dated, undated, inst } = moneyItems(), bal = balance();
-  if (!dated.length && !undated.length && !allTx().length) return '';
+  const done = plans.filter(p => p.status === 'done').sort((a, b) => (b.ts || 0) - (a.ts || 0)), canc = plans.filter(p => p.status === 'cancelled').sort((a, b) => (b.ts || 0) - (a.ts || 0));
   let run = bal; const shownRows = []; let firstNeg = null;
   dated.forEach(p => { run = round2(run + (p.kind === 'in' ? p.amount : -p.amount)); if (run < 0 && !firstNeg) firstNeg = { p, run }; shownRows.push({ p, run }); });
-  const LIM = 10;
-  let html = `<section><h2>Ближайшие платежи</h2>`;
+  const LIM = 10, ULIM = 5;
+  let html = `<section><div class="sechead"><h2>Планы и платежи</h2><button type="button" class="btn sm ghost" data-act="addPlan">＋ План</button></div>`;
+  if (!dated.length && !undated.length) html += `<p class="hint">Будущих платежей и планов пока нет. Добавьте план кнопкой выше или одной строкой в режиме «План» на «Сегодня».</p>`;
   if (shownRows.length) html += `<ul class="tl">${shownRows.slice(0, LIM).map(r => tlRowHtml(r.p, r.run)).join('')}</ul>`;
-  if (shownRows.length > LIM) html += `<p class="hint">Ещё ${shownRows.length - LIM} — на вкладке «Планы».</p>`;
+  if (shownRows.length > LIM) html += `<details class="fold"><summary>Дальше по датам (${shownRows.length - LIM})</summary><ul class="tl">${shownRows.slice(LIM).map(r => tlRowHtml(r.p, r.run)).join('')}</ul></details>`;
   if (firstNeg) html += `<p class="hint warnline">К ${esc(shortDate(firstNeg.p.date))} баланс по планам уходит в минус (${money(firstNeg.run)}).</p>`;
-  if (undated.length) html += `<h3 style="margin-top:16px">Без срока</h3><ul class="tl">${undated.slice(0, 5).map(p => tlRowHtml(p)).join('')}</ul>${undated.length > 5 ? `<p class="hint">И ещё ${undated.length - 5} — на вкладке «Планы».</p>` : ''}`;
+  if (undated.length) html += `<h3 style="margin-top:16px">Без срока</h3><ul class="tl">${undated.slice(0, ULIM).map(p => tlRowHtml(p)).join('')}</ul>${undated.length > ULIM ? `<details class="fold"><summary>Ещё без срока (${undated.length - ULIM})</summary><ul class="tl">${undated.slice(ULIM).map(p => tlRowHtml(p)).join('')}</ul></details>` : ''}`;
   if (open.length || sched.length || recs.length || owedItems.length) {
     const pOut = sum([...open, ...inst].filter(p => p.kind === 'out'), p => p.amount), pIn = sum([...open, ...inst].filter(p => p.kind === 'in'), p => p.amount), sOut = sum(sched, p => p.amount);
     const rNet = sum(recs, r => r.kind === 'in' ? r.amount : -r.amount), oTot = sum(owedItems, x => x.amount), after = round2(bal + rNet - pOut + pIn - sOut + oTot);
-    html += `<dl class="kv" style="margin-top:14px">${pOut ? `<dt>Запланированные расходы</dt><dd class="num out">−${money(pOut)}</dd>` : ''}${pIn ? `<dt>Запланированные доходы</dt><dd class="num in">+${money(pIn)}</dd>` : ''}${sOut ? `<dt>Платежи по долгам по графику (3 месяца)</dt><dd class="num out">−${money(sOut)}</dd>` : ''}${recs.length ? `<dt>Записи на будущие даты</dt><dd class="num ${rNet < 0 ? 'out' : 'in'}">${money(rNet, true)}</dd>` : ''}${oTot ? `<dt>Вернут вам</dt><dd class="num in">+${money(oTot)}</dd>` : ''}<div class="sep"></div><dt>После всех платежей и планов</dt><dd class="num ${after < 0 ? 'out' : ''}">${money(after)}</dd></dl>
-      <p class="hint"><button class="chip" data-act="tab" data-v="plans">Все планы</button></p>`;
+    html += `<dl class="kv" style="margin-top:14px">${pOut ? `<dt>Запланированные расходы</dt><dd class="num out">−${money(pOut)}</dd>` : ''}${pIn ? `<dt>Запланированные доходы</dt><dd class="num in">+${money(pIn)}</dd>` : ''}${sOut ? `<dt>Платежи по долгам по графику (3 месяца)</dt><dd class="num out">−${money(sOut)}</dd>` : ''}${recs.length ? `<dt>Записи на будущие даты</dt><dd class="num ${rNet < 0 ? 'out' : 'in'}">${money(rNet, true)}</dd>` : ''}${oTot ? `<dt>Вернут вам</dt><dd class="num in">+${money(oTot)}</dd>` : ''}<div class="sep"></div><dt>После всех платежей и планов</dt><dd class="num ${after < 0 ? 'out' : ''}">${money(after)}</dd></dl>`;
   }
+  if (done.length) html += `<details class="fold"><summary>Проведённые планы (${done.length})</summary>${done.map(p => planRowHtml(p, true)).join('')}</details>`;
+  if (canc.length) html += `<details class="fold"><summary>Отменённые планы (${canc.length})</summary>${canc.map(p => planRowHtml(p, true)).join('')}</details>`;
   return html + '</section>';
 }
 
@@ -1442,18 +1494,23 @@ function donutHtml(segs, total) {
   const arcs = list.map(x => { const len = x.amt / total * C, a = `<circle cx="70" cy="70" r="${R}" fill="none" style="stroke:${x.color}" stroke-width="20" stroke-dasharray="${Math.max(0.5, len - (list.length > 1 ? 1.2 : 0))} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"><title>${esc(x.name)}: ${esc(money(x.amt))}</title></circle>`; off += len; return a; }).join('');
   return `<div class="donutwrap"><svg viewBox="0 0 140 140" class="donut" role="img" aria-label="Расходы по категориям, всего ${esc(money(total))}"><circle cx="70" cy="70" r="${R}" fill="none" style="stroke:var(--line)" stroke-width="20"/>${arcs}<text x="70" y="68" text-anchor="middle" class="dv">${esc(compactMoney(total))}</text><text x="70" y="84" text-anchor="middle" class="dl">расходы</text></svg></div>`;
 }
+const addMonthKey = (k, n) => { const [y, m] = k.split('-').map(Number), d = new Date(y, m - 1 + n, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; };
+/* окно из шести месяцев: пока данных меньше чем на полгода — начинается с первого месяца с записями (прошлые пустые месяцы не показываем),
+   дальше — заканчивается текущим месяцем, а стрелкой «‹» можно листать назад */
+function trendDefaultStart(earliest) { const cur = mkey(today()), back = addMonthKey(cur, -5); return earliest > back ? earliest : back; }
 function trendHtml() {
-  const earliest = Object.keys(months).filter(k => months[k] && months[k].length).sort()[0] || null;
+  const earliest = Object.keys(months).filter(k => months[k] && months[k].length && k <= mkey(today())).sort()[0] || null;
   if (!earliest) return '';
-  const endKey = ui.trendMonth, [y, m] = endKey.split('-').map(Number);
-  const data = Array.from({ length: 6 }, (_, i) => { const d = new Date(y, m - 1 - 5 + i, 1), k = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`, st = monthStats(months[k] || []); return { k, mon: d.getMonth(), year: d.getFullYear(), inc: st.inc, spend: st.spend }; });
-  const canPrev = earliest < data[0].k, canNext = endKey < mkey(today());
+  const cur = mkey(today()), startKey = ui.trendStart && ui.trendStart >= earliest ? ui.trendStart : trendDefaultStart(earliest), endKey = addMonthKey(startKey, 5);
+  const [y, m] = endKey.split('-').map(Number);
+  const data = Array.from({ length: 6 }, (_, i) => { const d = new Date(y, m - 1 - 5 + i, 1), k = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`, st = monthStats(months[k] || []); return { k, mon: d.getMonth(), year: d.getFullYear(), inc: st.inc, spend: st.spend, future: k > cur }; });
+  const canPrev = earliest < data[0].k, canNext = endKey < cur;
   const mx = Math.max(1, ...data.map(d => Math.max(d.inc, d.spend))), H = 100, gw = 300 / 6, bw = 15;
   const bars = data.map((d, i) => {
     const x0 = i * gw + (gw - 2 * bw - 4) / 2, hi = Math.round(d.inc / mx * H), hs = Math.round(d.spend / mx * H), sel = d.k === mkey(today());
-    return `<g opacity="${sel ? 1 : .8}"><rect x="${x0}" y="${H - hi + 4}" width="${bw}" height="${Math.max(hi, d.inc ? 2 : 0)}" rx="3" style="fill:var(--income)"><title>${esc(MON_S[d.mon])}: доходы ${esc(money(d.inc))}</title></rect><rect x="${x0 + bw + 4}" y="${H - hs + 4}" width="${bw}" height="${Math.max(hs, d.spend ? 2 : 0)}" rx="3" style="fill:var(--expense)"><title>${esc(MON_S[d.mon])}: расходы ${esc(money(d.spend))}</title></rect><text x="${i * gw + gw / 2}" y="124" text-anchor="middle" class="${sel ? 'sel' : ''}">${esc(MON_S[d.mon])}</text></g>`;
+    return `<g opacity="${sel ? 1 : .8}"><rect x="${x0}" y="${H - hi + 4}" width="${bw}" height="${Math.max(hi, d.inc ? 2 : 0)}" rx="3" style="fill:var(--income)"><title>${esc(MON_S[d.mon])}: доходы ${esc(money(d.inc))}</title></rect><rect x="${x0 + bw + 4}" y="${H - hs + 4}" width="${bw}" height="${Math.max(hs, d.spend ? 2 : 0)}" rx="3" style="fill:var(--expense)"><title>${esc(MON_S[d.mon])}: расходы ${esc(money(d.spend))}</title></rect><text x="${i * gw + gw / 2}" y="124" text-anchor="middle" class="${sel ? 'sel' : d.future ? 'fut' : ''}">${esc(MON_S[d.mon])}</text></g>`;
   }).join('');
-  const avg = Math.round(sum(data, d => d.spend) / 6);
+  const past = data.filter(d => !d.future), avg = past.length ? Math.round(sum(past, d => d.spend) / past.length) : 0;   // среднее — только по уже наступившим месяцам
   const first = data[0], last = data[5], rangeLabel = first.year === last.year ? `${MON_S[first.mon]} – ${MON_S[last.mon]} ${String(last.year).slice(2)}` : `${MON_S[first.mon]} ${String(first.year).slice(2)} – ${MON_S[last.mon]} ${String(last.year).slice(2)}`;
   return `<section><h2>Динамика</h2>
     <div class="calnav"><button type="button" class="icon" data-act="trendNav" data-d="-1" ${canPrev ? '' : 'disabled'} aria-label="Раньше">‹</button><button type="button" class="label" data-act="trendToday" title="К текущему месяцу">${esc(rangeLabel)}</button><button type="button" class="icon" data-act="trendNav" data-d="1" ${canNext ? '' : 'disabled'} aria-label="Позже">›</button></div>
@@ -1593,36 +1650,15 @@ function renderOpsList() {
 }
 
 /* — plans tab — */
-function viewPlans(root) {
-  const open = openPlans();
-  const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount);
-  const bal = balance();
-  const tagChips = meta.tags.length ? `<div class="chips" style="margin-bottom:16px" role="group" aria-label="Фильтр по тегам">${meta.tags.map(t => `<button class="chip ${ui.planTag === t.id ? 'on' : ''}" style="--c:${col(t.color)}" data-act="planTagFilter" data-id="${t.id}" aria-pressed="${ui.planTag === t.id}">${esc(t.name)}</button>`).join('')}</div>` : '';
-  const pass = p => !ui.planTag || (p.tags || []).includes(ui.planTag);
-  const shown = open.filter(pass).sort(byPlanDate);
-  const done = plans.filter(p => p.status === 'done' && pass(p)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  const canc = plans.filter(p => p.status === 'cancelled' && pass(p)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  const planRow = (p, muted) => {
-    const late = p.status === 'open' && p.date && p.date < today();
-    return `<div class="plan-row ${muted ? 'done-row' : ''}">
-      <button class="row" data-act="editPlan" data-id="${p.id}">
-        ${catIco(p.cat)}
-        <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span>
-        <span class="row-sub"><span>${esc(catName(p.cat))}</span>${p.date ? `<span class="${late ? 'late' : ''}">${late ? 'просрочено, ' : 'до '}${esc(shortDate(p.date))}</span>` : ''}${p.repeat ? `<span class="badge">${REPEAT_SHORT[p.repeat]}${p.auto ? ', авто' : ''}</span>` : ''}${tagChipsHtml(p.tags)}</span></span>
-        <span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span></button>
-      <div class="plan-actions">${p.status === 'open'
-        ? `<button class="btn sm" data-act="planPay" data-id="${p.id}">${p.repeat && !p.auto ? 'Провести' : p.kind === 'in' ? 'Получено' : 'Оплачено'}</button><button class="btn sm ghost" data-act="planCancel" data-id="${p.id}">Отменить</button>`
-        : `<button class="btn sm ghost" data-act="planRestore" data-id="${p.id}">Вернуть</button>`}</div></div>`;
-  };
-  let html = '';
-  if (open.length) html += `<section><dl class="kv"><dt>Запланировано расходов</dt><dd class="num out">${pOut ? '−' + money(pOut) : money(0)}</dd><dt>Запланировано доходов</dt><dd class="num in">${pIn ? '+' + money(pIn) : money(0)}</dd><dt>Свободные деньги сейчас</dt><dd class="num">${money(bal)}</dd><div class="sep"></div><dt>После всех планов</dt><dd class="num ${bal - pOut + pIn < 0 ? 'out' : ''}">${money(bal - pOut + pIn)}</dd></dl></section>`;
-  html += tagChips;
-  if (!plans.length) html += `<div class="empty"><p>Здесь копятся будущие траты и поступления. Добавьте план с датой, и он появится на «Обзоре» в общем списке по срокам. Когда план случится, нажмите «Оплачено», и он станет записью. Регулярные платежи по долгам добавляются на вкладке «Долги/цели».</p><button class="btn" data-act="add">Новый план</button></div>`;
-  else if (!shown.length) html += `<div class="empty"><p>${open.length ? 'Под этот тег планов нет.' : 'Открытых планов нет.'}</p></div>`;
-  else html += `<section>${shown.map(p => planRow(p)).join('')}</section>`;
-  if (done.length) html += `<details class="fold"><summary>Проведено (${done.length})</summary>${done.map(p => planRow(p, true)).join('')}</details>`;
-  if (canc.length) html += `<details class="fold"><summary>Отменено (${canc.length})</summary>${canc.map(p => planRow(p, true)).join('')}</details>`;
-  root.innerHTML = html;
+function planRowHtml(p, muted) {
+  const late = p.status === 'open' && p.date && p.date < today();
+  return `<div class="plan-row ${muted ? 'done-row' : ''}">
+    <button class="row" data-act="editPlan" data-id="${p.id}">
+      ${catIco(p.cat)}
+      <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span>
+      <span class="row-sub"><span>${esc(catName(p.cat))}</span>${p.date ? `<span class="${late ? 'late' : ''}">${late ? 'просрочено, ' : 'до '}${esc(shortDate(p.date))}</span>` : ''}${p.repeat ? `<span class="badge">${REPEAT_SHORT[p.repeat]}${p.auto ? ', авто' : ''}</span>` : ''}${tagChipsHtml(p.tags)}</span></span>
+      <span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span></button>
+    ${p.status !== 'open' ? `<div class="plan-actions"><button class="btn sm ghost" data-act="planRestore" data-id="${p.id}">Вернуть</button></div>` : ''}</div>`;
 }
 
 /* — debts & goals tab — */
@@ -1764,7 +1800,8 @@ function renderCalBody() {
   <div class="callegend"><span><i class="cd bd"></i>день рождения</span><span><i class="cd tk"></i>дело</span><span><i class="cd pj"></i>срок проекта</span><span><i class="cd mn"></i>деньги</span></div>`;
   const x = idx.get(ui.calDay) || dayInfo(ui.calDay);
   html += `<section class="dayp"><div class="sechead"><h2>${esc(dayTitle(ui.calDay))}</h2><div class="btnrow"><button type="button" class="btn sm ghost" data-act="dayTask">＋ Дело</button></div></div>
-  <div class="qadd"><input id="dq-text" placeholder="Дело: врач 15:30" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="Быстрое дело"><button type="button" data-act="dqAdd" aria-label="Добавить дело">＋</button></div><div class="qprev" id="dq-prev" aria-live="polite"></div>`;
+  <div class="qadd"><input id="dq-text" placeholder="Дело: врач 15:30" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="Быстрое дело"><button type="button" data-act="dqAdd" aria-label="Добавить дело">＋</button></div><div class="qprev" id="dq-prev" aria-live="polite"></div>
+  <div class="qchips"><label class="qpick ${ui.dqt ? 'on' : ''}" title="Время"><span class="ql" aria-hidden="true">Время</span><input type="text" readonly inputmode="none" data-timepick placeholder="--:--" id="dq-time" data-change="dqtime" value="${esc(ui.dqt || '')}" aria-label="Время"></label></div>`;
   if (x.bdays.length) html += tsec('Дни рождения', `<ul class="tl">${x.bdays.map(q => bdayRowHtml(q, bdayInfo(q, ui.calDay))).join('')}</ul>`);
   if (x.tasks.length) html += tsec('Дела', x.tasks.slice().sort(byTaskTime).map(t => taskRowHtml(t, { noDue: true })).join(''));
   if (x.projects.length) html += tsec('Сроки проектов', `<ul class="tl">${x.projects.map(pr => `<li><button type="button" class="tlrow" data-act="openProjectFrom" data-id="${pr.id}"><span class="tl-date"><b>срок</b></span><span class="row-main"><span class="row-title">${esc(pr.name)}</span><span class="row-sub"><span class="pchip" style="--c:${col(pr.color)}">проект</span></span></span></button></li>`).join('')}</ul>`);
@@ -1883,9 +1920,10 @@ function taskRowHtml(t, o = {}) {
   </div>`;
 }
 function qaddHtml(scope, placeholder) {
+  const cd = ui.qd[scope], custom = isDate(cd) ? cd : '';
   return `<div class="qadd"><input id="q-title" data-scope="${scope}" placeholder="${placeholder}" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="${placeholder}"><button type="button" data-act="qadd" data-scope="${scope}" aria-label="Добавить">＋</button></div>
   <div class="qprev" id="q-prev" aria-live="polite"></div>
-  <div class="qchips" id="qchips">${[['today', 'Сегодня'], ['tomorrow', 'Завтра'], ['', 'Без срока']].map(([v, l]) => `<button type="button" class="chip ${ui.qd[scope] === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="qdue" data-scope="${scope}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  <div class="qchips" id="qchips">${[['today', 'Сегодня'], ['tomorrow', 'Завтра'], ['', 'Без срока']].map(([v, l]) => `<button type="button" class="chip ${cd === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="qdue" data-scope="${scope}" data-v="${v}">${l}</button>`).join('')}<label class="qpick ${custom ? 'on' : ''}" title="Выбрать дату"><span class="ql" aria-hidden="true">Дата</span><input type="date" id="q-date" data-change="qdate" data-scope="${scope}" value="${esc(custom)}" aria-label="Дата"></label><label class="qpick ${ui.qt ? 'on' : ''}" title="Время"><span class="ql" aria-hidden="true">Время</span><input type="text" readonly inputmode="none" data-timepick placeholder="--:--" id="q-time" data-change="qtime" value="${esc(ui.qt)}" aria-label="Время"></label></div>`;
 }
 function ringSvg(share, color) { const R = 17, C = 2 * Math.PI * R; return `<svg viewBox="0 0 44 44" class="ring" aria-hidden="true"><circle cx="22" cy="22" r="${R}" fill="none" style="stroke:var(--line)" stroke-width="5"/><circle cx="22" cy="22" r="${R}" fill="none" style="stroke:${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(0, Math.min(1, share)) * C} ${C}" transform="rotate(-90 22 22)"/></svg>`; }
 /* верх «Сегодня»: баланс, кольца дел и привычек, ближайшие события и дни рождения */
@@ -1904,8 +1942,8 @@ function bentoHtml() {
   const nxRow = r => `<button type="button" class="nx ${r.past ? 'past' : ''}" data-act="${r.act}" data-id="${r.id}"><span class="cico" style="--c:${col(r.c)}">${r.ico}</span><div><b>${esc(r.title)}</b><span class="cap">${esc(r.cap)}</span></div></button>`;
   return `<div class="bento">
     <div class="bt hero"><span class="lbl">Свободные деньги</span><b class="num ${bal < 0 ? 'out' : ''}">${money(bal)}</b>${pay ? `<span class="sub">${esc(shortDate(pay.date))} · ${esc(pay.title || catName(pay.cat))} ${pay.kind === 'in' ? '+' : '−'}${money(pay.amount)}</span>` : ''}</div>
-    <button type="button" class="bt tile" data-act="tsub" data-v="list">${ringSvg(total ? done / total : 0, 'var(--primary)')}<div><b>${total ? `${done} из ${total}` : '—'}</b><span class="cap">${total ? 'дел на сегодня' : 'дел на сегодня нет'}</span></div></button>
-    <button type="button" class="bt tile" data-act="habitsGo">${ringSvg(hab.length ? hDone / hab.length : 0, 'var(--income)')}<div><b>${hab.length ? `${hDone} из ${hab.length}` : '—'}</b><span class="cap">${hab.length ? 'привычек' : 'привычек пока нет'}</span></div></button>
+    <button type="button" class="bt tile" data-act="ringTasks">${ringSvg(total ? done / total : 0, 'var(--primary)')}<div><b>${total ? `${done} из ${total}` : '—'}</b><span class="cap">${total ? 'дел на сегодня' : 'дел на сегодня нет'}</span></div></button>
+    <button type="button" class="bt tile" data-act="ringHabits">${ringSvg(hab.length ? hDone / hab.length : 0, 'var(--income)')}<div><b>${hab.length ? `${hDone} из ${hab.length}` : '—'}</b><span class="cap">${hab.length ? 'привычек' : 'привычек пока нет'}</span></div></button>
     ${todayRows.length || laterRows.length ? `<div class="bt next">${todayRows.length ? `<div class="nxgrp">${laterRows.length ? '<span class="nxlbl">Сегодня</span>' : ''}${todayRows.map(nxRow).join('')}</div>` : ''}${laterRows.length ? `<div class="nxgrp">${todayRows.length ? '<span class="nxlbl">Дальше</span>' : ''}${laterRows.map(nxRow).join('')}</div>` : ''}</div>` : ''}
   </div>`;
 }
@@ -1962,11 +2000,11 @@ function renderTodayList() {
   const mp = monthPlan();
   let html = '';
   const hToday = habits.filter(h => !h.archived && habitScheduled(h, t0));
-  if (hToday.length) html += tsec('Привычки', hToday.map(h => habitRowHtml(h)).join(''), '', `<button type="button" class="chip" data-act="habitsGo">${hToday.filter(h => habitDone(h, t0)).length} из ${hToday.length}</button>`);
+  if (hToday.length) html += tsec('Привычки', hToday.map(h => habitRowHtml(h)).join(''), 'hsec', `<button type="button" class="chip" data-act="habitsGo">Все привычки</button>`);
   if (due.length) {
     const left = overdue.length + todays.length, total = left + doneToday.length;
     html += `<section class="tsec"><details class="coll" data-key="tasks" ${ui.tasksOpen ? 'open' : ''}>
-      <summary><div class="mmh"><h3>Дела на сегодня</h3><span class="cap">${left ? `осталось ${left} из ${total}` : `выполнено ${total} из ${total}`}${overdue.length ? `, просрочено ${overdue.length}` : ''}</span></div><span class="mm-chev" aria-hidden="true"></span></summary>
+      <summary><div class="mmh"><h3>Дела на сегодня</h3><span class="cap">${overdue.length ? `<span class="late">просрочено ${overdue.length}</span> · ` : ''}ближайшее: ${esc((overdue[0] || todays.slice().sort(byTaskTime)[0]).title)}</span></div><span class="mm-chev" aria-hidden="true"></span></summary>
       <div class="mmbody">${overdue.length ? tsec('Просрочено', overdue.map(t => taskRowHtml(t)).join(''), 'late') : ''}${todays.length ? tsec('На сегодня', todays.map(t => taskRowHtml(t)).join('')) : ''}
       <div class="btnrow" style="margin:4px 0 6px"><button type="button" class="btn ghost sm" data-act="rollover">Перенести несделанное на завтра (${due.length})</button></div></div></details></section>`;
   }
@@ -2388,7 +2426,7 @@ function planHtml() {
   ${d.prepeat ? `<label class="field check"><input id="f-pauto" type="checkbox" ${d.pauto ? 'checked' : ''}><span style="font-size:.95rem;color:var(--ink)">Вносить в день платежа автоматически</span></label>` : ''}
   <details class="more" ${moreState(d, (d.tags && d.tags.length) || (d.note || '').trim()) ? 'open' : ''}><summary>Подробнее: теги, заметка</summary>${tagBlock()}${noteField(d)}</details>
   <div class="ferr" id="ferr" role="alert"></div>
-  <div class="mfoot">${d.id ? `<button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>` : '<span></span>'}
+  <div class="mfoot">${d.id ? `<span class="lefts"><button type="button" class="btn danger sm" data-act="delDraft">Удалить</button>${d.status === 'open' ? `<button type="button" class="btn ghost sm" data-act="planCancelDraft">Отменить план</button>` : ''}</span>` : '<span></span>'}
     <div class="right"><button type="button" class="btn ghost" data-act="closeModal">Отмена</button><button type="button" class="btn" data-act="saveDraft">Сохранить</button></div></div>`;
 }
 
@@ -2531,7 +2569,7 @@ function taskHtml() {
   <div class="grid2">
     <div class="field"><span>Срок</span><input id="t-due" type="date" value="${esc(d.tdue)}">
       <div class="chips" style="margin-top:8px">${[['Сегодня', t0], ['Завтра', shiftDate(t0, 1)], ['Через неделю', shiftDate(t0, 7)], ['Без срока', '']].map(([l, v]) => `<button type="button" class="chip ${d.tdue === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="setTdue" data-v="${v}">${l}</button>`).join('')}</div></div>
-    <div class="field"><span>Время (необязательно)</span><input id="t-time" type="time" value="${esc(d.ttime)}"></div>
+    <div class="field"><span>Время (необязательно)</span><input id="t-time" type="text" readonly inputmode="none" data-timepick placeholder="--:--" value="${esc(d.ttime)}"></div>
   </div>
   ${taskCatChipsHtml(d)}
   <details class="more" ${more ? 'open' : ''}><summary>Подробнее: место, проект, повтор, заметка</summary>
@@ -2548,7 +2586,8 @@ function taskHtml() {
 function saveTask() {
   const d = draft, title = (d.ttitle || '').trim();
   if (!title) return formErr('Введите, что нужно сделать', 't-title');
-  const repeat = d.tproject ? '' : (d.trepeat || ''), due = isDate(d.tdue) ? d.tdue : (repeat ? today() : '');
+  const hasTime = /^\d{2}:\d{2}$/.test(d.ttime || '');
+  const repeat = d.tproject ? '' : (d.trepeat || ''), due = isDate(d.tdue) ? d.tdue : (repeat || hasTime ? today() : '');   // время без срока → на сегодня, иначе оно бы потерялось
   const ex = d.id ? taskById(d.id) : null, t = ex || { id: 'k' + uid(), done: false, pos: Date.now(), ts: Date.now() };
   t.title = title;
   if ((d.tnote || '').trim()) t.note = d.tnote.trim(); else delete t.note;
@@ -2953,7 +2992,8 @@ const actions = {
   tab(el) {
     const v = el.dataset.v;
     if (v === ui.tab && el.classList.contains('tab')) { if (v === 'tasks') { ui.project = null; ui.habit = null; } if (v === 'cal') ui.person = null; }   // повторный тап по активной вкладке возвращает к её началу
-    if (MONEY_SUBS.some(([k]) => k === v)) { ui.tab = 'money'; ui.msub = v; }
+    if (v === 'plans') { ui.tab = 'money'; ui.msub = 'overview'; }
+    else if (MONEY_SUBS.some(([k]) => k === v)) { ui.tab = 'money'; ui.msub = v; }
     else if (v === 'settings') ui.tab = 'more';
     else ui.tab = v;
     if (ui.tab !== 'tasks') { ui.project = null; ui.habit = null; }
@@ -2962,17 +3002,33 @@ const actions = {
   },
   month(el) { const [y, m] = ui.month.split('-').map(Number); const d = new Date(y, m - 1 + (+el.dataset.d), 1); ui.month = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; render(); },
   monthToday() { ui.month = mkey(today()); render(); },
-  trendNav(el) { const d = +el.dataset.d, [y, m] = ui.trendMonth.split('-').map(Number), nd = new Date(y, m - 1 + d, 1), nk = `${nd.getFullYear()}-${pad(nd.getMonth() + 1)}`; if (d > 0 && nk > mkey(today())) return; ui.trendMonth = nk; render(); },
-  trendToday() { ui.trendMonth = mkey(today()); render(); },
+  trendNav(el) {
+    const cur = mkey(today()), earliest = Object.keys(months).filter(k => months[k] && months[k].length && k <= cur).sort()[0]; if (!earliest) return;
+    const start = ui.trendStart && ui.trendStart >= earliest ? ui.trendStart : trendDefaultStart(earliest), d = +el.dataset.d, ns = addMonthKey(start, d);
+    if (d < 0 && ns < earliest) return;                         // раньше первого месяца с записями не листаем
+    if (d > 0 && addMonthKey(start, 5) >= cur) return;          // окно уже доходит до текущего месяца
+    ui.trendStart = ns; render();
+  },
+  trendToday() { ui.trendStart = ''; render(); },
   add() {
     if (ui.tab === 'today') return ui.qmode === 'money' ? openTx() : openTask({ due: today() });
     if (ui.tab === 'cal') { if (ui.person) return openGift(); if (ui.csub === 'bdays') return openPerson(); return openTask({ due: ui.calDay }); }
     if (ui.tab === 'tasks' && ui.habit) return;
     if (ui.tab === 'tasks' && ui.tsub === 'habits') return openHabit();
     if (ui.tab === 'tasks') return ui.project ? openTask({ project: ui.project }) : ui.tsub === 'projects' ? openProject() : openTask({});
-    if (ui.msub === 'plans') openPlan(); else openTx();
+    openTx();
   },
   addTx() { openTx(); },
+  addPlan() { openPlan(); },
+  ringTasks() {   // кольцо «дел на сегодня» раскрывает блок дел здесь же, а не уводит на другую вкладку
+    const t0 = today(); if (!tasks.some(t => !t.done && t.due && t.due <= t0)) return actions.tsub({ dataset: { v: 'list' } }, true);
+    ui.tasksOpen = true; renderTodayList();
+    const b = $('details.coll[data-key="tasks"]'); if (b) { b.open = true; try { b.closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* не критично */ } }
+  },
+  ringHabits() {
+    const sec = $('#todayList .hsec'); if (!sec) return actions.habitsGo();
+    try { sec.closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* не критично */ }
+  },
   saveDraftMore() { syncDraft(); const d = draft; if (!d || d.type !== 'tx') return; againNext = { kind: d.kind, date: d.date }; actions.saveDraft(); againNext = null; },
   txRepeat() {
     const d = draft; if (!d || d.type !== 'tx' || !d.id) return; const f = findTx(d.id); if (!f) return;
@@ -2991,7 +3047,17 @@ const actions = {
   catMore() { syncDraft(); draft.catMore = true; renderModal(); },
   setDate(el) { const inp = $('#f-date'); if (!inp) return; inp.value = el.dataset.v; syncDraft(); $$('.dater .chip').forEach(b => b.classList.toggle('on', b.dataset.v === inp.value)); refreshLimitHint(); },
   setPrepeat(el) { syncDraft(); draft.prepeat = el.dataset.v; if (draft.prepeat && !draft.date) draft.date = today(); renderModal(); },
-  qmode(el) { ui.qmode = el.dataset.v; try { localStorage.setItem('fin-qmode', ui.qmode); } catch (e) { /* не критично */ } render(); $(ui.qmode === 'money' ? '#qm-text' : '#q-title')?.focus(); },
+  qmode(el) { ui.qmode = el.dataset.v; try { localStorage.setItem('fin-qmode', ui.qmode); } catch (e) { /* не критично */ } render(); if (ui.qmode === 'plan') refreshQpPreview(); $(ui.qmode === 'money' ? '#qm-text' : ui.qmode === 'plan' ? '#qp-text' : '#q-title')?.focus(); },
+  qpCat(el) { const q = parseQuick($('#qp-text')?.value), cur = ui.qpCat != null ? ui.qpCat : q.cat; ui.qpCat = cur === el.dataset.v ? '' : el.dataset.v; refreshQpPreview(); },
+  qpAdd() {
+    const inp = $('#qp-text'); if (!inp) return;
+    const q = parseQuick(inp.value); if (!(q.amount > 0)) { toast('Впишите сумму, например: аренда 30000', 'err'); return inp.focus(); }
+    const snap = snapshot(), cat = ui.qpCat != null ? ui.qpCat : q.cat;
+    const pl = { id: uid(), kind: q.kind, title: q.title, amount: q.amount, cat: cat || '', tags: [], date: q.date || '', note: '', status: 'open', txId: null, ts: Date.now() };
+    if (q.repeat) { pl.repeat = q.repeat; if (!pl.date) pl.date = today(); pl.auto = pl.date > today(); if (q.repeat === 'monthly') pl.rday = +pl.date.slice(8); }   // автовнесение — только если первый платёж ещё впереди, чтобы ничего не провелось само в момент ввода
+    plans.push(pl); ui.qpCat = null; inp.value = ''; persist(); render(); refreshQpPreview(); $('#qp-text')?.focus();
+    toastUndo(`План: ${pl.title || catName(pl.cat)} ${pl.kind === 'in' ? '+' : '−'}${money(pl.amount)} · ${pl.date ? txDateLabel(pl.date) : 'без срока'}${pl.repeat ? ' · ' + REPEAT_SHORT[pl.repeat] + (pl.auto ? ', авто' : '') : ''}`, snap);
+  },
   qmCat(el) { ui.qmCat = ui.qmCat === el.dataset.v ? null : el.dataset.v; refreshQmPreview(); if (ui.qmCat === null) { const q = parseQuick($('#qm-text')?.value); ui.qmCat = null; } },
   qmAdd() {
     const inp = $('#qm-text'); if (!inp) return;
@@ -3005,7 +3071,7 @@ const actions = {
     addQuickTx({ id: uid(), kind: 'out', date: today(), amount: t.amount, cat: t.cat || '', title: t.title || '', tags: [], note: '', ts: Date.now() });
     render();
   },
-  tsub(el) { ui.tsub = el.dataset.v; ui.project = null; ui.habit = null; render(); },
+  tsub(el, go) { if (go) ui.tab = 'tasks'; ui.tsub = el.dataset.v; ui.project = null; ui.habit = null; render(); },
   toggleTask(el) {
     const t = taskById(el.dataset.id); if (!t) return;
     let msg = '';
@@ -3025,26 +3091,36 @@ const actions = {
     if (v === '__new__') { draft.tcatNew = !draft.tcatNew; if (draft.tcatNew) draft.tcat = ''; renderModal(); if (draft.tcatNew) $('#t-newcat')?.focus(); return; }
     draft.tcatNew = false; draft.tcat = draft.tcat === v ? '' : v; renderModal();
   },
-  qdue(el) { const sc = el.dataset.scope; ui.qd[sc] = el.dataset.v; $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc])); $('#q-title')?.focus(); },
+  qdue(el) {
+    const sc = el.dataset.scope; ui.qd[sc] = el.dataset.v;
+    $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc]));
+    const di = $('#q-date'); if (di) { di.value = ''; di.closest('.qpick').classList.remove('on'); }
+    if (!ui.qd[sc]) { ui.qt = ''; const ti = $('#q-time'); if (ti) { ti.value = ''; ti.closest('.qpick').classList.remove('on'); } }   // «без срока» — значит и без времени
+    refreshTaskPreview(); $('#q-title')?.focus();
+  },
+  dqCat(el) { const inp = $('#dq-text'), q = parseTaskText(inp?.value || '', ui.calDay), cur = ui.dqc != null ? ui.dqc : q.tcat; ui.dqc = cur === el.dataset.v ? '' : el.dataset.v; refreshDqPreview(); inp?.focus(); },
+  qtCat(el) { const inp = $('#q-title'), q = parseTaskText(inp?.value || ''), cur = ui.qtc != null ? ui.qtc : q.tcat; ui.qtc = cur === el.dataset.v ? '' : el.dataset.v; refreshTaskPreview(); inp?.focus(); },
   qadd(el) {
     const sc = el.dataset.scope, inp = $('#q-title'), raw = (inp?.value || '').trim(); if (!raw) return inp && inp.focus();
-    const q = parseTaskText(raw), v = ui.qd[sc], chipDue = v === 'today' ? today() : v === 'tomorrow' ? shiftDate(today(), 1) : '';
-    const due = q.due || chipDue, snap = snapshot();
+    const q = parseTaskText(raw), ch = quickTaskChoice(sc, q), due = ch.due, snap = snapshot();
     const t = { id: 'k' + uid(), title: q.title || raw, done: false, pos: Date.now(), ts: Date.now() }; if (due) t.due = due;
-    if (due && q.time) t.time = q.time;
+    if (ch.time) t.time = ch.time;
     if (q.project) t.project = q.project; else if (q.repeat) { t.repeat = q.repeat; if (q.repeat === 'monthly') t.rday = +due.slice(8); }
-    if (q.tcat) t.cat = q.tcat;
-    tasks.push(t); inp.value = ''; persist(); renderLists(); inp.focus(); refreshTaskPreview();
-    if (q.matched) toastUndo(`Дело добавлено${t.due ? ' · ' + dueLabel(t.due) : ''}${t.time ? ', ' + t.time : ''}${t.repeat ? ' · ' + REPEAT_SHORT[t.repeat] : ''}${q.tcat ? ' · ' + taskCatById(q.tcat).name : ''}`, snap);
+    if (ch.cat) t.cat = ch.cat;
+    const picked = !!(ui.qt || ui.qtc || isDate(ui.qd[sc]));
+    tasks.push(t); inp.value = ''; ui.qt = ''; ui.qtc = null; persist(); renderLists();
+    const ti = $('#q-time'); if (ti) { ti.value = ''; ti.closest('.qpick').classList.remove('on'); }
+    inp.focus(); refreshTaskPreview();
+    if (q.matched || picked) toastUndo(`Дело добавлено${t.due ? ' · ' + dueLabel(t.due) : ''}${t.time ? ', ' + t.time : ''}${t.repeat ? ' · ' + REPEAT_SHORT[t.repeat] : ''}${t.cat ? ' · ' + taskCatById(t.cat).name : ''}`, snap);
   },
   dqAdd() {
     const inp = $('#dq-text'), raw = (inp?.value || '').trim(); if (!raw) return inp && inp.focus();
-    const q = parseTaskText(raw, ui.calDay), due = q.due || ui.calDay, snap = snapshot();
-    const t = { id: 'k' + uid(), title: q.title || raw, done: false, pos: Date.now(), ts: Date.now(), due }; if (q.time) t.time = q.time;
+    const q = parseTaskText(raw, ui.calDay), due = q.due || ui.calDay, snap = snapshot(), time = q.time || ui.dqt || '', cat = ui.dqc != null ? ui.dqc : q.tcat;
+    const t = { id: 'k' + uid(), title: q.title || raw, done: false, pos: Date.now(), ts: Date.now(), due }; if (time) t.time = time;
     if (q.project) t.project = q.project; else if (q.repeat) { t.repeat = q.repeat; if (q.repeat === 'monthly') t.rday = +due.slice(8); }
-    if (q.tcat) t.cat = q.tcat;
-    tasks.push(t); inp.value = ''; ui.calDay = due; ui.cal = mkey(due); persist(); renderCalBody(); $('#dq-text')?.focus();
-    toastUndo(`Дело добавлено · ${dueLabel(due)}${t.time ? ', ' + t.time : ''}`, snap);
+    if (cat) t.cat = cat;
+    tasks.push(t); inp.value = ''; ui.dqt = ''; ui.dqc = null; ui.calDay = due; ui.cal = mkey(due); persist(); renderCalBody(); $('#dq-text')?.focus();
+    toastUndo(`Дело добавлено · ${dueLabel(due)}${t.time ? ', ' + t.time : ''}${t.cat ? ' · ' + taskCatById(t.cat).name : ''}`, snap);
   },
   stepAdd() {
     const inp = $('#s-title'), title = (inp?.value || '').trim(); if (!title) return inp && inp.focus();
@@ -3138,9 +3214,9 @@ const actions = {
     toastUndo(`${tx.kind === 'in' ? 'Получено' : 'Оплачено'}: ${p.title || catName(p.cat)}, ${money(p.amount)}${lm.length ? '. ' + lm[0] : ''}`, snap, lm.length ? 'warn' : '');
   },
   planDo(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) openTx({ prefill: { kind: p.kind, amount: p.amount, title: p.title, cat: p.cat, tags: p.tags || [], note: p.note || '', date: today(), planId: p.id } }); },
+  planCancelDraft() { const id = draft && draft.id; if (!id) return; closeModal(); actions.planCancel({ dataset: { id } }); },
   planCancel(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) { const snap = snapshot(); p.status = 'cancelled'; persist(); render(); toastUndo('План отменён', snap); } },
   planRestore(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) { p.status = 'open'; p.txId = null; persist(); render(); } },
-  planTagFilter(el) { ui.planTag = ui.planTag === el.dataset.id ? '' : el.dataset.id; render(); },
   opsKind(el) { ui.f.kind = el.dataset.v; render(); },
   closeModal() { closeModal(); },
   setKind(el) {
@@ -3244,6 +3320,9 @@ document.addEventListener('change', e => {
     case 'tproject': syncDraft(); if (draft.tproject) draft.trepeat = ''; renderModal(); break;
     case 'tproj': ui.tproj = v; renderTaskList(); break;
     case 'ttcat': ui.ttcat = v; renderTaskList(); break;
+    case 'qdate': { const sc = t.dataset.scope || 'today'; ui.qd[sc] = isDate(v) ? v : 'today'; $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc])); t.closest('.qpick').classList.toggle('on', isDate(v)); refreshTaskPreview(); break; }
+    case 'dqtime': { ui.dqt = /^\d{2}:\d{2}$/.test(v) ? v : ''; t.closest('.qpick').classList.toggle('on', !!ui.dqt); refreshDqPreview(); break; }
+    case 'qtime': { ui.qt = /^\d{2}:\d{2}$/.test(v) ? v : ''; t.closest('.qpick').classList.toggle('on', !!ui.qt); refreshTaskPreview(); break; }
     case 'dowed': syncDraft(); if (draft.kind === 'recv' && !draft.id) { const o = owedById(draft.owed); if (o) draft.amount = fmtIn(Math.max(0, owedStats(o).remaining)); } renderModal(); break;
     case 'dkind': syncDraft(); renderModal(); break;
     case 'extra': { const n = parseNum(v); ui.extra[t.dataset.id] = n > 0 ? n : 0; render(); break; }
@@ -3275,7 +3354,8 @@ document.addEventListener('input', e => {
   if (t.id === 'f-search') { ui.f.q = t.value; renderOpsList(); return; }
   if (t.id === 'qm-text') { ui.qmCat = null; refreshQmPreview(); return; }
   if (t.id === 'q-title') { refreshTaskPreview(); return; }
-  if (t.id === 'dq-text') { refreshDqPreview(); return; }
+  if (t.id === 'dq-text') { ui.dqc = null; refreshDqPreview(); return; }
+  if (t.id === 'qp-text') { ui.qpCat = null; refreshQpPreview(); return; }
   if (!draft) return;
   if (t.id === 'f-amount') {
     draft.amount = t.value;
@@ -3286,6 +3366,8 @@ document.addEventListener('input', e => {
   else if (t.id === 'f-actual') { draft.actual = t.value; refreshReconCalc(); }
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#tp')) { closeTP(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-timepick]')) { e.preventDefault(); openTimePicker(e.target); return; }
   if (e.key === 'Escape' && $('#modal-root').firstChild) { closeModal(); return; }
   if (e.key !== 'Enter') return;
   const t = e.target;
@@ -3294,12 +3376,80 @@ document.addEventListener('keydown', e => {
     else if (t.classList && t.classList.contains('entersave')) { e.preventDefault(); saveDraft(); }
   } else if (t.id === 'q-title') { e.preventDefault(); actions.qadd({ dataset: { scope: t.dataset.scope } }); }
   else if (t.id === 'qm-text') { e.preventDefault(); actions.qmAdd(); }
+  else if (t.id === 'qp-text') { e.preventDefault(); actions.qpAdd(); }
   else if (t.id === 'dq-text') { e.preventDefault(); actions.dqAdd(); }
   else if (t.id === 's-title') { e.preventDefault(); actions.stepAdd(); }
   else if (t.id === 'g-text' || t.id === 'g-price') { e.preventDefault(); actions.giftAdd(); }
   else if (t.id === 'new-tag') actions.tagAdd();
   else if (t.id && t.id.startsWith('new-cat-')) actions.catAdd({ dataset: { kind: t.id.slice(8) } });
 });
+
+/* ───────── свой выбор времени ─────────
+   Системное окно выбора времени на Android рисуется вне страницы и в тёмной теме бывает нечитаемым (белое на белом).
+   Поэтому поля времени — текст «только для чтения», а по нажатию открывается эта панель в цветах приложения. */
+let tp = null;
+function openTimePicker(inp) {
+  const v = /^\d{2}:\d{2}$/.test(inp.value) ? inp.value : '';
+  tp = { inp, h: v ? +v.slice(0, 2) : null, m: v ? +v.slice(3) : null };
+  renderTP();
+  setTimeout(() => $('#tp .tp-grid.h button.on, #tp .tp-grid.h button')?.focus(), 0);
+}
+const tpValue = () => tp && tp.h != null ? `${pad(tp.h)}:${pad(tp.m == null ? 0 : tp.m)}` : '';
+function renderTP() {
+  let box = $('#tp'); if (!box) { box = document.createElement('div'); box.id = 'tp'; document.body.appendChild(box); }
+  const v = tpValue(), cell = (kind, n) => `<button type="button" class="${(kind === 'h' ? tp.h : tp.m) === n ? 'on' : ''}" data-act="tp${kind.toUpperCase()}" data-v="${n}" aria-pressed="${(kind === 'h' ? tp.h : tp.m) === n}">${pad(n)}</button>`;
+  box.innerHTML = `<div class="tp-scrim" data-act="tpClose"></div><div class="tp" role="dialog" aria-modal="true" aria-label="Выбор времени">
+    <div class="tp-head"><span class="tp-val num">${v || '--:--'}</span><button type="button" class="icon" data-act="tpClose" aria-label="Закрыть">×</button></div>
+    <div class="tp-lbl">Часы</div><div class="tp-grid h">${Array.from({ length: 24 }, (_, i) => cell('h', i)).join('')}</div>
+    <div class="tp-lbl">Минуты</div><div class="tp-grid m">${Array.from({ length: 12 }, (_, i) => cell('m', i * 5)).join('')}</div>
+    <div class="tp-foot"><button type="button" class="btn ghost sm" data-act="tpClear">Без времени</button><button type="button" class="btn" data-act="tpOk" ${tp.h == null ? 'disabled' : ''}>Готово</button></div></div>`;
+}
+function closeTP() { const b = $('#tp'); if (b) b.remove(); const i = tp && tp.inp; tp = null; return i; }
+function applyTP(v) {
+  const inp = closeTP(); if (!inp || !inp.isConnected) return;
+  inp.value = v; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+}
+Object.assign(actions, {
+  tpH(el) { tp.h = +el.dataset.v; renderTP(); },
+  tpM(el) { tp.m = +el.dataset.v; if (tp.h != null) applyTP(tpValue()); else renderTP(); },   // час и минута выбраны — сразу готово
+  tpOk() { if (tp && tp.h != null) applyTP(tpValue()); },
+  tpClear() { applyTP(''); },
+  tpClose() { closeTP(); }
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest) return;
+  const inp = e.target.closest('[data-timepick]') || (e.target.closest('.qpick') && e.target.closest('.qpick').querySelector('[data-timepick]'));
+  if (!inp) return;
+  e.preventDefault(); openTimePicker(inp);
+});
+
+/* ───────── свайп по строке дела: вправо — выполнено, влево — на завтра ───────── */
+let sw = null, swipeBlock = false;
+const SW_GO = 90;
+document.addEventListener('pointerdown', e => {
+  const row = e.target.closest && e.target.closest('.trow'); if (!row || draft) return;
+  const chk = row.querySelector('[data-act="toggleTask"]'); if (!chk) return;
+  sw = { row, id: chk.dataset.id, x: e.clientX, y: e.clientY, dx: 0, on: false, pid: e.pointerId };
+});
+document.addEventListener('pointermove', e => {
+  if (!sw) return;
+  const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+  if (!sw.on) { if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { sw = null; return; } if (Math.abs(dx) < 12) return; sw.on = true; sw.row.classList.add('dragging'); try { sw.row.setPointerCapture(sw.pid); } catch (x) { /* не критично */ } }
+  sw.dx = dx; sw.row.style.transform = `translateX(${dx}px)`;
+  sw.row.classList.toggle('sw-r', dx > SW_GO * .5); sw.row.classList.toggle('sw-l', dx < -SW_GO * .5);
+});
+function endSwipe() {
+  if (!sw) return; const s0 = sw; sw = null;
+  if (!s0.on) return;
+  swipeBlock = true; setTimeout(() => { swipeBlock = false; }, 150);   // после свайпа не срабатывает нажатие на строку
+  s0.row.classList.remove('dragging', 'sw-r', 'sw-l'); s0.row.style.transform = '';
+  const t = taskById(s0.id); if (!t) return;
+  if (s0.dx > SW_GO) actions.toggleTask({ dataset: { id: s0.id } });
+  else if (s0.dx < -SW_GO && !isDoneNow(t)) { const snap = snapshot(); t.due = shiftDate(today(), 1); persist(); renderLists(); if (ui.tab === 'cal') renderCalBody(); toastUndo(`«${t.title}» — на завтра`, snap); }
+}
+document.addEventListener('pointerup', endSwipe);
+document.addEventListener('pointercancel', () => { if (sw && sw.on) { sw.row.classList.remove('dragging', 'sw-r', 'sw-l'); sw.row.style.transform = ''; } sw = null; });
+document.addEventListener('click', e => { if (swipeBlock) { swipeBlock = false; e.stopPropagation(); e.preventDefault(); } }, true);
 
 /* ───────── экранная клавиатура ─────────
    Окно поднимается над клавиатурой, а поле, в которое идёт ввод, прокручивается в видимую часть. */
@@ -3347,6 +3497,7 @@ function initBackGuard() {
     if (!backReady) return;
     const st = e.state || {};
     if (st.m) return;                                                  // вернулись на рабочую запись — ничего не делаем
+    if ($('#tp')) { closeTP(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if ($('#modal-root').firstChild) { closeModal(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if (ui.tab === 'tasks' && ui.project) { ui.project = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if (ui.tab === 'tasks' && ui.habit) { ui.habit = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }

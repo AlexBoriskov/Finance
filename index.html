@@ -558,12 +558,12 @@ details.coll[open] .mm-chev::after{content:"▴"}
 .qdate{color:var(--muted);font-weight:600}
 .lefts{display:flex;flex-wrap:wrap;gap:8px}
 /* быстрый ввод: выбор даты и времени, категории под строкой */
-.qpick{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:.9rem;cursor:pointer}
+.qpick{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:.9rem;cursor:pointer}
 .qpick.on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--surface))}
 .qpick input{border:0;background:transparent;color:inherit;font:inherit;padding:0;min-height:0;width:auto;max-width:9.5em}
 .qpick:not(.on) input{width:1.6em;color:transparent}
-.qpick.on .ql{display:none}
-.qpick:not(.on) input::-webkit-datetime-edit{opacity:0}
+.qpick.on:not(.date) .ql{display:none}
+.qpick.date.on .ql{font-weight:600}
 .qtcats{margin:6px 0 4px}
 .qmode button{padding:7px 14px}
 /* свайп по делу */
@@ -587,6 +587,27 @@ input[data-timepick]{cursor:pointer;caret-color:transparent}
 .tp-grid button.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .tp-foot{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
 .tp-foot .btn:disabled{opacity:.45}
+/* циферблат и сетка месяца */
+.tp-val{display:flex;align-items:center;gap:2px}
+.tp-part{border:0;background:none;color:var(--muted);font:inherit;font-size:2.2rem;font-weight:700;padding:0 4px;border-radius:10px;min-width:1.6em}
+.tp-part.on{color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent)}
+.tp-hint{margin:0 0 6px;color:var(--muted);font-size:.84rem}
+.dial{display:block;width:min(280px,78vw);height:auto;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.dial .face{fill:var(--soft)}
+.dial .hand{stroke:var(--primary);stroke-width:2.5}
+.dial .pin{fill:var(--primary)}
+.dial .knob{fill:var(--primary)}
+.dial text{fill:var(--ink);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer}
+.dial text.in{font-size:13px;fill:var(--muted)}
+.dial text.on{fill:var(--on-primary)}
+.dp-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dp-grid .cwd{text-align:center;font-size:.72rem;color:var(--muted);font-weight:600;padding:2px 0}
+.dp-grid button{min-height:40px;border:0;border-radius:10px;background:none;color:var(--ink);font:inherit;font-weight:600}
+.dp-grid button.other{opacity:.35}
+.dp-grid button.today{box-shadow:inset 0 0 0 1.5px var(--primary)}
+.dp-grid button.on{background:var(--primary);color:var(--on-primary)}
+.tp .calnav .label{flex:1;text-align:center;font-weight:700}
+.dp-title{font-size:1.15rem;font-weight:700;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -1362,14 +1383,14 @@ function limitMessages(tx) {
 
 /* ───────── views ───────── */
 const TOP_TITLES = { today: 'Сегодня', cal: 'Календарь', tasks: 'Дела', money: 'Деньги', more: 'Настройки' };
-const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['debts', 'Долги/цели']];
+const MONEY_SUBS = [['overview', 'Обзор'], ['ops', 'Операции'], ['plans', 'Планы'], ['debts', 'Долги/цели']];
 function fabLabel() {
   if (ui.tab === 'more') return '';
   if (ui.tab === 'today') return '';
   if (ui.tab === 'cal') return ui.person ? 'Подарок' : '';   // у дня в календаре и у списка дней рождения уже есть своя кнопка «＋»
   if (ui.tab === 'tasks') return ui.habit ? '' : ui.project ? 'Шаг' : ui.tsub === 'projects' ? '' : ui.tsub === 'habits' ? '' : 'Дело';   // у списков проектов и привычек уже есть своя кнопка «＋»
   if (ui.msub === 'debts') return '';
-  return 'Добавить';
+  return ui.msub === 'plans' ? 'План' : 'Добавить';
 }
 function render() {
   $('#monthnav').hidden = !(ui.tab === 'money' && (ui.msub === 'overview' || ui.msub === 'ops'));
@@ -1382,7 +1403,7 @@ function render() {
 }
 function viewMoney(root) {
   root.innerHTML = `<nav class="subnav" aria-label="Разделы денег">${MONEY_SUBS.map(([v, l]) => `<button data-act="tab" data-v="${v}" aria-current="${ui.msub === v}">${l}</button>`).join('')}</nav><div id="msub"></div>`;
-  ({ overview: viewOverview, ops: viewOps, debts: viewDebts })[ui.msub]($('#msub'));
+  ({ overview: viewOverview, ops: viewOps, plans: viewPlans, debts: viewDebts })[ui.msub]($('#msub'));
 }
 
 function curBanner() {
@@ -1469,8 +1490,8 @@ function plansTimelineHtml() {
   let run = bal; const shownRows = []; let firstNeg = null;
   dated.forEach(p => { run = round2(run + (p.kind === 'in' ? p.amount : -p.amount)); if (run < 0 && !firstNeg) firstNeg = { p, run }; shownRows.push({ p, run }); });
   const LIM = 10, ULIM = 5;
-  let html = `<section><div class="sechead"><h2>Планы и платежи</h2><button type="button" class="btn sm ghost" data-act="addPlan">＋ План</button></div>`;
-  if (!dated.length && !undated.length) html += `<p class="hint">Будущих платежей и планов пока нет. Добавьте план кнопкой выше или одной строкой в режиме «План» на «Сегодня».</p>`;
+  let html = `<section><div class="sechead"><h2>Ближайшие платежи</h2><button type="button" class="btn sm ghost" data-act="addPlan">＋ План</button></div>`;
+  if (!dated.length && !undated.length) html += `<p class="hint">Будущих платежей пока нет. Добавьте план кнопкой выше или одной строкой в режиме «План» на «Сегодня».</p>`;
   if (shownRows.length) html += `<ul class="tl">${shownRows.slice(0, LIM).map(r => tlRowHtml(r.p, r.run)).join('')}</ul>`;
   if (shownRows.length > LIM) html += `<details class="fold"><summary>Дальше по датам (${shownRows.length - LIM})</summary><ul class="tl">${shownRows.slice(LIM).map(r => tlRowHtml(r.p, r.run)).join('')}</ul></details>`;
   if (firstNeg) html += `<p class="hint warnline">К ${esc(shortDate(firstNeg.p.date))} баланс по планам уходит в минус (${money(firstNeg.run)}).</p>`;
@@ -1480,8 +1501,7 @@ function plansTimelineHtml() {
     const rNet = sum(recs, r => r.kind === 'in' ? r.amount : -r.amount), oTot = sum(owedItems, x => x.amount), after = round2(bal + rNet - pOut + pIn - sOut + oTot);
     html += `<dl class="kv" style="margin-top:14px">${pOut ? `<dt>Запланированные расходы</dt><dd class="num out">−${money(pOut)}</dd>` : ''}${pIn ? `<dt>Запланированные доходы</dt><dd class="num in">+${money(pIn)}</dd>` : ''}${sOut ? `<dt>Платежи по долгам по графику (3 месяца)</dt><dd class="num out">−${money(sOut)}</dd>` : ''}${recs.length ? `<dt>Записи на будущие даты</dt><dd class="num ${rNet < 0 ? 'out' : 'in'}">${money(rNet, true)}</dd>` : ''}${oTot ? `<dt>Вернут вам</dt><dd class="num in">+${money(oTot)}</dd>` : ''}<div class="sep"></div><dt>После всех платежей и планов</dt><dd class="num ${after < 0 ? 'out' : ''}">${money(after)}</dd></dl>`;
   }
-  if (done.length) html += `<details class="fold"><summary>Проведённые планы (${done.length})</summary>${done.map(p => planRowHtml(p, true)).join('')}</details>`;
-  if (canc.length) html += `<details class="fold"><summary>Отменённые планы (${canc.length})</summary>${canc.map(p => planRowHtml(p, true)).join('')}</details>`;
+  if (plans.length) html += `<p class="hint"><button type="button" class="chip" data-act="tab" data-v="plans">Все планы${done.length || canc.length ? ' и история' : ''}</button></p>`;
   return html + '</section>';
 }
 
@@ -1659,6 +1679,38 @@ function planRowHtml(p, muted) {
       <span class="row-sub"><span>${esc(catName(p.cat))}</span>${p.date ? `<span class="${late ? 'late' : ''}">${late ? 'просрочено, ' : 'до '}${esc(shortDate(p.date))}</span>` : ''}${p.repeat ? `<span class="badge">${REPEAT_SHORT[p.repeat]}${p.auto ? ', авто' : ''}</span>` : ''}${tagChipsHtml(p.tags)}</span></span>
       <span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span></button>
     ${p.status !== 'open' ? `<div class="plan-actions"><button class="btn sm ghost" data-act="planRestore" data-id="${p.id}">Вернуть</button></div>` : ''}</div>`;
+}
+
+function viewPlans(root) {
+  const open = openPlans();
+  const pOut = sum(open.filter(p => p.kind === 'out'), p => p.amount), pIn = sum(open.filter(p => p.kind === 'in'), p => p.amount);
+  const bal = balance();
+  const tagChips = meta.tags.length ? `<div class="chips" style="margin-bottom:16px" role="group" aria-label="Фильтр по тегам">${meta.tags.map(t => `<button class="chip ${ui.planTag === t.id ? 'on' : ''}" style="--c:${col(t.color)}" data-act="planTagFilter" data-id="${t.id}" aria-pressed="${ui.planTag === t.id}">${esc(t.name)}</button>`).join('')}</div>` : '';
+  const pass = p => !ui.planTag || (p.tags || []).includes(ui.planTag);
+  const shown = open.filter(pass).sort(byPlanDate);
+  const done = plans.filter(p => p.status === 'done' && pass(p)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const canc = plans.filter(p => p.status === 'cancelled' && pass(p)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const planRow = (p, muted) => {
+    const late = p.status === 'open' && p.date && p.date < today();
+    return `<div class="plan-row ${muted ? 'done-row' : ''}">
+      <button class="row" data-act="editPlan" data-id="${p.id}">
+        ${catIco(p.cat)}
+        <span class="row-main"><span class="row-title">${esc(p.title || catName(p.cat))}</span>
+        <span class="row-sub"><span>${esc(catName(p.cat))}</span>${p.date ? `<span class="${late ? 'late' : ''}">${late ? 'просрочено, ' : 'до '}${esc(shortDate(p.date))}</span>` : ''}${p.repeat ? `<span class="badge">${REPEAT_SHORT[p.repeat]}${p.auto ? ', авто' : ''}</span>` : ''}${tagChipsHtml(p.tags)}</span></span>
+        <span class="amt num ${p.kind}">${p.kind === 'in' ? '+' : '−'}${money(p.amount)}</span></button>
+      <div class="plan-actions">${p.status === 'open'
+        ? `<button class="btn sm" data-act="planPay" data-id="${p.id}">${p.repeat && !p.auto ? 'Провести' : p.kind === 'in' ? 'Получено' : 'Оплачено'}</button><button class="btn sm ghost" data-act="planCancel" data-id="${p.id}">Отменить</button>`
+        : `<button class="btn sm ghost" data-act="planRestore" data-id="${p.id}">Вернуть</button>`}</div></div>`;
+  };
+  let html = '';
+  if (open.length) html += `<section><dl class="kv"><dt>Запланировано расходов</dt><dd class="num out">${pOut ? '−' + money(pOut) : money(0)}</dd><dt>Запланировано доходов</dt><dd class="num in">${pIn ? '+' + money(pIn) : money(0)}</dd><dt>Свободные деньги сейчас</dt><dd class="num">${money(bal)}</dd><div class="sep"></div><dt>После всех планов</dt><dd class="num ${bal - pOut + pIn < 0 ? 'out' : ''}">${money(bal - pOut + pIn)}</dd></dl></section>`;
+  html += tagChips;
+  if (!plans.length) html += `<div class="empty"><p>Здесь копятся будущие траты и поступления. Добавьте план кнопкой «План» внизу или одной строкой в режиме «План» на «Сегодня»; планы с датой появятся и на «Обзоре» в общем списке по срокам. Когда план случится, нажмите «Оплачено», и он станет записью. Регулярные платежи по долгам добавляются на вкладке «Долги/цели».</p><button class="btn" data-act="add">Новый план</button></div>`;
+  else if (!shown.length) html += `<div class="empty"><p>${open.length ? 'Под этот тег планов нет.' : 'Открытых планов нет.'}</p></div>`;
+  else html += `<section>${shown.map(p => planRow(p)).join('')}</section>`;
+  if (done.length) html += `<details class="fold"><summary>Проведено (${done.length})</summary>${done.map(p => planRow(p, true)).join('')}</details>`;
+  if (canc.length) html += `<details class="fold"><summary>Отменено (${canc.length})</summary>${canc.map(p => planRow(p, true)).join('')}</details>`;
+  root.innerHTML = html;
 }
 
 /* — debts & goals tab — */
@@ -1923,7 +1975,7 @@ function qaddHtml(scope, placeholder) {
   const cd = ui.qd[scope], custom = isDate(cd) ? cd : '';
   return `<div class="qadd"><input id="q-title" data-scope="${scope}" placeholder="${placeholder}" maxlength="120" autocomplete="off" enterkeyhint="done" aria-label="${placeholder}"><button type="button" data-act="qadd" data-scope="${scope}" aria-label="Добавить">＋</button></div>
   <div class="qprev" id="q-prev" aria-live="polite"></div>
-  <div class="qchips" id="qchips">${[['today', 'Сегодня'], ['tomorrow', 'Завтра'], ['', 'Без срока']].map(([v, l]) => `<button type="button" class="chip ${cd === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="qdue" data-scope="${scope}" data-v="${v}">${l}</button>`).join('')}<label class="qpick ${custom ? 'on' : ''}" title="Выбрать дату"><span class="ql" aria-hidden="true">Дата</span><input type="date" id="q-date" data-change="qdate" data-scope="${scope}" value="${esc(custom)}" aria-label="Дата"></label><label class="qpick ${ui.qt ? 'on' : ''}" title="Время"><span class="ql" aria-hidden="true">Время</span><input type="text" readonly inputmode="none" data-timepick placeholder="--:--" id="q-time" data-change="qtime" value="${esc(ui.qt)}" aria-label="Время"></label></div>`;
+  <div class="qchips" id="qchips">${[['today', 'Сегодня'], ['tomorrow', 'Завтра'], ['', 'Без срока']].map(([v, l]) => `<button type="button" class="chip ${cd === v ? 'on' : ''}" style="--c:#4C6EF5" data-act="qdue" data-scope="${scope}" data-v="${v}">${l}</button>`).join('')}<button type="button" class="qpick date ${custom ? 'on' : ''}" data-datepick-for="q-date" title="Выбрать дату"><span class="ql">${custom ? esc(shortDate(custom)) : 'Дата'}</span><input type="hidden" id="q-date" data-change="qdate" data-scope="${scope}" value="${esc(custom)}"></button><label class="qpick ${ui.qt ? 'on' : ''}" title="Время"><span class="ql" aria-hidden="true">Время</span><input type="text" readonly inputmode="none" data-timepick placeholder="--:--" id="q-time" data-change="qtime" value="${esc(ui.qt)}" aria-label="Время"></label></div>`;
 }
 function ringSvg(share, color) { const R = 17, C = 2 * Math.PI * R; return `<svg viewBox="0 0 44 44" class="ring" aria-hidden="true"><circle cx="22" cy="22" r="${R}" fill="none" style="stroke:var(--line)" stroke-width="5"/><circle cx="22" cy="22" r="${R}" fill="none" style="stroke:${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(0, Math.min(1, share)) * C} ${C}" transform="rotate(-90 22 22)"/></svg>`; }
 /* верх «Сегодня»: баланс, кольца дел и привычек, ближайшие события и дни рождения */
@@ -2992,8 +3044,7 @@ const actions = {
   tab(el) {
     const v = el.dataset.v;
     if (v === ui.tab && el.classList.contains('tab')) { if (v === 'tasks') { ui.project = null; ui.habit = null; } if (v === 'cal') ui.person = null; }   // повторный тап по активной вкладке возвращает к её началу
-    if (v === 'plans') { ui.tab = 'money'; ui.msub = 'overview'; }
-    else if (MONEY_SUBS.some(([k]) => k === v)) { ui.tab = 'money'; ui.msub = v; }
+    if (MONEY_SUBS.some(([k]) => k === v)) { ui.tab = 'money'; ui.msub = v; }
     else if (v === 'settings') ui.tab = 'more';
     else ui.tab = v;
     if (ui.tab !== 'tasks') { ui.project = null; ui.habit = null; }
@@ -3016,7 +3067,7 @@ const actions = {
     if (ui.tab === 'tasks' && ui.habit) return;
     if (ui.tab === 'tasks' && ui.tsub === 'habits') return openHabit();
     if (ui.tab === 'tasks') return ui.project ? openTask({ project: ui.project }) : ui.tsub === 'projects' ? openProject() : openTask({});
-    openTx();
+    if (ui.msub === 'plans') openPlan(); else openTx();
   },
   addTx() { openTx(); },
   addPlan() { openPlan(); },
@@ -3094,7 +3145,7 @@ const actions = {
   qdue(el) {
     const sc = el.dataset.scope; ui.qd[sc] = el.dataset.v;
     $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc]));
-    const di = $('#q-date'); if (di) { di.value = ''; di.closest('.qpick').classList.remove('on'); }
+    const di = $('#q-date'); if (di) { di.value = ''; const qp = di.closest('.qpick'); qp.classList.remove('on'); qp.querySelector('.ql').textContent = 'Дата'; }
     if (!ui.qd[sc]) { ui.qt = ''; const ti = $('#q-time'); if (ti) { ti.value = ''; ti.closest('.qpick').classList.remove('on'); } }   // «без срока» — значит и без времени
     refreshTaskPreview(); $('#q-title')?.focus();
   },
@@ -3214,6 +3265,7 @@ const actions = {
     toastUndo(`${tx.kind === 'in' ? 'Получено' : 'Оплачено'}: ${p.title || catName(p.cat)}, ${money(p.amount)}${lm.length ? '. ' + lm[0] : ''}`, snap, lm.length ? 'warn' : '');
   },
   planDo(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) openTx({ prefill: { kind: p.kind, amount: p.amount, title: p.title, cat: p.cat, tags: p.tags || [], note: p.note || '', date: today(), planId: p.id } }); },
+  planTagFilter(el) { ui.planTag = ui.planTag === el.dataset.id ? '' : el.dataset.id; render(); },
   planCancelDraft() { const id = draft && draft.id; if (!id) return; closeModal(); actions.planCancel({ dataset: { id } }); },
   planCancel(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) { const snap = snapshot(); p.status = 'cancelled'; persist(); render(); toastUndo('План отменён', snap); } },
   planRestore(el) { const p = plans.find(x => x.id === el.dataset.id); if (p) { p.status = 'open'; p.txId = null; persist(); render(); } },
@@ -3320,7 +3372,7 @@ document.addEventListener('change', e => {
     case 'tproject': syncDraft(); if (draft.tproject) draft.trepeat = ''; renderModal(); break;
     case 'tproj': ui.tproj = v; renderTaskList(); break;
     case 'ttcat': ui.ttcat = v; renderTaskList(); break;
-    case 'qdate': { const sc = t.dataset.scope || 'today'; ui.qd[sc] = isDate(v) ? v : 'today'; $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc])); t.closest('.qpick').classList.toggle('on', isDate(v)); refreshTaskPreview(); break; }
+    case 'qdate': { const sc = t.dataset.scope || 'today'; ui.qd[sc] = isDate(v) ? v : 'today'; $$('#qchips .chip').forEach(c => c.classList.toggle('on', c.dataset.v === ui.qd[sc])); const qp = t.closest('.qpick'); qp.classList.toggle('on', isDate(v)); qp.querySelector('.ql').textContent = isDate(v) ? shortDate(v) : 'Дата'; refreshTaskPreview(); break; }
     case 'dqtime': { ui.dqt = /^\d{2}:\d{2}$/.test(v) ? v : ''; t.closest('.qpick').classList.toggle('on', !!ui.dqt); refreshDqPreview(); break; }
     case 'qtime': { ui.qt = /^\d{2}:\d{2}$/.test(v) ? v : ''; t.closest('.qpick').classList.toggle('on', !!ui.qt); refreshTaskPreview(); break; }
     case 'dowed': syncDraft(); if (draft.kind === 'recv' && !draft.id) { const o = owedById(draft.owed); if (o) draft.amount = fmtIn(Math.max(0, owedStats(o).remaining)); } renderModal(); break;
@@ -3366,7 +3418,7 @@ document.addEventListener('input', e => {
   else if (t.id === 'f-actual') { draft.actual = t.value; refreshReconCalc(); }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('#tp')) { closeTP(); return; }
+  if (e.key === 'Escape' && $('#tp')) { closeTP(); closeDP(); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-timepick]')) { e.preventDefault(); openTimePicker(e.target); return; }
   if (e.key === 'Escape' && $('#modal-root').firstChild) { closeModal(); return; }
   if (e.key !== 'Enter') return;
@@ -3388,33 +3440,89 @@ document.addEventListener('keydown', e => {
    Системное окно выбора времени на Android рисуется вне страницы и в тёмной теме бывает нечитаемым (белое на белом).
    Поэтому поля времени — текст «только для чтения», а по нажатию открывается эта панель в цветах приложения. */
 let tp = null;
+/* циферблат 24 ч: внешний круг 1–12, внутренний 13–00; после часа — минуты (с точностью до минуты при перетаскивании) */
 function openTimePicker(inp) {
   const v = /^\d{2}:\d{2}$/.test(inp.value) ? inp.value : '';
-  tp = { inp, h: v ? +v.slice(0, 2) : null, m: v ? +v.slice(3) : null };
+  tp = { inp, h: v ? +v.slice(0, 2) : null, m: v ? +v.slice(3) : null, mode: 'h', drag: false };
   renderTP();
-  setTimeout(() => $('#tp .tp-grid.h button.on, #tp .tp-grid.h button')?.focus(), 0);
 }
 const tpValue = () => tp && tp.h != null ? `${pad(tp.h)}:${pad(tp.m == null ? 0 : tp.m)}` : '';
+const DIAL = { c: 140, R: 108, r: 70 };
+const dialPos = (ang, rad) => [DIAL.c + rad * Math.sin(ang * Math.PI / 180), DIAL.c - rad * Math.cos(ang * Math.PI / 180)];
+function dialHtml() {
+  const hm = tp.mode === 'h', labels = [];
+  if (hm) for (let i = 0; i < 12; i++) { labels.push({ v: i === 0 ? 12 : i, ang: i * 30, rad: DIAL.R, inner: false }); labels.push({ v: i === 0 ? 0 : i + 12, ang: i * 30, rad: DIAL.r, inner: true }); }
+  else for (let i = 0; i < 12; i++) labels.push({ v: i * 5, ang: i * 30, rad: DIAL.R, inner: false });
+  const sel = hm ? tp.h : tp.m; let hand = '';
+  if (sel != null) {
+    const ang = hm ? (sel % 12) * 30 : sel * 6, rad = hm && (sel === 0 || sel > 12) ? DIAL.r : DIAL.R, [x, y] = dialPos(ang, rad);
+    hand = `<line x1="${DIAL.c}" y1="${DIAL.c}" x2="${x}" y2="${y}" class="hand"/><circle cx="${DIAL.c}" cy="${DIAL.c}" r="4" class="pin"/><circle cx="${x}" cy="${y}" r="19" class="knob"/>`;
+  }
+  return `<circle cx="${DIAL.c}" cy="${DIAL.c}" r="134" class="face"/>${hand}${labels.map(l => { const [x, y] = dialPos(l.ang, l.rad); return `<text x="${x}" y="${y}" data-v="${l.v}" class="${l.inner ? 'in' : ''} ${l.v === sel ? 'on' : ''}" text-anchor="middle" dominant-baseline="central">${hm ? (l.inner ? pad(l.v) : l.v) : pad(l.v)}</text>`; }).join('')}`;
+}
 function renderTP() {
   let box = $('#tp'); if (!box) { box = document.createElement('div'); box.id = 'tp'; document.body.appendChild(box); }
-  const v = tpValue(), cell = (kind, n) => `<button type="button" class="${(kind === 'h' ? tp.h : tp.m) === n ? 'on' : ''}" data-act="tp${kind.toUpperCase()}" data-v="${n}" aria-pressed="${(kind === 'h' ? tp.h : tp.m) === n}">${pad(n)}</button>`;
   box.innerHTML = `<div class="tp-scrim" data-act="tpClose"></div><div class="tp" role="dialog" aria-modal="true" aria-label="Выбор времени">
-    <div class="tp-head"><span class="tp-val num">${v || '--:--'}</span><button type="button" class="icon" data-act="tpClose" aria-label="Закрыть">×</button></div>
-    <div class="tp-lbl">Часы</div><div class="tp-grid h">${Array.from({ length: 24 }, (_, i) => cell('h', i)).join('')}</div>
-    <div class="tp-lbl">Минуты</div><div class="tp-grid m">${Array.from({ length: 12 }, (_, i) => cell('m', i * 5)).join('')}</div>
+    <div class="tp-head"><div class="tp-val num"><button type="button" class="tp-part ${tp.mode === 'h' ? 'on' : ''}" data-act="tpMode" data-v="h">${tp.h == null ? '--' : pad(tp.h)}</button>:<button type="button" class="tp-part ${tp.mode === 'm' ? 'on' : ''}" data-act="tpMode" data-v="m">${tp.m == null ? '--' : pad(tp.m)}</button></div><button type="button" class="icon" data-act="tpClose" aria-label="Закрыть">×</button></div>
+    <p class="tp-hint">${tp.mode === 'h' ? 'Выберите час: снаружи 1–12, внутри 13–00' : 'Выберите минуты — можно вести пальцем по кругу'}</p>
+    <svg viewBox="0 0 280 280" class="dial" role="img" aria-label="Циферблат">${dialHtml()}</svg>
     <div class="tp-foot"><button type="button" class="btn ghost sm" data-act="tpClear">Без времени</button><button type="button" class="btn" data-act="tpOk" ${tp.h == null ? 'disabled' : ''}>Готово</button></div></div>`;
+  const svg = box.querySelector('svg.dial');
+  const pick = e => {
+    let v = e.target && e.target.dataset && e.target.dataset.v != null ? +e.target.dataset.v : null;
+    if (v == null) {   // перетаскивание: значение — по углу и расстоянию от центра
+      const b = svg.getBoundingClientRect(); if (!b.width) return;
+      const x = (e.clientX - b.left) * 280 / b.width - DIAL.c, y = (e.clientY - b.top) * 280 / b.height - DIAL.c;
+      let ang = Math.atan2(x, -y) * 180 / Math.PI; if (ang < 0) ang += 360;
+      if (tp.mode === 'h') { const i = Math.round(ang / 30) % 12, inner = Math.hypot(x, y) < (DIAL.R + DIAL.r) / 2; v = inner ? (i === 0 ? 0 : i + 12) : (i === 0 ? 12 : i); }
+      else v = Math.round(ang / 6) % 60;
+    }
+    if (tp.mode === 'h') tp.h = v; else tp.m = v;
+    svg.innerHTML = dialHtml();
+    const parts = box.querySelectorAll('.tp-part'); parts[0].textContent = tp.h == null ? '--' : pad(tp.h); parts[1].textContent = tp.m == null ? '--' : pad(tp.m);
+    box.querySelector('[data-act="tpOk"]').disabled = tp.h == null;
+  };
+  svg.addEventListener('pointerdown', e => { e.preventDefault(); tp.drag = true; try { svg.setPointerCapture(e.pointerId); } catch (x) { /* не критично */ } pick(e); });
+  svg.addEventListener('pointermove', e => { if (tp && tp.drag) pick(e); });
+  svg.addEventListener('pointerup', e => {
+    if (!tp || !tp.drag) return; tp.drag = false; pick(e);
+    if (tp.mode === 'h') { tp.mode = 'm'; renderTP(); }       // выбран час — переходим к минутам
+    else if (tp.h != null) applyTP(tpValue());               // выбраны минуты — готово
+  });
 }
 function closeTP() { const b = $('#tp'); if (b) b.remove(); const i = tp && tp.inp; tp = null; return i; }
 function applyTP(v) {
   const inp = closeTP(); if (!inp || !inp.isConnected) return;
   inp.value = v; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
 }
+/* своя сетка месяца для выбора даты (системный календарь в тёмной теме бывает нечитаемым) */
+let dp = null;
+function openDatePicker(inp) { const v = isDate(inp.value) ? inp.value : ''; dp = { inp, sel: v, month: (v || today()).slice(0, 7) }; renderDP(); }
+function renderDP() {
+  let box = $('#tp'); if (!box) { box = document.createElement('div'); box.id = 'tp'; document.body.appendChild(box); }
+  const t0 = today(), cells = monthGrid(dp.month);
+  box.innerHTML = `<div class="tp-scrim" data-act="dpClose"></div><div class="tp" role="dialog" aria-modal="true" aria-label="Выбор даты">
+    <div class="tp-head"><div class="dp-title">${dp.sel ? esc(dayTitle(dp.sel)) : 'Выберите дату'}</div><button type="button" class="icon" data-act="dpClose" aria-label="Закрыть">×</button></div>
+    <div class="calnav"><button type="button" class="icon" data-act="dpNav" data-d="-1" aria-label="Предыдущий месяц">‹</button><span class="label">${esc(monthTitle(dp.month))}</span><button type="button" class="icon" data-act="dpNav" data-d="1" aria-label="Следующий месяц">›</button></div>
+    <div class="dp-grid">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(w => `<span class="cwd">${w}</span>`).join('')}${cells.map(ds => `<button type="button" class="${mkey(ds) !== dp.month ? 'other' : ''} ${ds === t0 ? 'today' : ''} ${ds === dp.sel ? 'on' : ''}" data-act="dpPick" data-d="${ds}">${+ds.slice(8)}</button>`).join('')}</div>
+    <div class="tp-foot"><button type="button" class="btn ghost sm" data-act="dpClear">Сбросить</button><button type="button" class="btn ghost sm" data-act="dpPick" data-d="${t0}">Сегодня</button></div></div>`;
+}
+function closeDP() { const b = $('#tp'); if (b) b.remove(); const i = dp && dp.inp; dp = null; return i; }
+function applyDP(v) { const inp = closeDP(); if (!inp || !inp.isConnected) return; inp.value = v; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); }
 Object.assign(actions, {
-  tpH(el) { tp.h = +el.dataset.v; renderTP(); },
-  tpM(el) { tp.m = +el.dataset.v; if (tp.h != null) applyTP(tpValue()); else renderTP(); },   // час и минута выбраны — сразу готово
+  tpMode(el) { if (!tp) return; tp.mode = el.dataset.v; renderTP(); },
   tpOk() { if (tp && tp.h != null) applyTP(tpValue()); },
   tpClear() { applyTP(''); },
-  tpClose() { closeTP(); }
+  tpClose() { closeTP(); },
+  dpNav(el) { if (!dp) return; const [y, m] = dp.month.split('-').map(Number), d = new Date(y, m - 1 + (+el.dataset.d), 1); dp.month = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; renderDP(); },
+  dpPick(el) { if (dp) applyDP(el.dataset.d); },
+  dpClear() { applyDP(''); },
+  dpClose() { closeDP(); }
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest) return;
+  const dbtn = e.target.closest('[data-datepick-for]');
+  if (dbtn) { e.preventDefault(); const inp = document.getElementById(dbtn.dataset.datepickFor); if (inp) openDatePicker(inp); }
 });
 document.addEventListener('click', e => {
   if (!e.target.closest) return;
@@ -3497,7 +3605,7 @@ function initBackGuard() {
     if (!backReady) return;
     const st = e.state || {};
     if (st.m) return;                                                  // вернулись на рабочую запись — ничего не делаем
-    if ($('#tp')) { closeTP(); try { history.forward(); } catch (x) { /* не критично */ } return; }
+    if ($('#tp')) { closeTP(); closeDP(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if ($('#modal-root').firstChild) { closeModal(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if (ui.tab === 'tasks' && ui.project) { ui.project = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
     if (ui.tab === 'tasks' && ui.habit) { ui.habit = null; render(); try { history.forward(); } catch (x) { /* не критично */ } return; }
